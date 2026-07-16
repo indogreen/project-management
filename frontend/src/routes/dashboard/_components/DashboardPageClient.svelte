@@ -44,11 +44,11 @@
   let kategoriDist = $state<DashboardSeries>({ labels: [], counts: [] });
   let topCustomers = $state<DashboardSeries>({ labels: [], counts: [] });
 
-  // canvas refs — plain let, NOT $state (Chart.js needs raw HTMLCanvasElement)
-  let cTrend: HTMLCanvasElement;
-  let cStatus: HTMLCanvasElement;
-  let cKategori: HTMLCanvasElement;
-  let cTopCust: HTMLCanvasElement;
+  // canvas refs — using $state to avoid Svelte 5 bind:this warning
+  let cTrend = $state<HTMLCanvasElement>();
+  let cStatus = $state<HTMLCanvasElement>();
+  let cKategori = $state<HTMLCanvasElement>();
+  let cTopCust = $state<HTMLCanvasElement>();
 
   // chart instances — plain let, NOT $state (Chart.js needs raw references)
   let chartTrend: ChartJS | null = null;
