@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import Chart from 'chart.js/auto';
   import type { Chart as ChartJS, ChartOptions } from 'chart.js';
   import {
@@ -44,17 +44,17 @@
   let kategoriDist = $state<DashboardSeries>({ labels: [], counts: [] });
   let topCustomers = $state<DashboardSeries>({ labels: [], counts: [] });
 
-  // canvas refs
-  let cTrend = $state<HTMLCanvasElement>();
-  let cStatus = $state<HTMLCanvasElement>();
-  let cKategori = $state<HTMLCanvasElement>();
-  let cTopCust = $state<HTMLCanvasElement>();
+  // canvas refs — plain let, NOT $state (Chart.js needs raw HTMLCanvasElement)
+  let cTrend: HTMLCanvasElement;
+  let cStatus: HTMLCanvasElement;
+  let cKategori: HTMLCanvasElement;
+  let cTopCust: HTMLCanvasElement;
 
-  // chart instances
-  let chartTrend = $state<ChartJS | null>(null);
-  let chartStatus = $state<ChartJS | null>(null);
-  let chartKategori = $state<ChartJS | null>(null);
-  let chartTopCust = $state<ChartJS | null>(null);
+  // chart instances — plain let, NOT $state (Chart.js needs raw references)
+  let chartTrend: ChartJS | null = null;
+  let chartStatus: ChartJS | null = null;
+  let chartKategori: ChartJS | null = null;
+  let chartTopCust: ChartJS | null = null;
 
   // ==== HELPERS ====
   function destroyCharts() {
@@ -71,15 +71,25 @@
 
     const ticksInt = { beginAtZero: true, ticks: { precision: 0 as number, stepSize: 1 } };
 
+    // Unwrap reactive proxies to plain arrays for Chart.js
+    const trendLabels = [...trend.labels];
+    const trendCounts = [...trend.counts];
+    const statusLabels = [...statusDist.labels];
+    const statusCounts = [...statusDist.counts];
+    const katLabels = [...kategoriDist.labels];
+    const katCounts = [...kategoriDist.counts];
+    const custLabels = [...topCustomers.labels];
+    const custCounts = [...topCustomers.counts];
+
     // Tren 12 bulan (Line)
     chartTrend = new Chart(cTrend, {
       type: 'line',
       data: {
-        labels: trend.labels,
+        labels: trendLabels,
         datasets: [
           {
             label: 'Project',
-            data: trend.counts,
+            data: trendCounts,
             tension: 0.35,
             fill: false
           }
@@ -97,11 +107,11 @@
     chartStatus = new Chart(cStatus, {
       type: 'doughnut',
       data: {
-        labels: statusDist.labels,
+        labels: statusLabels,
         datasets: [
           {
-            data: statusDist.counts,
-            backgroundColor: statusDist.labels.map((l) => STATUS_COLOR[l] ?? '#9CA3AF'),
+            data: statusCounts,
+            backgroundColor: statusLabels.map((l) => STATUS_COLOR[l] ?? '#9CA3AF'),
             borderColor: '#FFFFFF',
             borderWidth: 2,
             hoverOffset: 6
@@ -120,8 +130,8 @@
     chartKategori = new Chart(cKategori, {
       type: 'bar',
       data: {
-        labels: kategoriDist.labels,
-        datasets: [{ label: 'Jumlah', data: kategoriDist.counts }]
+        labels: katLabels,
+        datasets: [{ label: 'Jumlah', data: katCounts }]
       },
       options: {
         responsive: true,
@@ -135,8 +145,8 @@
     chartTopCust = new Chart(cTopCust, {
       type: 'bar',
       data: {
-        labels: topCustomers.labels,
-        datasets: [{ label: 'Project', data: topCustomers.counts }]
+        labels: custLabels,
+        datasets: [{ label: 'Project', data: custCounts }]
       },
       options: {
         responsive: true,
@@ -165,14 +175,16 @@
       statusDist = data.status_distribution ?? statusDist;
       kategoriDist = data.kategori_distribution ?? kategoriDist;
       topCustomers = data.top_customers ?? topCustomers;
-
-      // render chart setelah data ada
-      setTimeout(drawCharts, 0);
     } catch (e) {
       error = extractApiErrors(e);
       console.error(e);
     } finally {
       loading = false;
+      // Wait for Svelte to flush the DOM so <canvas> elements exist
+      await tick();
+      if (!error) {
+        drawCharts();
+      }
     }
   }
 
