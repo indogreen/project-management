@@ -41,12 +41,21 @@ Lokasi file: `backend/.env` (salin dari `backend/.env.example`)
 | `AI_API_KEY`          | Server | No       | —               | API key provider AI                    |
 | `AI_MODEL`            | Server | No       | —               | Model AI yang digunakan                |
 
-### Server
+### Server (Development & Local)
 
 | Variable              | Scope  | Required | Default         | Deskripsi                              |
 | --------------------- | ------ | -------- | --------------- | -------------------------------------- |
-| `SERVER_HOST`         | Server | No       | `127.0.0.1`     | Host untuk `artisan serve`             |
-| `SERVER_PORT`         | Server | No       | `8000`          | Port untuk `artisan serve`             |
+| `SERVER_HOST`         | Server | No       | `127.0.0.1`     | Host untuk `artisan serve` (`0.0.0.0` untuk tunnel) |
+| `SERVER_PORT`         | Server | No       | `8000`          | Port untuk `artisan serve` (`8004` untuk tunnel)   |
+
+### Konfigurasi Khusus Dev Cloudflare Tunnel (Backend)
+
+Pada lingkungan dev via Cloudflare Tunnel (`backend/.env`):
+```env
+APP_URL=https://api-pm-idg.zed.ai.id
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8004
+```
 
 ### Lainnya
 
@@ -71,16 +80,49 @@ Lokasi file: `frontend/.env` (salin dari `frontend/.env.example`)
 | `PUBLIC_API_BASE_URL`     | Public | Yes      | `http://127.0.0.1:8000/api`    | Base URL API backend              |
 | `PUBLIC_STORAGE_BASE_URL` | Public | Yes      | `http://127.0.0.1:8000/storage`| Base URL file storage backend     |
 
-### Development Server
+### Development Server & HMR
 
-| Variable         | Scope  | Required | Default     | Deskripsi                              |
-| ---------------- | ------ | -------- | ----------- | -------------------------------------- |
-| `DEV_HOST`       | Server | No       | `localhost` | Host untuk dev server                  |
-| `DEV_PORT`       | Server | No       | `5174`      | Port untuk dev server                  |
-| `PREVIEW_HOST`   | Server | No       | `localhost` | Host untuk preview server              |
-| `PREVIEW_PORT`   | Server | No       | `4174`      | Port untuk preview server              |
-| `HMR_HOST`       | Server | No       | `localhost` | Host untuk Hot Module Replacement      |
-| `HMR_PORT`       | Server | No       | `24679`     | Port untuk Hot Module Replacement      |
+| Variable            | Scope  | Required | Default         | Deskripsi                                             |
+| ------------------- | ------ | -------- | --------------- | ----------------------------------------------------- |
+| `DEV_HOST`          | Server | No       | `localhost`     | Host untuk dev server (`0.0.0.0` untuk tunnel)        |
+| `DEV_PORT`          | Server | No       | `5174`          | Port untuk dev server (`8005` untuk tunnel)           |
+| `DEV_ALLOWED_HOSTS` | Server | No       | —               | Daftar hostname yang diizinkan Vite (dipisah koma)    |
+| `PREVIEW_HOST`      | Server | No       | `localhost`     | Host untuk preview server                             |
+| `PREVIEW_PORT`      | Server | No       | `4174`          | Port untuk preview server                             |
+| `HMR_HOST`          | Server | No       | `localhost`     | Host untuk WebSocket Hot Module Replacement           |
+| `HMR_PORT`          | Server | No       | `24679`         | Port internal HMR jika menggunakan port terpisah      |
+| `HMR_PROTOCOL`      | Server | No       | `wss`           | Protokol HMR (`ws` untuk HTTP lokal, `wss` untuk HTTPS)|
+| `HMR_CLIENT_PORT`   | Server | No       | —               | Client port HMR (misal `443` jika lewat tunnel HTTPS) |
+
+### Internal Server-Side API
+
+| Variable                | Scope  | Required | Default                    | Deskripsi                                    |
+| ----------------------- | ------ | -------- | -------------------------- | -------------------------------------------- |
+| `INTERNAL_API_BASE_URL` | Server | No       | `http://localhost:8004/api`| Alamat internal server SvelteKit ke Laravel  |
+
+### Konfigurasi Khusus Dev Cloudflare Tunnel (Frontend)
+
+Pada lingkungan dev via Cloudflare Tunnel (`frontend/.env`):
+```env
+DEV_HOST=0.0.0.0
+DEV_PORT=8005
+DEV_ALLOWED_HOSTS=app-pm-idg.zed.ai.id
+
+HMR_HOST=app-pm-idg.zed.ai.id
+HMR_PROTOCOL=wss
+HMR_CLIENT_PORT=443
+# HMR_PORT dikosongkan
+
+PUBLIC_STORAGE_BASE_URL=https://api-pm-idg.zed.ai.id/storage
+PUBLIC_API_BASE_URL=https://api-pm-idg.zed.ai.id/api
+INTERNAL_API_BASE_URL=http://localhost:8004/api
+```
+
+> ⚠️ **Catatan Cookie Sesi:**
+> Jika mengimplementasikan cookie sesi, cookie harus bersifat **host-only** pada domain `app-pm-idg.zed.ai.id` (jangan menggunakan atribut `Domain` agar tidak bocor atau tertukar dengan subdomain lain).
+> 
+> ⚠️ **Catatan Rebuild / Restart Frontend:**
+> Nilai variable `PUBLIC_*` dikompilasi secara statis pada saat bundle dibuat. Setiap kali mengubah `PUBLIC_API_BASE_URL` atau `PUBLIC_STORAGE_BASE_URL`, restart dev server (`npm run dev`) atau rebuild aplikasi.
 
 ---
 

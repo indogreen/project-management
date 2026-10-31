@@ -177,6 +177,33 @@ Model Event (created/updated/deleted)
        per user via admin       per user via admin
 ```
 
+## Topologi Development via Cloudflare Tunnel (PWA Testing)
+
+Untuk mendukung pengetesan PWA dan Service Worker di perangkat mobile (Android/iOS) via jaringan seluler, lingkungan development dijalankan melalui Cloudflare Tunnel dengan HTTPS valid:
+
+```
+Mobile Browser (Data Seluler / HTTPS)
+  │
+  ├── https://app-pm-idg.zed.ai.id (Frontend PWA)
+  └── https://api-pm-idg.zed.ai.id (Backend API & Storage)
+  │
+  ▼
+Cloudflare Edge Network (TLS Termination, WAF, Zero Trust Access)
+  │
+  │ Cloudflare Tunnel (QUIC / gRPC outbound connection)
+  ▼
+Dev Host / VM Server
+  ├── cloudflared daemon
+  │     ├── app-pm-idg.zed.ai.id ──► http://localhost:8005 (Vite Dev Server)
+  │     └── api-pm-idg.zed.ai.id ──► http://localhost:8004 (Laravel Artisan Serve)
+  │
+  ├── Vite Dev Server (:8005)
+  │     └── HMR WebSocket: wss://app-pm-idg.zed.ai.id:443
+  │
+  └── Laravel Backend (:8004)
+        └── Storage files: public/storage symlink
+```
+
 ## Stack Komunikasi
 
 | Layer            | Teknologi                 | Keterangan                         |

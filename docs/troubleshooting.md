@@ -175,3 +175,84 @@ Pastikan folder `storage/app/public` writable.
 **Solusi:**
 - Minta admin/super_admin untuk menambahkan permission yang diperlukan melalui Settings → Manajemen User.
 - Cek endpoint `GET /api/auth/me` untuk melihat permission aktual user.
+
+---
+
+## Cloudflare Tunnel — Vite Dev Server "Host Not Allowed" / 403 Invalid Host header
+
+**Penyebab:** Vite v6/v7 membatasi hostname yang boleh mengakses dev server untuk mencegah DNS rebinding attacks. Host `app-pm-idg.zed.ai.id` belum terdaftar di `allowedHosts`.
+
+**Solusi:**
+1. Tambahkan hostname di `frontend/.env`:
+   ```env
+   DEV_ALLOWED_HOSTS=app-pm-idg.zed.ai.id
+   ```
+2. Restart Vite dev server (`npm run dev`).
+
+---
+
+## Cloudflare Tunnel — HMR WebSocket error / Reconnecting loop
+
+**Penyebab:** Client Vite mencoba membuka koneksi WebSocket ke port internal atau protokol tidak aman (`ws://`), bukan `wss://` melalui port 443 Cloudflare Edge.
+
+**Solusi:**
+1. Pastikan konfigurasi HMR di `frontend/.env`:
+   ```env
+   HMR_HOST=app-pm-idg.zed.ai.id
+   HMR_PROTOCOL=wss
+   HMR_CLIENT_PORT=443
+   # Pastikan HMR_PORT kosong / tidak diisi
+   ```
+2. Restart dev server dan muat ulang browser mobile.
+
+---
+
+## Cloudflare Tunnel — Login gagal 429 Too Many Requests (Lockout Massal)
+
+**Penyebab:** Semua request dari tunnel atau proxy lokal masuk ke backend Laravel dari IP `127.0.0.1`. Middleware `SlidingWindowThrottle` menganggap seluruh pengunjung adalah user yang sama, sehingga limit 5 request/60s habis seketika.
+
+**Solusi:**
+- Pastikan reverse proxy meneruskan header `CF-Connecting-IP` atau `X-Forwarded-For`.
+- Konfigurasikan trusted proxies di `backend/bootstrap/app.php`:
+  ```php
+  $middleware->trustProxies(at: '*'); // atau IP internal proxy
+  ```
+- Bersihkan cache throttle sementara: `php artisan cache:clear`.
+
+---
+
+## Cloudflare Tunnel — Upload lampiran gagal 403 Forbidden (CSRF / Origin Check)
+
+**Penyebab:** Dev server SvelteKit melakukan verifikasi Origin header pada HTTP POST multipart form submission dan mendapati origin berbeda dengan local host.
+
+**Solusi:**
+- Daftarkan trusted origins di `frontend/svelte.config.js`:
+  ```javascript
+  kit: {
+    csrf: {
+      trustedOrigins: ['https://app-pm-idg.zed.ai.id']
+    }
+  }
+  ```
+
+---
+
+## Cloudflare Tunnel — PWA tidak bisa diinstall / Manifest 302 Redirect
+
+**Penyebab:** Cloudflare Access (Zero Trust) memblokir request browser terhadap `/manifest.webmanifest` atau `/icons/*` dan mengembalikan redirect (302) ke halaman login Cloudflare Access.
+
+**Solusi:**
+- Buka Cloudflare Zero Trust Dashboard > **Access** > **Applications** > Pilih aplikasi `app-pm-idg`.
+- Tambahkan **Bypass Policy**:
+  - Selector: Path
+  - Values: `/manifest.webmanifest`, `/icons/*`, `/service-worker.js`
+
+---
+
+## Akses LAN (http://192.168.1.x) Tidak Bisa Login
+
+**Penyebab:** Ketika cookie dikonfigurasi dengan flag `Secure`, browser menolak menyimpan cookie melalui HTTP biasa (non-localhost IP).
+
+**Solusi:**
+- Gunakan koneksi HTTPS via Cloudflare Tunnel (`https://app-pm-idg.zed.ai.id`) untuk seluruh pengujian mobile.
+- Akses via IP lokal tidak lagi mendukung session login berbasis cookie Secure.

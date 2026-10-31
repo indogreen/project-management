@@ -14,18 +14,35 @@ export default defineConfig(({ mode }) => {
   const hmrHost = env.HMR_HOST || host;
   const hmrPort = env.HMR_PORT ? Number(env.HMR_PORT) : undefined;
 
+  const allowedHosts = env.DEV_ALLOWED_HOSTS
+    ? env.DEV_ALLOWED_HOSTS.split(',')
+        .map((h) => h.trim())
+        .filter(Boolean)
+    : undefined;
+
+  const hmrClientPort = env.HMR_CLIENT_PORT ? Number(env.HMR_CLIENT_PORT) : undefined;
+  const hmrConfig = hmrClientPort
+    ? {
+        protocol: env.HMR_PROTOCOL || 'wss',
+        host: env.HMR_HOST || host,
+        clientPort: hmrClientPort
+      }
+    : { host: hmrHost, port: hmrPort };
+
   return {
     plugins: [tailwindcss(), sveltekit()],
     server: {
       host,
       port,
       strictPort: true,
-      hmr: { host: hmrHost, port: hmrPort }
+      ...(allowedHosts && allowedHosts.length > 0 ? { allowedHosts } : {}),
+      hmr: hmrConfig
     },
     preview: {
       host: previewHost,
       port: previewPort,
-      strictPort: true
+      strictPort: true,
+      ...(allowedHosts && allowedHosts.length > 0 ? { allowedHosts } : {})
     },
     test: {
       expect: { requireAssertions: true },

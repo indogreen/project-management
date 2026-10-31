@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-10-31] — feat(pwa): phase 1 cloudflare tunnel setup & dev environment
+
+- Konfigurasi environment development HTTPS via Cloudflare Tunnel untuk pengujian PWA mobile via data seluler.
+- Penambahan dukungan `DEV_ALLOWED_HOSTS`, `HMR_PROTOCOL`, dan `HMR_CLIENT_PORT` pada `vite.config.ts`.
+- Template ingress `cloudflared` (locally-managed dan remote-managed) untuk port 8005 (frontend) dan port 8004 (backend).
+- Dokumentasi unit systemd auto-start (`setup-auto-start.md`), checklist dashboard Cloudflare, troubleshooting tunnel, dan pembaruan arsitektur.
+- File yang diubah:
+  - Frontend: `frontend/vite.config.ts`, `frontend/.env.example`
+  - Backend: `backend/.env.example`
+  - Docs: `docs/deployment.md`, `docs/setup-auto-start.md`, `docs/environment-variables.md`, `docs/security-checklist.md`, `docs/troubleshooting.md`, `docs/architecture.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Operator dapat menjalankan dev server di belakang Cloudflare Tunnel tanpa error `Invalid Host header` atau HMR WebSocket failure.
+  - Akses LAN via HTTP tidak lagi mendukung pengujian session login jika menggunakan cookie Secure.
+
 ## [2026-09-25] — feat(activities): add Purchase Requisition category
 
 - Menambahkan opsi kategori 'Purchase Requisition' pada aktivitas proyek (DB enum, validasi request backend, AI document extraction, factory, serta tipe dan opsi frontend).
