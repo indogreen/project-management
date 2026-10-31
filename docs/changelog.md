@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-10-31] — feat(pwa): phase 2 manifest, icons, and theme synchronization
+
+- Penambahan file Web App Manifest (`manifest.webmanifest`) dengan metadata PWA lengkap dan 4 shortcut aplikasi (Dashboard, Project, Aktivitas, Keuangan).
+- Pembuatan aset ikon standar di `frontend/static/icons/`: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (safe zone 80% terverifikasi), dan `apple-touch-icon-180.png` dari master `indogreen.png`.
+- Pemasangan metadata PWA dan link manifest pada `src/app.html`.
+- Sinkronisasi dinamis `<meta name="theme-color">` pada `src/routes/+layout.svelte` saat toggle tema manual.
+- Pembuatan dokumentasi fitur `docs/features/pwa.md` dan pembaruan `folder-structure.md` serta `frontend-guidelines.md`.
+- File yang diubah:
+  - Frontend: `frontend/static/manifest.webmanifest`, `frontend/static/icons/*`, `frontend/src/app.html`, `frontend/src/routes/+layout.svelte`
+  - Docs: `docs/features/pwa.md`, `docs/folder-structure.md`, `docs/frontend-guidelines.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Browser mobile kini dapat mengenali aplikasi sebagai Progressive Web App (PWA) yang siap di-install.
+  - Perilaku aplikasi dan alur auth `/auth/*` tetap identik dengan sebelumnya.
+
 ## [2026-10-31] — feat(pwa): phase 1 cloudflare tunnel setup & dev environment
 
 - Konfigurasi environment development HTTPS via Cloudflare Tunnel untuk pengujian PWA mobile via data seluler.

@@ -21,7 +21,19 @@
   let sidebarCollapsed = $state(false);
 
   onMount(() => {
-    const unsubscribe = theme.subscribe(() => {});
+    const unsubscribe = theme.subscribe((currentTheme) => {
+      if (typeof document === 'undefined') return;
+      const themeColor = currentTheme === 'dark' ? '#000000' : '#ffffff';
+      const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+      if (metaTags.length > 0) {
+        metaTags.forEach((el) => el.setAttribute('content', themeColor));
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('name', 'theme-color');
+        meta.setAttribute('content', themeColor);
+        document.head.appendChild(meta);
+      }
+    });
     return unsubscribe;
   });
 

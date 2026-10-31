@@ -103,9 +103,28 @@ export async function getProjects(params) {
 
 - Gunakan pemisah ribuan sesuai locale Indonesia
 
-## Tema
+## Tema & Sinkronisasi Theme-Color PWA
 
 Aplikasi mendukung **dark mode** dan **light mode** melalui store `theme.ts`. Konfigurasi CSS menggunakan variabel CSS custom di `app.css`.
+
+- **Palet Warna:**
+  - Background: light `#f3f4f6` / dark `#262626`
+  - Card & TopNav: light `#ffffff` / dark `#000000`
+  - Primary Accent: `#4f46e5` (Indigo)
+- **Sinkronisasi Meta Tag (`<meta name="theme-color">`):**
+  - Pada `app.html`, disiapkan default media queries: `#ffffff` untuk light mode dan `#000000` untuk dark mode.
+  - Pada `+layout.svelte`, pemanggilan `theme.subscribe()` secara dinamis memperbarui nilai `content` pada `<meta name="theme-color">` di runtime saat user melakukan toggle manual, sehingga warna status bar browser mobile (Chrome/Safari) langsung mengikuti tema aktif.
+
+## PWA & Web App Manifest
+
+- File manifest berlokasi di `frontend/static/manifest.webmanifest`.
+- Standar aset ikon tersimpan di `frontend/static/icons/`:
+  - `icon-192.png`: 192x192 px (purpose `any`, latar solid)
+  - `icon-512.png`: 512x512 px (purpose `any`, latar solid)
+  - `icon-maskable-512.png`: 512x512 px (purpose `maskable`, konten dalam safe zone 80% dengan padding solid)
+  - `apple-touch-icon-180.png`: 180x180 px (latar solid, tanpa transparansi untuk iOS Home Screen)
+- Standar mode tampilan: `display: standalone`, `orientation: any`, `start_url: /dashboard`.
+- Standar shortcut aplikasi: Dashboard, Project, Aktivitas, Keuangan.
 
 ## Responsive Design
 

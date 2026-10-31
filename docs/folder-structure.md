@@ -154,6 +154,10 @@ frontend/
 │       ├── stock-movements/
 │       └── settings/
 ├── static/                        # Static assets
+│   ├── icons/                     # PWA Icons (192, 512, maskable 512, apple-touch 180)
+│   ├── indogreen.png              # Logo master (sidebar & favicon)
+│   ├── manifest.webmanifest       # Web App Manifest PWA
+│   └── robots.txt
 ├── .env.example
 ├── eslint.config.js
 ├── package.json
