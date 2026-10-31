@@ -50,6 +50,16 @@
 - [ ] Foreign key constraint aktif untuk menjaga integritas data.
 - [ ] StockMovement bersifat immutable (tidak bisa diubah/dihapus).
 
+## Progressive Web App (PWA) & Service Worker
+
+- [ ] Service Worker mem-bypass seluruh request `/api/*` dan `/storage/*` (tanpa caching data bisnis/keuangan).
+- [ ] Service Worker mem-bypass seluruh request non-GET (POST, PUT, DELETE, PATCH).
+- [ ] Service Worker mem-bypass seluruh request yang membawa header `Authorization` atau meminta JSON (`Accept: application/json`).
+- [ ] HTML dokumen navigasi tidak pernah disimpan ke cache (Network-Only dengan `/offline.html` fallback).
+- [ ] Cache terisolasi per versi build (`indogreen-static-${version}` & `indogreen-assets-${version}`).
+- [ ] Emergency Kill-Switch runtime tersedia (`PUBLIC_PWA_ENABLED=false`).
+- [ ] Mode development secara otomatis mematikan dan membersihkan Service Worker lama (`unregisterAndClean()`).
+
 ## Deployment & Cloudflare Tunnel (PWA Dev / Staging)
 
 - [ ] HTTPS aktif untuk semua domain via Cloudflare Tunnel (`app-pm-idg.zed.ai.id`, `api-pm-idg.zed.ai.id`).

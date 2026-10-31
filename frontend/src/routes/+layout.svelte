@@ -14,6 +14,7 @@
   import { theme } from '$lib/stores/theme';
   import { currentUser, setUser } from '$lib/stores/user';
   import { showError, showSuccess } from '$lib/utils/toast';
+  import { registerServiceWorker } from '$lib/pwa/register';
 
   let { children }: { children: Snippet } = $props();
 
@@ -21,6 +22,8 @@
   let sidebarCollapsed = $state(false);
 
   onMount(() => {
+    void registerServiceWorker();
+
     const unsubscribe = theme.subscribe((currentTheme) => {
       if (typeof document === 'undefined') return;
       const themeColor = currentTheme === 'dark' ? '#000000' : '#ffffff';

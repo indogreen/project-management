@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-10-31] — feat(pwa): phase 3 service worker, routing classifier, and offline fallback
+
+- Implementasi Service Worker (`src/service-worker.ts`) menggunakan modul bawaan SvelteKit `$service-worker`.
+- Penambahan pure request classifier (`src/lib/pwa/sw-routing.ts`) dengan 19 unit test Vitest (project server): menjamin bahwa `/api/*`, `/storage/*`, `__data.json`, request non-GET, lintas origin, dan request ber-Authorization tidak pernah diintersep/dicache.
+- Pembuatan halaman offline mandiri (`static/offline.html`) dengan CSS inline, dukungan Dark Mode, dan tombol muat ulang.
+- Strategi caching terpisah: precache eksplisit untuk aset statis dasar (offline, manifest, icons), network-only untuk navigasi dokumen HTML dengan offline fallback, dan bypass penuh untuk request dinamis.
+- Modul pendaftaran dan kill-switch runtime (`src/lib/pwa/register.ts`) dengan auto-cleanup saat berada di mode DEV atau saat `PUBLIC_PWA_ENABLED=false`.
+- Konfigurasi `svelte.config.js` (`kit.serviceWorker.register = false`) untuk registrasi manual terkontrol.
+- File yang diubah:
+  - Frontend: `src/service-worker.ts`, `src/lib/pwa/sw-routing.ts`, `src/lib/pwa/sw-routing.test.ts`, `src/lib/pwa/register.ts`, `static/offline.html`, `svelte.config.js`, `src/routes/+layout.svelte`, `.env.example`
+  - Docs: `docs/features/pwa.md`, `docs/architecture.md`, `docs/security-checklist.md`, `docs/troubleshooting.md`, `docs/folder-structure.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Aplikasi kini memiliki Service Worker aktif pada mode produksi yang menyediakan fallback halaman offline saat koneksi terputus.
+  - Perilaku jaringan untuk API, upload/unduh berkas, dan autentikasi tetap 100% normal tanpa risiko stale data.
+
 ## [2026-10-31] — feat(pwa): phase 2 manifest, icons, and theme synchronization
 
 - Penambahan file Web App Manifest (`manifest.webmanifest`) dengan metadata PWA lengkap dan 4 shortcut aplikasi (Dashboard, Project, Aktivitas, Keuangan).

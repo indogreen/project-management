@@ -256,3 +256,55 @@ Pastikan folder `storage/app/public` writable.
 **Solusi:**
 - Gunakan koneksi HTTPS via Cloudflare Tunnel (`https://app-pm-idg.zed.ai.id`) untuk seluruh pengujian mobile.
 - Akses via IP lokal tidak lagi mendukung session login berbasis cookie Secure.
+
+---
+
+## Service Worker — Terjebak ("Stuck") atau Menampilkan Versi Lama
+
+**Penyebab:** Siklus hidup Service Worker secara sengaja tidak menggunakan `skipWaiting` otomatis agar tab aktif tidak crash di tengah pekerjaan pengguna. Service Worker baru berada pada status `waiting to activate`.
+
+**Solusi:**
+1. Tutup seluruh tab aplikasi Indogreen di browser, lalu buka kembali.
+2. Di lingkungan development / testing:
+   - Buka Chrome DevTools > Tab **Application** > **Service Workers**.
+   - Centang opsi **Update on reload** selama proses development aktif.
+   - Klik **Skip waiting** secara manual jika worker baru berstatus waiting.
+3. Untuk membersihkan secara paksa: Klik tombol **Unregister** di tab Service Workers dan **Clear site data** di tab Storage.
+
+---
+
+## PWA — Konflik Aset saat Berpindah antara Mode BUILD dan Mode DEV
+
+**Penyebab:** Menjalankan mode build (`preview` atau server produksi) mendaftarkan Service Worker ke origin/port lokal. Saat kembali ke mode dev (`npm run dev`), Service Worker lama berpotensi menyajikan berkas hasil build lama yang sudah basi.
+
+**Solusi:**
+- Kode `src/lib/pwa/register.ts` sudah dilengkapi pembersih otomatis: saat `!import.meta.env.PROD`, script otomatis memanggil `unregisterAndClean()` dan menghapus seluruh cache `indogreen-*`.
+- Jika browser masih menyajikan aset lama sebelum script sempat dieksekusi:
+  1. Buka DevTools > Tab **Application** > **Storage**.
+  2. Klik **Clear site data**.
+  3. Lakukan hard reload (`Cmd + Shift + R` di Mac atau `Ctrl + Shift + R` di Windows/Linux).
+
+---
+
+## PWA — Halaman Offline Tidak Muncul Saat Koneksi Terputus
+
+**Penyebab:** Berkas `offline.html` gagal di-precache saat instalasi Service Worker, atau request navigasi terintersep oleh aturan bypass yang tidak tepat.
+
+**Solusi:**
+1. Buka DevTools > Tab **Application** > **Cache Storage** > Periksa apakah `indogreen-static-v...` memuat entri `/offline.html`.
+2. Pastikan request navigasi berstatus mode `'navigate'`.
+3. Cek log console: pastikan tidak ada network error saat fase `install` Service Worker berlangsung.
+
+---
+
+## PWA — Emergency Kill-Switch (Mematikan SW dari Sisi Server)
+
+**Kebutuhan:** Terjadi bug kritis pada Service Worker di lingkungan produksi dan seluruh pengguna harus segera dibersihkan dari worker.
+
+**Langkah:**
+1. Pada file `.env` server host, ubah:
+   ```env
+   PUBLIC_PWA_ENABLED=false
+   ```
+2. Restart service frontend (`npm run build` & restart process).
+3. Setiap pengguna yang membuka halaman web akan secara otomatis mengeksekusi `unregisterAndClean()`: Service Worker di-unregister dan seluruh cache lokal dihapus seketika.

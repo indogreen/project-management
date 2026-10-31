@@ -74,6 +74,44 @@ Laravel Backend
         └── JSON Response → Browser
 ```
 
+## Alur Request Service Worker (PWA)
+
+Pada mode produksi, Service Worker bertindak sebagai programmable network proxy di browser klien:
+
+```
+Browser Fetch Event
+  │
+  ├── classifyRequest()
+  │     │
+  │     ├── BYPASS Criteria:
+  │     │     ├── Method bukan GET (POST / PUT / DELETE)
+  │     │     ├── Lintas Origin (bukan domain frontend)
+  │     │     ├── Path /api/* atau /storage/*
+  │     │     ├── Path /__data.json
+  │     │     ├── Header x-sveltekit-action
+  │     │     ├── Header Accept: application/json
+  │     │     └── Header Authorization (Bearer JWT)
+  │     │     └──► RETURN LANGSUNG (Browser menangani normal tanpa intersep)
+  │     │
+  │     ├── NAVIGATION Criteria:
+  │     │     └── Mode: 'navigate'
+  │     │           └──► Network-Only via fetch(event.request)
+  │     │                 ├── Online: Kembalikan HTML dari server (HTML TIDAK DICACHE)
+  │     │                 └── Offline / Error: caches.match('/offline.html')
+  │     │
+  │     ├── STATIC ASSETS Criteria:
+  │     │     └── /offline.html, /manifest.webmanifest, /icons/*
+  │     │           └──► Cache-First dari 'indogreen-static-v...'
+  │     │                 ├── Ada di Cache: Kembalikan dari cache
+  │     │                 └── Tidak ada: Ambil dari jaringan & simpan ke cache
+  │     │
+  │     └── IMMUTABLE ASSETS Criteria:
+  │           └── /_app/immutable/*
+  │                 └──► Bypass di Fase 3 (diaktifkan di Fase 4)
+  │
+  └── Default: Bypass ke jaringan biasa
+```
+
 ## Alur Autentikasi JWT
 
 ```

@@ -83,10 +83,15 @@ frontend/
 │   ├── app.css                    # Global styles (Tailwind + custom CSS)
 │   ├── app.d.ts                   # TypeScript declarations
 │   ├── app.html                   # HTML template
+│   ├── service-worker.ts          # Service Worker PWA (routing & precache)
 │   ├── lib/
 │   │   ├── axiosClient.ts         # Axios instance + JWT interceptors
 │   │   ├── config.ts              # API & Storage base URL config
 │   │   ├── inventory.ts           # Inventory helper utilities
+│   │   ├── pwa/                   # PWA Helper modules
+│   │   │   ├── register.ts        # SW registration & unregister kill-switch
+│   │   │   ├── sw-routing.ts      # Pure request classifier
+│   │   │   └── sw-routing.test.ts # Vitest suite for routing
 │   │   ├── components/
 │   │   │   ├── common/            # ConfirmDialog, dll
 │   │   │   ├── detail/            # Detail view components
@@ -157,6 +162,7 @@ frontend/
 │   ├── icons/                     # PWA Icons (192, 512, maskable 512, apple-touch 180)
 │   ├── indogreen.png              # Logo master (sidebar & favicon)
 │   ├── manifest.webmanifest       # Web App Manifest PWA
+│   ├── offline.html               # Halaman fallback offline mandiri
 │   └── robots.txt
 ├── .env.example
 ├── eslint.config.js
