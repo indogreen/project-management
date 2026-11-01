@@ -14,6 +14,9 @@ const config = {
     adapter: adapter(),
     serviceWorker: {
       register: false
+    },
+    version: {
+      pollInterval: 300000
     }
   }
 };

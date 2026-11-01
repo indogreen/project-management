@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-11-01] — feat(pwa): phase 5 update prompt UI, version polling, and chunk reload guard
+
+- Pembuatan store PWA terpusat (`src/lib/stores/pwa.ts`) dengan properti writable `{ updateReady, registration }` dan unit test Vitest lengkap.
+- Penambahan deteksi worker baru pada `src/lib/pwa/register.ts`: deteksi status `waiting` dan event `updatefound -> statechange 'installed'` saat controller aktif.
+- Penambahan polling berkala `registration.update()` pada Service Worker saat tab `visibilityState === 'visible'` dan tiap ~60 menit.
+- Pengaktifan SvelteKit version polling `kit.version.pollInterval: 300000` (5 menit) pada `svelte.config.js`.
+- Pembuatan komponen banner update non-blokir (`src/lib/components/pwa/UpdatePrompt.svelte`) dengan tombol "Perbarui sekarang" dan "Nanti":
+  - Komunikasi `postMessage({ type: 'SKIP_WAITING' })` ke worker baru.
+  - Listener `controllerchange` dengan guard flag `pwa_refreshing` untuk mencegah reload loop.
+  - Proteksi modal/drawer terbuka (`body[data-scroll-locked='true']`): menunda auto-reload dan menampilkan dialog konfirmasi SweetAlert2 sebelum user menyetujui reload.
+- Penanganan navigasi stale tab via hook `beforeNavigate`: memaksa full reload native saat versi baru terdeteksi sehingga terhindar dari chunk mismatch error (*"Failed to fetch dynamically imported module"*).
+- Pemasangan `<UpdatePrompt />` di root layout (`src/routes/+layout.svelte`) agar aktif di seluruh rute termasuk halaman autentikasi.
+- File yang diubah:
+  - Frontend: `src/lib/stores/pwa.ts`, `src/lib/stores/pwa.test.ts`, `src/lib/pwa/register.ts`, `src/lib/components/pwa/UpdatePrompt.svelte`, `src/routes/+layout.svelte`, `svelte.config.js`
+  - Docs: `docs/features/pwa.md`, `docs/frontend-guidelines.md`, `docs/troubleshooting.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengguna secara otomatis mendapatkan pemberitahuan visual elegan saat versi baru dirilis tanpa kehilangan pekerjaan yang sedang diinput di dalam modal atau formulir.
+  - Navigasi pada tab lama setelah deploy baru akan memuat bundle terbaru secara mulus tanpa error modul.
+
 ## [2026-11-01] — feat(pwa): phase 4 immutable asset caching and cache pruning
 
 - Implementasi strategi **Cache-First** untuk aset immutable (`/_app/immutable/**`) ke cache `indogreen-assets-${version}`.
@@ -17,6 +36,8 @@
 - Dampak yang perlu diketahui:
   - Pada kunjungan kedua (second visit), transfer jaringan untuk aset JS/CSS turun menjadi **0 B** (penghematan bandwidth >99.8%).
   - Navigasi dokumen HTML tetap Network-Only untuk menjaga kesegaran sesi dan otentikasi.
+
+## [2026-10-31] — feat(pwa): phase 3 service worker, routing classifier, and offline fallback
 
 - Implementasi Service Worker (`src/service-worker.ts`) menggunakan modul bawaan SvelteKit `$service-worker`.
 - Penambahan pure request classifier (`src/lib/pwa/sw-routing.ts`) dengan 19 unit test Vitest (project server): menjamin bahwa `/api/*`, `/storage/*`, `__data.json`, request non-GET, lintas origin, dan request ber-Authorization tidak pernah diintersep/dicache.

@@ -1,5 +1,57 @@
 import { base } from '$app/paths';
 import { env } from '$env/dynamic/public';
+import { setUpdateReady } from '$lib/stores/pwa';
+
+// Interval polling berkala untuk mengecek pembaruan Service Worker (~60 menit)
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+
+let periodicUpdateTimer: ReturnType<typeof setInterval> | null = null;
+let visibilityListenerRegistered = false;
+
+/**
+ * Menyiapkan pendeteksian update dan polling berkala pada ServiceWorkerRegistration aktif.
+ */
+function setupUpdateDetection(registration: ServiceWorkerRegistration): void {
+  // 1. Deteksi jika sudah ada worker yang berstatus waiting saat halaman dibuka
+  // Hanya picu updateReady jika sudah ada controller aktif (bukan instalasi awal pertama)
+  if (registration.waiting && navigator.serviceWorker.controller) {
+    setUpdateReady(registration);
+  }
+
+  // 2. Deteksi event updatefound untuk worker baru yang sedang diunduh/diinstal
+  registration.addEventListener('updatefound', () => {
+    const installingWorker = registration.installing;
+    if (!installingWorker) return;
+
+    installingWorker.addEventListener('statechange', () => {
+      // Saat worker baru selesai terinstal dan sudah ada controller aktif sebelumnya
+      if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+        setUpdateReady(registration);
+      }
+    });
+  });
+
+  // 3. Panggil registration.update() saat tab kembali visible
+  if (!visibilityListenerRegistered && typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        void registration.update().catch(() => {
+          // Tangani kemungkinan offline / network timeout tanpa melempar error
+        });
+      }
+    });
+    visibilityListenerRegistered = true;
+  }
+
+  // 4. Polling registration.update() tiap ~60 menit
+  if (!periodicUpdateTimer && typeof window !== 'undefined') {
+    periodicUpdateTimer = setInterval(() => {
+      void registration.update().catch(() => {
+        // Tangani kemungkinan offline / network timeout tanpa melempar error
+      });
+    }, UPDATE_CHECK_INTERVAL_MS);
+  }
+}
 
 /**
  * Menghapus seluruh registrasi Service Worker aktif dan membersihkan seluruh
@@ -10,6 +62,11 @@ import { env } from '$env/dynamic/public';
  * 2. Kill-switch runtime jika PUBLIC_PWA_ENABLED di-set ke 'false'.
  */
 export async function unregisterAndClean(): Promise<void> {
+  if (periodicUpdateTimer) {
+    clearInterval(periodicUpdateTimer);
+    periodicUpdateTimer = null;
+  }
+
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
     return;
   }
@@ -56,11 +113,11 @@ export async function registerServiceWorker(): Promise<void> {
 
   try {
     const swUrl = `${base}/service-worker.js`;
-    await navigator.serviceWorker.register(swUrl, {
+    const registration = await navigator.serviceWorker.register(swUrl, {
       type: 'classic'
     });
+    setupUpdateDetection(registration);
   } catch (error) {
     console.error('[PWA] Registrasi Service Worker gagal:', error);
   }
 }
-

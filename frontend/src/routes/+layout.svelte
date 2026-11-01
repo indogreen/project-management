@@ -15,6 +15,7 @@
   import { currentUser, setUser } from '$lib/stores/user';
   import { showError, showSuccess } from '$lib/utils/toast';
   import { registerServiceWorker } from '$lib/pwa/register';
+  import UpdatePrompt from '$lib/components/pwa/UpdatePrompt.svelte';
 
   let { children }: { children: Snippet } = $props();
 
@@ -97,6 +98,8 @@
     }
   });
 </script>
+
+<UpdatePrompt />
 
 {#if isAuthRoute}
   {@render children()}

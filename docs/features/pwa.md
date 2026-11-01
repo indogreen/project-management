@@ -1,6 +1,6 @@
 # Fitur: Progressive Web App (PWA)
 
-> **Status Fitur:** Dalam Pengerjaan (Fase 4 Selesai: Caching Aset Immutable & Aset Statis dengan Cache Pruning)
+> **Status Fitur:** Selesai Penuh (Fase 5 Selesai: Mekanisme Pembaruan Versi, UpdatePrompt UI, dan Deteksi Deploy Baru)
 
 ---
 
@@ -90,7 +90,42 @@ Aplikasi dilengkapi dua lapis pengaman untuk menghentikan Service Worker jika te
 
 ---
 
-## 4. Halaman Offline (`static/offline.html`)
+## 4. Mekanisme Pembaruan Versi & UI Prompt (`UpdatePrompt.svelte`)
+
+Untuk memastikan pengguna selalu mendapatkan rilis kode terbaru tanpa merusak sesi kerja aktif, sistem pembaruan mengombinasikan SvelteKit Version Polling dan Service Worker Lifecycle Management:
+
+### A. Alur Deteksi Pembaruan
+1. **PWA Store (`src/lib/stores/pwa.ts`)**:
+   Store writable terpusat yang menyimpan `{ updateReady: boolean, registration?: ServiceWorkerRegistration }`.
+2. **Event Listener Service Worker (`src/lib/pwa/register.ts`)**:
+   - Memeriksa apakah `registration.waiting` sudah ada saat inisialisasi.
+   - Mendengarkan `registration.onupdatefound` -> mendeteksi ketika `installingWorker.state === 'installed'`.
+   - Update hanya ditandai siap (`setUpdateReady`) jika `navigator.serviceWorker.controller` sudah ada (bukan fresh install pertama kali).
+   - Memanggil `registration.update()` setiap kali tab kembali aktif (`visibilitychange` ke `visible`) dan polling berkala tiap ~60 menit.
+3. **SvelteKit Version Polling (`kit.version.pollInterval = 300000`)**:
+   - Diatur 5 menit pada `svelte.config.js`. SvelteKit secara mandiri mem-polling `/_app/version.json`.
+   - Ketika deploy baru terdeteksi, `updated.current` dari `$app/state` menjadi `true`.
+
+### B. Komponen Banner Non-Blokir (`src/lib/components/pwa/UpdatePrompt.svelte`)
+- Diletakkan di level tertinggi `src/routes/+layout.svelte` sehingga aktif di seluruh rute (termasuk halaman `/auth/*`).
+- Banner muncul secara elegan di pojok kanan bawah (`fixed bottom-4 right-4 z-50`) dengan teks: *"Versi baru tersedia"*.
+- **Tombol "Nanti"**: Menutup banner untuk sesi saat ini tanpa mengganggu aktivitas kerja user.
+- **Tombol "Perbarui sekarang"**:
+  1. Memeriksa apakah ada formulir/drawer yang sedang aktif (`document.body.dataset.scrollLocked === 'true'`).
+  2. Jika ada, menampilkan konfirmasi SweetAlert2: *"Terdapat dialog atau formulir yang belum selesai... Tetap perbarui sekarang?"*. Jika user menunda, reload dibatalkan.
+  3. Jika aman, mengirim pesan `{ type: 'SKIP_WAITING' }` ke worker baru.
+  4. Mendengarkan event `controllerchange` satu kali (`{ once: true }`) lalu mengeksekusi `window.location.reload()`.
+  5. Dilengkapi flag penjaga `sessionStorage.setItem('pwa_refreshing', 'true')` untuk memastikan reload hanya terjadi tepat **SEKALI** (mencegah infinite reload loop).
+
+### C. Proteksi Navigasi Bersih (`beforeNavigate`)
+Saat tab lama dibiarkan terbuka lalu user mengeklik menu navigasi setelah deploy baru:
+- `beforeNavigate` mendeteksi bahwa versi baru telah siap (`updated.current || $pwaStore.updateReady`).
+- Jika tidak ada form modal yang terbuka, navigasi otomatis dialihkan ke `location.href = to.url.href` (native browser navigation).
+- Hal ini memaksa peramban memuat dokumen HTML shell baru beserta hash chunk JS/CSS yang sesuai, meniadakan error chunk hash mismatch (*"Failed to fetch dynamically imported module"*).
+
+---
+
+## 5. Halaman Offline (`static/offline.html`)
 
 Halaman offline dirancang mandiri tanpa dependensi JavaScript eksternal:
 - Berbahasa Indonesia ramah pengguna: *"Anda sedang offline"*.
@@ -101,7 +136,7 @@ Halaman offline dirancang mandiri tanpa dependensi JavaScript eksternal:
 
 ---
 
-## 5. Palet Warna & Metadata Tema
+## 6. Palet Warna & Metadata Tema
 
 | Elemen | Mode Terang (Light) | Mode Gelap (Dark) | Keterangan |
 |---|---|---|---|
@@ -115,7 +150,7 @@ Pada `src/routes/+layout.svelte`, listener `theme.subscribe()` memantau perubaha
 
 ---
 
-## 3. Web App Manifest (`manifest.webmanifest`)
+## 7. Web App Manifest (`manifest.webmanifest`)
 
 File manifest berlokasi di `frontend/static/manifest.webmanifest` dengan properti:
 
@@ -146,7 +181,7 @@ PWA menyediakan akses cepat (long-press pada ikon aplikasi di home screen):
 
 ---
 
-## 4. Standar Aset Ikon
+## 8. Standar Aset Ikon
 
 Semua aset ikon di-generate dari master `frontend/static/indogreen.png` (resolusi 1254x1254, latar solid) dan disimpan di `frontend/static/icons/`:
 
@@ -161,7 +196,7 @@ Semua aset ikon di-generate dari master `frontend/static/indogreen.png` (resolus
 
 ---
 
-## 5. Metadata PWA di `app.html`
+## 9. Metadata PWA di `app.html`
 
 Tag berikut disematkan di dalam `<head>` pada `frontend/src/app.html`:
 
@@ -178,12 +213,12 @@ Tag berikut disematkan di dalam `<head>` pada `frontend/src/app.html`:
 
 ---
 
-## 6. Roadmap PWA Selanjutnya
+## 10. Status Roadmap PWA
 
 - [x] **Fase 0:** Audit Kesiapan PWA & Arsitektur
 - [x] **Fase 1:** Konfigurasi Dev HTTPS via Cloudflare Tunnel
 - [x] **Fase 2:** Web App Manifest, Aset Ikon, & Sinkronisasi Tema
 - [x] **Fase 3:** Service Worker, Precache App Shell, & Offline Fallback Navigation
 - [x] **Fase 4:** Caching Aset Immutable (Cache-First) & Aset Statis (Stale-While-Revalidate)
-- [ ] **Fase 5:** PWA Install Prompt Banner, Update Toast UI, & Pengujian Manual Komprehensif
+- [x] **Fase 5:** Mekanisme Pembaruan Versi, UpdatePrompt UI, & Pencegahan Chunk Error
 

@@ -61,6 +61,7 @@ export async function getProjects(params) {
   - `user.ts` — Data user yang sedang login
   - `permissions.ts` — Roles dan permissions user
   - `theme.ts` — Dark/light theme preference
+  - `pwa.ts` — Status pembaruan PWA (`updateReady`, `registration`)
 
 ## Aturan Form
 

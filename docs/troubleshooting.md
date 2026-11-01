@@ -308,3 +308,26 @@ Pastikan folder `storage/app/public` writable.
    ```
 2. Restart service frontend (`npm run build` & restart process).
 3. Setiap pengguna yang membuka halaman web akan secara otomatis mengeksekusi `unregisterAndClean()`: Service Worker di-unregister dan seluruh cache lokal dihapus seketika.
+
+---
+
+## PWA — Error "Failed to fetch dynamically imported module" Setelah Deploy Baru
+
+**Penyebab:** Pengguna membuka tab aplikasi sebelum deployment baru dilakukan. Ketika user berpindah halaman via navigasi client-side (SPA routing), browser mencari chunk hash JavaScript lama yang sudah digantikan oleh hash versi baru di server.
+
+**Solusi:**
+- Sistem sudah dilengkapi deteksi otomatis di `src/lib/components/pwa/UpdatePrompt.svelte` dan `src/routes/+layout.svelte`.
+- SvelteKit Version Polling (`kit.version.pollInterval`) dan Service Worker `updatefound` akan memunculkan banner *"Versi baru tersedia"*.
+- Jika pengguna mengeklik tautan navigasi di tab lama tanpa menekan banner, hook `beforeNavigate` otomatis mendeteksi perubahan versi dan mengeksekusi navigasi penuh (`location.href = to.url.href`), memuat HTML shell baru dan hash chunk terkini tanpa memunculkan error chunk.
+
+---
+
+## PWA — Mencegah Kehilangan Data Formulir Saat Pembaruan Muncul
+
+**Kebutuhan:** Pengguna sedang mengisi form panjang atau membuka drawer saat banner pembaruan versi baru terdeteksi.
+
+**Mekanisme Pengamanan:**
+- Komponen `UpdatePrompt.svelte` dan hook navigasi memeriksa indikator `document.body.dataset.scrollLocked === 'true'` (yang dipasang oleh `scroll-lock.ts` saat Modal atau Drawer terbuka).
+- Jika formulir/drawer terbuka, auto-reload dibatalkan sepenuhnya.
+- Jika pengguna menekan tombol *"Perbarui sekarang"*, aplikasi menampilkan dialog konfirmasi SweetAlert2: *"Terdapat dialog atau formulir yang belum selesai... Tetap perbarui sekarang?"*.
+- Pengguna dapat memilih *"Tunda"* untuk menyelesaikan input data terlebih dahulu.
