@@ -238,11 +238,11 @@ Pastikan folder `storage/app/public` writable.
 **Solusi:**
 
 - Pastikan reverse proxy meneruskan header `CF-Connecting-IP` atau `X-Forwarded-For`.
-- Konfigurasikan trusted proxies di `backend/bootstrap/app.php`:
+- Konfigurasikan trusted proxies di `backend/bootstrap/app.php` (telah aktif per Fase 8):
   ```php
-  $middleware->trustProxies(at: '*'); // atau IP internal proxy
+  $middleware->trustProxies(at: '*');
   ```
-- Bersihkan cache throttle sementara: `php artisan cache:clear`.
+- Bersihkan cache throttle sementara jika terkena lockout: `php artisan cache:clear`.
 
 ---
 

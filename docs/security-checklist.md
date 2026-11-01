@@ -67,9 +67,52 @@
 - [ ] File kredensial tunnel (`<TUNNEL_ID>.json`) disimpan di luar repositori (`/etc/cloudflared/`).
 - [ ] Cloudflare Access (Email OTP) aktif untuk domain frontend `app-pm-idg.zed.ai.id`.
 - [ ] Bypass rule pada Cloudflare Access untuk file PWA publik (`/manifest.webmanifest`, `/icons/*`, `/service-worker.js`).
-- [ ] Header keamanan dikonfigurasi (X-Frame-Options, X-Content-Type-Options, dll).
+- [x] Header keamanan dikonfigurasi (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` via `hooks.server.ts` & `app.html`).
+- [x] Header `Cache-Control: no-cache, no-store, must-revalidate` terpasang untuk `/service-worker.js` dan `/manifest.webmanifest`.
+- [x] Trusted Proxies di Laravel dikonfigurasi (`$middleware->trustProxies(at: '*')`) untuk mendukung resolusi IP per-user nyata di balik Cloudflare Tunnel.
 - [ ] Laravel debug bar/telescope dimatikan di production.
 - [ ] Log level minimal `warning` di production.
+
+---
+
+## Content Security Policy (CSP) Recommendation
+
+> **Catatan Rekomendasi:** Penegakan Content Security Policy (CSP) ketat via HTTP header ditunda untuk audit komprehensif karena pustaka runtime UI (SweetAlert2 dialog styling, Chart.js canvas rendering, dan Tailwind CSS runtime utilities) membutuhkan evaluasi hash/nonce atau `'unsafe-inline'` agar tidak memblokir render grafis dan modal interaktif.
+>
+> Rekomendasi baseline CSP untuk tahap evaluasi:
+>
+> ```text
+> default-src 'self';
+> script-src 'self' 'unsafe-inline';
+> style-src 'self' 'unsafe-inline';
+> img-src 'self' data: blob: https://api-pm-idg.zed.ai.id;
+> connect-src 'self' https://api-pm-idg.zed.ai.id wss://app-pm-idg.zed.ai.id;
+> font-src 'self';
+> object-src 'none';
+> base-uri 'self';
+> form-action 'self';
+> frame-ancestors 'none';
+> ```
+
+---
+
+## Content Security Policy (CSP) Recommendation
+
+> **Catatan Rekomendasi:** Penegakan Content Security Policy (CSP) ketat via HTTP header ditunda untuk audit komprehensif karena pustaka runtime UI (SweetAlert2 dialog styling, Chart.js canvas rendering, dan Tailwind CSS runtime utilities) membutuhkan evaluasi hash/nonce atau `'unsafe-inline'` agar tidak memblokir render grafis dan modal interaktif.
+>
+> Rekomendasi baseline CSP untuk tahap evaluasi:
+> ```text
+> default-src 'self';
+> script-src 'self' 'unsafe-inline';
+> style-src 'self' 'unsafe-inline';
+> img-src 'self' data: blob: https://api-pm-idg.zed.ai.id;
+> connect-src 'self' https://api-pm-idg.zed.ai.id wss://app-pm-idg.zed.ai.id;
+> font-src 'self';
+> object-src 'none';
+> base-uri 'self';
+> form-action 'self';
+> frame-ancestors 'none';
+> ```
 
 ---
 

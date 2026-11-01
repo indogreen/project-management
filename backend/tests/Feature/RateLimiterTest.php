@@ -36,6 +36,32 @@ class RateLimiterTest extends TestCase
         $response->assertJsonStructure(['success', 'message']);
     }
 
+    public function test_unauthenticated_requests_are_throttled_per_client_ip_via_forwarded_headers(): void
+    {
+        // Client A hits limit (5 requests)
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->withServerVariables([
+                'REMOTE_ADDR' => '127.0.0.1',
+                'HTTP_X_FORWARDED_FOR' => '203.0.113.10',
+            ])->postJson('/api/auth/login', []);
+            $response->assertStatus(401);
+        }
+
+        // 6th request from Client A is throttled (429)
+        $responseA = $this->withServerVariables([
+            'REMOTE_ADDR' => '127.0.0.1',
+            'HTTP_X_FORWARDED_FOR' => '203.0.113.10',
+        ])->postJson('/api/auth/login', []);
+        $responseA->assertStatus(429);
+
+        // Client B from different forwarded IP is NOT throttled
+        $responseB = $this->withServerVariables([
+            'REMOTE_ADDR' => '127.0.0.1',
+            'HTTP_X_FORWARDED_FOR' => '203.0.113.20',
+        ])->postJson('/api/auth/login', []);
+        $responseB->assertStatus(401);
+    }
+
     public function test_authenticated_requests_bypass_throttle(): void
     {
         // Create the permission first

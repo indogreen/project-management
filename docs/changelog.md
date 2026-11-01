@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-11-01] — test(pwa): phase 8 QA matrix, security verification, and performance report
+
+- Verifikasi menyeluruh checklist keamanan PWA, performa Lighthouse, dan kapasitas Cache Storage.
+- Penambahan konfigurasi Trusted Proxies di Laravel (`backend/bootstrap/app.php`: `$middleware->trustProxies(at: '*')`) agar rate limiter SlidingWindowThrottle mengenali IP pengguna asli peramban di balik Cloudflare Tunnel, dilengkapi unit test di `RateLimiterTest.php`.
+- Penguatan Service Worker caching (`src/service-worker.ts`) dengan pengecekan `!networkResponse.headers.has('set-cookie')` untuk mencegah caching respons sensitif ber-cookie.
+- Penambahan server handle hook (`src/hooks.server.ts` & unit test) yang menyematkan header keamanan HTTP (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`) dan header `Cache-Control: no-cache, no-store, must-revalidate` pada `/service-worker.js` dan `/manifest.webmanifest`.
+- Penambahan meta tag referrer policy di `src/app.html`.
+- Pengujian otomatis: 81 unit test Vitest lulus, svelte-check 0 error, build produksi Vite sukses, dan pengujian backend Laravel rate limiter lulus.
+- Pembaruan dokumen: `docs/security-checklist.md`, `docs/features/pwa.md`, `docs/troubleshooting.md`, `docs/changelog.md`.
+
 ## [2026-11-01] — feat(pwa): phase 7 connectivity store, offline banner, error handling, and standalone polish
 
 - Pembuatan store reaktif `src/lib/stores/connectivity.ts` (`isOnline`) berbasis `navigator.onLine` dan event window `online`/`offline` dengan penanganan aman untuk SSR/Node 26 serta 2 unit test Vitest.

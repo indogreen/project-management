@@ -83,8 +83,12 @@ sw.addEventListener('fetch', (event) => {
         }
 
         const networkResponse = await fetch(event.request);
-        // Simpan hanya respons status 200 bertipe basic (bukan opaque, bukan error)
-        if (networkResponse.status === 200 && networkResponse.type === 'basic') {
+        // Simpan hanya respons status 200 bertipe basic (bukan opaque, bukan error, tanpa set-cookie)
+        if (
+          networkResponse.status === 200 &&
+          networkResponse.type === 'basic' &&
+          !networkResponse.headers.has('set-cookie')
+        ) {
           await cache.put(event.request, networkResponse.clone());
           event.waitUntil(pruneCache(cache, MAX_IMMUTABLE_ASSETS));
         }
@@ -101,7 +105,11 @@ sw.addEventListener('fetch', (event) => {
 
         const fetchPromise = fetch(event.request)
           .then(async (networkResponse) => {
-            if (networkResponse.status === 200 && networkResponse.type === 'basic') {
+            if (
+              networkResponse.status === 200 &&
+              networkResponse.type === 'basic' &&
+              !networkResponse.headers.has('set-cookie')
+            ) {
               await cache.put(event.request, networkResponse.clone());
               await pruneCache(cache, MAX_STATIC_ASSETS);
             }
