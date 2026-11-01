@@ -1,4 +1,6 @@
 <script lang="ts">
+  import InstallButton from '$lib/components/pwa/InstallButton.svelte';
+
   /** Profile settings form with bindable local draft. */
   let {
     profile = $bindable(),
@@ -84,4 +86,8 @@
       </div>
     </div>
   </form>
+
+  <div class="mt-6">
+    <InstallButton variant="card" />
+  </div>
 </div>

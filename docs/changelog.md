@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-11-01] — feat(pwa): phase 6 install button, multi-platform detection, and standalone handling
+
+- Pembuatan modul pure utility `src/lib/utils/pwa-platform.ts` dengan 18 unit test: mendeteksi `isStandalone()`, `isIOS()`, `isIOSSafari()`, dan `canShowIOSInstallHint()`.
+- Perluasan store `src/lib/stores/pwa.ts`: menambahkan `deferredPrompt`, `canInstall`, `isInstalled`, penangkapan event `beforeinstallprompt` (preventDefault + capture) dan `appinstalled`, serta fungsi `triggerInstallPrompt()`.
+- Pembuatan komponen `src/lib/components/pwa/InstallButton.svelte` dengan dukungan multi-varian:
+  - Varian `menu`: tombol *"Pasang Aplikasi"* di menu akun sidebar (`AppSidebar.svelte`), persis di atas opsi *"Pengaturan"*.
+  - Varian `card`: kartu status dan aksi *"Aplikasi Web (PWA)"* di halaman pengaturan (`ProfileSettingsTab.svelte`).
+  - Penanganan native prompt pada peramban Chromium desktop dan Android.
+  - Dialog modal instruksi 3 langkah untuk Apple iOS Safari ("Bagikan" -> "Tambah ke Layar Utama" -> "Tambah") lengkap dengan catatan penting login ulang.
+  - Sembunyi otomatis saat aplikasi sudah berjalan dalam mode standalone.
+  - Tanpa popup banner otomatis yang mengganggu di halaman login atau saat awal memuat.
+- File yang diubah:
+  - Frontend: `src/lib/utils/pwa-platform.ts`, `src/lib/utils/pwa-platform.test.ts`, `src/lib/stores/pwa.ts`, `src/lib/stores/pwa.test.ts`, `src/lib/pwa/register.ts`, `src/lib/components/pwa/InstallButton.svelte`, `src/lib/components/layout/AppSidebar.svelte`, `src/routes/settings/_components/ProfileSettingsTab.svelte`
+  - Docs: `docs/features/pwa.md`, `docs/features/settings.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengguna di perangkat Android, Desktop, maupun iOS Safari kini dapat menginstal aplikasi PWA secara intuitif melalui menu akun atau pengaturan tanpa terganggu oleh popup banner otomatis.
+
 ## [2026-11-01] — feat(pwa): phase 5 update prompt UI, version polling, and chunk reload guard
 
 - Pembuatan store PWA terpusat (`src/lib/stores/pwa.ts`) dengan properti writable `{ updateReady, registration }` dan unit test Vitest lengkap.

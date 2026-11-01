@@ -1,6 +1,6 @@
 # Fitur: Progressive Web App (PWA)
 
-> **Status Fitur:** Selesai Penuh (Fase 5 Selesai: Mekanisme Pembaruan Versi, UpdatePrompt UI, dan Deteksi Deploy Baru)
+> **Status Fitur:** Selesai Penuh (Fase 6 Selesai: Fitur Instalasi PWA Multi-Platform & Deteksi Standalone)
 
 ---
 
@@ -125,7 +125,48 @@ Saat tab lama dibiarkan terbuka lalu user mengeklik menu navigasi setelah deploy
 
 ---
 
-## 5. Halaman Offline (`static/offline.html`)
+## 5. Fitur Instalasi PWA Multi-Platform (`InstallButton.svelte` & `pwa-platform.ts`)
+
+Aplikasi menyediakan sarana pemasangan yang ramah pengguna, non-intrusif, dan berorientasi inisiatif pengguna tanpa memunculkan popup banner otomatis yang mengganggu di halaman login.
+
+### A. Utilitas Deteksi Platform (`src/lib/utils/pwa-platform.ts`)
+Modul fungsi murni yang mendeteksi platform peramban klien tanpa efek samping:
+- `isStandalone()`: Memeriksa apakah aplikasi berjalan dalam jendela aplikasi terpasang (via CSS `display-mode: standalone` atau properti legacy iOS `navigator.standalone`).
+- `isIOS()`: Mendeteksi iPhone, iPad, iPod, serta iPadOS 13+ (yang melaporkan diri sebagai desktop Macintosh dengan `maxTouchPoints > 1`).
+- `isIOSSafari()`: Membedakan Safari resmi iOS dari browser pihak ketiga (Chrome/CriOS, Firefox/FxiOS, Edge/EdgiOS) yang tidak memiliki akses API Add-to-Home-Screen Apple.
+- `canShowIOSInstallHint()`: Menentukan kelayakan petunjuk manual khusus pengguna iOS Safari.
+
+### B. State Management Instalasi (`src/lib/stores/pwa.ts`)
+Store melacak siklus instalasi browser:
+- `deferredPrompt`: Menyimpan event `beforeinstallprompt` Chromium setelah dicegah (`e.preventDefault()`).
+- `canInstall`: Boolean reaktif penanda ketersediaan prompt native.
+- `isInstalled`: Boolean penanda apakah aplikasi sudah terpasang di OS / home screen.
+- Event `appinstalled`: Menghapus prompt tersimpan dan menandai `isInstalled: true`.
+
+### C. Komponen `InstallButton.svelte`
+Komponen adaptif yang mendukung 2 varian utama:
+1. **Varian Menu Akun (`variant="menu"`)**:
+   - Diletakkan di dalam popup menu profil `AppSidebar.svelte`, persis di atas tombol *"Pengaturan"*.
+   - Otomatis disembunyikan jika aplikasi sudah berjalan dalam mode standalone.
+2. **Varian Kartu Pengaturan (`variant="card"`)**:
+   - Diletakkan di halaman `/settings` pada tab Profil pengguna.
+   - Menampilkan status *"Aplikasi Terpasang"* dengan lencana hijau saat standalone, atau tombol *"Pasang Aplikasi"* saat dibuka dari browser.
+
+### D. Perilaku Berdasarkan Browser & Platform
+- **Android & Chromium Desktop (Chrome / Edge / Brave / Samsung Internet)**:
+  Memicu dialog instalasi native browser via `triggerInstallPrompt()`. Jika pengguna menyetujui, aplikasi langsung terinstal ke desktop/home screen.
+- **Apple iOS Safari**:
+  Menampilkan modal panduan ramah pengguna dengan 3 langkah jelas:
+  1. Tekan tombol **Bagikan** (ikon kotak panah atas) di menu Safari.
+  2. Gulir dan pilih **Tambah ke Layar Utama** (*Add to Home Screen*).
+  3. Tekan **Tambah** di sudut kanan atas.
+  *Catatan Khusus iOS*: Diberikan pemberitahuan transparan bahwa pada iOS WebClip, pengguna perlu melakukan login satu kali lagi karena isolasi container penyimpanan Apple.
+- **Peramban Lainnya (Firefox desktop / browser non-PWA)**:
+  Menampilkan panduan informatif untuk menggunakan peramban yang mendukung atau memasang shortcut melalui menu peramban.
+
+---
+
+## 6. Halaman Offline (`static/offline.html`)
 
 Halaman offline dirancang mandiri tanpa dependensi JavaScript eksternal:
 - Berbahasa Indonesia ramah pengguna: *"Anda sedang offline"*.
@@ -136,7 +177,7 @@ Halaman offline dirancang mandiri tanpa dependensi JavaScript eksternal:
 
 ---
 
-## 6. Palet Warna & Metadata Tema
+## 7. Palet Warna & Metadata Tema
 
 | Elemen | Mode Terang (Light) | Mode Gelap (Dark) | Keterangan |
 |---|---|---|---|
@@ -150,7 +191,7 @@ Pada `src/routes/+layout.svelte`, listener `theme.subscribe()` memantau perubaha
 
 ---
 
-## 7. Web App Manifest (`manifest.webmanifest`)
+## 8. Web App Manifest (`manifest.webmanifest`)
 
 File manifest berlokasi di `frontend/static/manifest.webmanifest` dengan properti:
 
@@ -181,7 +222,7 @@ PWA menyediakan akses cepat (long-press pada ikon aplikasi di home screen):
 
 ---
 
-## 8. Standar Aset Ikon
+## 9. Standar Aset Ikon
 
 Semua aset ikon di-generate dari master `frontend/static/indogreen.png` (resolusi 1254x1254, latar solid) dan disimpan di `frontend/static/icons/`:
 
@@ -196,7 +237,7 @@ Semua aset ikon di-generate dari master `frontend/static/indogreen.png` (resolus
 
 ---
 
-## 9. Metadata PWA di `app.html`
+## 10. Metadata PWA di `app.html`
 
 Tag berikut disematkan di dalam `<head>` pada `frontend/src/app.html`:
 
@@ -213,7 +254,7 @@ Tag berikut disematkan di dalam `<head>` pada `frontend/src/app.html`:
 
 ---
 
-## 10. Status Roadmap PWA
+## 11. Status Roadmap PWA
 
 - [x] **Fase 0:** Audit Kesiapan PWA & Arsitektur
 - [x] **Fase 1:** Konfigurasi Dev HTTPS via Cloudflare Tunnel
@@ -221,4 +262,5 @@ Tag berikut disematkan di dalam `<head>` pada `frontend/src/app.html`:
 - [x] **Fase 3:** Service Worker, Precache App Shell, & Offline Fallback Navigation
 - [x] **Fase 4:** Caching Aset Immutable (Cache-First) & Aset Statis (Stale-While-Revalidate)
 - [x] **Fase 5:** Mekanisme Pembaruan Versi, UpdatePrompt UI, & Pencegahan Chunk Error
+- [x] **Fase 6:** Fitur Instalasi PWA Multi-Platform & Deteksi Standalone (Menu Akun & Pengaturan)
 

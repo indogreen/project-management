@@ -1,12 +1,46 @@
 import { base } from '$app/paths';
 import { env } from '$env/dynamic/public';
-import { setUpdateReady } from '$lib/stores/pwa';
+import {
+  setUpdateReady,
+  setDeferredPrompt,
+  setAppInstalled,
+  type BeforeInstallPromptEvent
+} from '$lib/stores/pwa';
+import { isStandalone } from '$lib/utils/pwa-platform';
 
 // Interval polling berkala untuk mengecek pembaruan Service Worker (~60 menit)
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 let periodicUpdateTimer: ReturnType<typeof setInterval> | null = null;
 let visibilityListenerRegistered = false;
+let installListenersRegistered = false;
+
+/**
+ * Menangkap event `beforeinstallprompt` dan `appinstalled` browser untuk
+ * instalasi terkontrol tanpa banner popup otomatis yang mengganggu.
+ */
+export function initPwaInstallListeners(): void {
+  if (installListenersRegistered || typeof window === 'undefined') {
+    return;
+  }
+
+  // Jika sudah berjalan dalam mode standalone, tandai terinstal
+  if (isStandalone()) {
+    setAppInstalled();
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Cegah mini-infobar default browser agar tidak mengganggu alur pengguna
+    e.preventDefault();
+    setDeferredPrompt(e as BeforeInstallPromptEvent);
+  });
+
+  window.addEventListener('appinstalled', () => {
+    setAppInstalled();
+  });
+
+  installListenersRegistered = true;
+}
 
 /**
  * Menyiapkan pendeteksian update dan polling berkala pada ServiceWorkerRegistration aktif.
@@ -101,6 +135,8 @@ export async function unregisterAndClean(): Promise<void> {
  * Jika kondisi tidak terpenuhi, secara otomatis memanggil unregisterAndClean().
  */
 export async function registerServiceWorker(): Promise<void> {
+  initPwaInstallListeners();
+
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
     return;
   }
