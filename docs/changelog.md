@@ -1,12 +1,30 @@
 # Changelog
 
+## [2026-11-01] — feat(pwa): phase 7 connectivity store, offline banner, error handling, and standalone polish
+
+- Pembuatan store reaktif `src/lib/stores/connectivity.ts` (`isOnline`) berbasis `navigator.onLine` dan event window `online`/`offline` dengan penanganan aman untuk SSR/Node 26 serta 2 unit test Vitest.
+- Pemasangan banner notifikasi offline tipis non-blokir di `src/routes/+layout.svelte` (_"Anda offline. Perubahan tidak dapat disimpan."_) dengan gaya amber ramping `sticky top-0 z-50`.
+- Standardisasi penanganan error API pada `src/lib/utils/errors.ts` (`extractApiErrors`) ke dalam 3 kategori terarah lengkap dengan 11 unit test Vitest:
+  - Kasus a (tanpa respons / network drop / timeout): _"Tidak dapat terhubung ke server. Periksa koneksi internet Anda."_
+  - Kasus b (server gateway 502/503/504): _"Server sedang tidak dapat dihubungi. Coba lagi beberapa saat."_
+  - Kasus c (respons standar Laravel): penanganan validasi 422, custom error message, atau fallback default.
+- Seluruh formulir modal aplikasi otomatis terproteksi oleh pesan error terarah tanpa perubahan massal komponen.
+- Penambahan tombol "Kembali" pada `TopNav.svelte` khusus untuk mode standalone saat berada di rute detail (`/projects/[id]`, `/activities/[id]`, `/mitras/[id]`, `/certificates/[id]`, `/barang-certificates/[id]`) dengan helper murni `getDetailParentHref(pathname)` di `nav.ts` (7 unit test) dan fallback navigasi ke rute induk.
+- Verifikasi dan dokumentasi audit pengalaman standalone: evaluasi safe-area TopNav, isolasi pull-to-refresh melalui `scroll-lock.ts`, dan mekanisme unduhan berkas lampiran lintas origin di iOS Safari & Android Chrome.
+- File yang diubah:
+  - Frontend: `src/lib/stores/connectivity.ts`, `src/lib/stores/connectivity.test.ts`, `src/lib/utils/errors.ts`, `src/lib/utils/errors.test.ts`, `src/lib/components/layout/nav.ts`, `src/lib/components/layout/nav.test.ts`, `src/lib/components/layout/TopNav.svelte`, `src/routes/+layout.svelte`
+  - Docs: `docs/features/pwa.md`, `docs/frontend-guidelines.md`, `docs/troubleshooting.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengguna mendapatkan umpan balik konektivitas seketika saat jaringan putus tanpa mengunci navigasi data yang sudah dimuat.
+  - Pengguna mode standalone di ponsel cerdas memiliki navigasi "Kembali" yang jelas di halaman detail tanpa kehilangan tombol drawer menu.
+
 ## [2026-11-01] — feat(pwa): phase 6 install button, multi-platform detection, and standalone handling
 
 - Pembuatan modul pure utility `src/lib/utils/pwa-platform.ts` dengan 18 unit test: mendeteksi `isStandalone()`, `isIOS()`, `isIOSSafari()`, dan `canShowIOSInstallHint()`.
 - Perluasan store `src/lib/stores/pwa.ts`: menambahkan `deferredPrompt`, `canInstall`, `isInstalled`, penangkapan event `beforeinstallprompt` (preventDefault + capture) dan `appinstalled`, serta fungsi `triggerInstallPrompt()`.
 - Pembuatan komponen `src/lib/components/pwa/InstallButton.svelte` dengan dukungan multi-varian:
-  - Varian `menu`: tombol *"Pasang Aplikasi"* di menu akun sidebar (`AppSidebar.svelte`), persis di atas opsi *"Pengaturan"*.
-  - Varian `card`: kartu status dan aksi *"Aplikasi Web (PWA)"* di halaman pengaturan (`ProfileSettingsTab.svelte`).
+  - Varian `menu`: tombol _"Pasang Aplikasi"_ di menu akun sidebar (`AppSidebar.svelte`), persis di atas opsi _"Pengaturan"_.
+  - Varian `card`: kartu status dan aksi _"Aplikasi Web (PWA)"_ di halaman pengaturan (`ProfileSettingsTab.svelte`).
   - Penanganan native prompt pada peramban Chromium desktop dan Android.
   - Dialog modal instruksi 3 langkah untuk Apple iOS Safari ("Bagikan" -> "Tambah ke Layar Utama" -> "Tambah") lengkap dengan catatan penting login ulang.
   - Sembunyi otomatis saat aplikasi sudah berjalan dalam mode standalone.
@@ -27,7 +45,7 @@
   - Komunikasi `postMessage({ type: 'SKIP_WAITING' })` ke worker baru.
   - Listener `controllerchange` dengan guard flag `pwa_refreshing` untuk mencegah reload loop.
   - Proteksi modal/drawer terbuka (`body[data-scroll-locked='true']`): menunda auto-reload dan menampilkan dialog konfirmasi SweetAlert2 sebelum user menyetujui reload.
-- Penanganan navigasi stale tab via hook `beforeNavigate`: memaksa full reload native saat versi baru terdeteksi sehingga terhindar dari chunk mismatch error (*"Failed to fetch dynamically imported module"*).
+- Penanganan navigasi stale tab via hook `beforeNavigate`: memaksa full reload native saat versi baru terdeteksi sehingga terhindar dari chunk mismatch error (_"Failed to fetch dynamically imported module"_).
 - Pemasangan `<UpdatePrompt />` di root layout (`src/routes/+layout.svelte`) agar aktif di seluruh rute termasuk halaman autentikasi.
 - File yang diubah:
   - Frontend: `src/lib/stores/pwa.ts`, `src/lib/stores/pwa.test.ts`, `src/lib/pwa/register.ts`, `src/lib/components/pwa/UpdatePrompt.svelte`, `src/routes/+layout.svelte`, `svelte.config.js`

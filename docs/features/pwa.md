@@ -1,14 +1,15 @@
 # Fitur: Progressive Web App (PWA)
 
-> **Status Fitur:** Selesai Penuh (Fase 6 Selesai: Fitur Instalasi PWA Multi-Platform & Deteksi Standalone)
+> **Status Fitur:** Selesai Penuh (Fase 7 Selesai: Ketahanan Konektivitas, Banner Offline, Kategorisasi Error, Navigasi Standalone, & Audit Unduhan Lampiran)
 
 ---
 
 ## 1. Ringkasan Fitur
 
-Aplikasi **Indogreen Project Management** dikonfigurasi sebagai Progressive Web App (PWA) agar pengguna di perangkat seluler (Android & iOS) dan desktop dapat menginstal aplikasi langsung ke home screen dengan tampilan mandiri (*standalone app*) tanpa address bar browser.
+Aplikasi **Indogreen Project Management** dikonfigurasi sebagai Progressive Web App (PWA) agar pengguna di perangkat seluler (Android & iOS) dan desktop dapat menginstal aplikasi langsung ke home screen dengan tampilan mandiri (_standalone app_) tanpa address bar browser.
 
 Service Worker pada aplikasi dirancang dengan prinsip **minimal-invasif** dan **zero-side-effect**:
+
 - **TIDAK MENGUBAH** perilaku jaringan yang sudah ada.
 - **TIDAK MENCACHE** endpoint API (`/api/*`), file storage (`/storage/*`), data SSR (`/__data.json`), request non-GET, request lintas origin, atau request ber-Authorization.
 - Menyediakan fallback navigasi halaman offline yang ramah pengguna (`offline.html`) saat koneksi terputus.
@@ -18,6 +19,7 @@ Service Worker pada aplikasi dirancang dengan prinsip **minimal-invasif** dan **
 ## 2. Service Worker (`src/service-worker.ts`) & Routing Classifier
 
 ### A. Strategi Cache & Klasifikasi Request (`src/lib/pwa/sw-routing.ts`)
+
 Setiap request jaringan masuk dievaluasi melalui fungsi murni `classifyRequest` dengan urutan ketat:
 
 1. **`bypass` (Diteruskan langsung ke jaringan tanpa intersep):**
@@ -43,11 +45,14 @@ Setiap request jaringan masuk dievaluasi melalui fungsi murni `classifyRequest` 
    - Jika aset belum ada di cache (mis. logo `/indogreen.png` pada kunjungan pertama), aset diunduh dari jaringan, disimpan ke cache, dan dibatasi maksimal 50 entri (`MAX_STATIC_ASSETS = 50`).
 
 ### B. Pemangkasan Cache (Cache Pruning Logic)
+
 Untuk mencegah akumulasi penyimpanan browser tanpa kendali, modul `src/lib/pwa/sw-routing.ts` mengekspor dua fungsi murni:
+
 - `getExcessKeys(keys, maxItems)`: Menghitung daftar key yang harus dipangkas berdasarkan selisih kapasitas dengan urutan FIFO (First-In, First-Out: item tertua yang pertama kali masuk akan dihapus terlebih dahulu).
 - `pruneCache(cache, maxItems)`: Mengeksekusi pemangkasan key berlebih secara asinkron dengan penanganan error terisolasi per-item agar tidak memutus rantai proses cache lainnya.
 
 ### C. Siklus Hidup (Lifecycle) Service Worker
+
 - **Nama Cache:** `indogreen-static-${version}` dan `indogreen-assets-${version}` (menggunakan `$service-worker` `version`).
 - **Install:** Melakukan precache **HANYA** pada daftar eksplisit:
   `['/offline.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-maskable-512.png', '/icons/apple-touch-icon-180.png']`.
@@ -57,14 +62,16 @@ Untuk mencegah akumulasi penyimpanan browser tanpa kendali, modul `src/lib/pwa/s
 - **Message Listener:** Mendengarkan pesan `{ type: 'SKIP_WAITING' }` untuk memicu `sw.skipWaiting()` saat pengguna menyetujui pembaruan versi (Fase 5).
 
 ### D. Hasil Pengukuran Jaringan (First Visit vs Second Visit)
+
 Berdasarkan hasil build produksi (`vite build`):
-- **Total Ukuran Aset Immutable (`/_app/immutable/**`):** 94 berkas chunk JS & CSS (~1.02 MB uncompressed).
+
+- **Total Ukuran Aset Immutable (`/\_app/immutable/**`):\*\* 94 berkas chunk JS & CSS (~1.02 MB uncompressed).
 - **Total Ukuran Aset Statis:** 10 berkas (~1.78 MB, termasuk master logo `indogreen.png` sebesar 1.28 MB dan ikon PWA).
 
-| Skenario | Dokumen HTML Navigasi | Aset Immutable (JS/CSS) | Logo & Aset Statis | Total Data Transferred | Reduksi Jaringan |
-|---|---|---|---|---|---|
-| **First Visit (Kunjungan Pertama)** | ~3.5 KB (Network) | ~800–1000 KB (Network) | ~1.3 MB (Network) | **~2.1 – 2.5 MB** | Baseline |
-| **Second Visit (Kunjungan Kedua)** | ~3.5 KB (Network-Only) | **0 B** (`indogreen-assets`) | **0 B** (`indogreen-static`) | **~3.5 KB** | **> 99.8% Penghematan Bandwidth** |
+| Skenario                            | Dokumen HTML Navigasi  | Aset Immutable (JS/CSS)      | Logo & Aset Statis           | Total Data Transferred | Reduksi Jaringan                  |
+| ----------------------------------- | ---------------------- | ---------------------------- | ---------------------------- | ---------------------- | --------------------------------- |
+| **First Visit (Kunjungan Pertama)** | ~3.5 KB (Network)      | ~800–1000 KB (Network)       | ~1.3 MB (Network)            | **~2.1 – 2.5 MB**      | Baseline                          |
+| **Second Visit (Kunjungan Kedua)**  | ~3.5 KB (Network-Only) | **0 B** (`indogreen-assets`) | **0 B** (`indogreen-static`) | **~3.5 KB**            | **> 99.8% Penghematan Bandwidth** |
 
 > Catatan: Navigasi dokumen HTML tetap berstatus Network-Only untuk menjaga kesegaran data user/sesi, sedangkan seluruh beban JS, CSS, dan aset visual ditanggung sepenuhnya oleh Service Worker Cache Storage.
 
@@ -75,6 +82,7 @@ Berdasarkan hasil build produksi (`vite build`):
 Registrasi Service Worker diatur secara manual melalui `svelte.config.js` (`kit.serviceWorker.register = false`) dan dipanggil via `onMount` di `src/routes/+layout.svelte`.
 
 ### Prosedur Kill-Switch Runtime & Penanganan Konflik DEV/BUILD:
+
 Aplikasi dilengkapi dua lapis pengaman untuk menghentikan Service Worker jika terjadi anomali:
 
 1. **Lapis 1 (Environment Variable Kill-Switch):**
@@ -95,6 +103,7 @@ Aplikasi dilengkapi dua lapis pengaman untuk menghentikan Service Worker jika te
 Untuk memastikan pengguna selalu mendapatkan rilis kode terbaru tanpa merusak sesi kerja aktif, sistem pembaruan mengombinasikan SvelteKit Version Polling dan Service Worker Lifecycle Management:
 
 ### A. Alur Deteksi Pembaruan
+
 1. **PWA Store (`src/lib/stores/pwa.ts`)**:
    Store writable terpusat yang menyimpan `{ updateReady: boolean, registration?: ServiceWorkerRegistration }`.
 2. **Event Listener Service Worker (`src/lib/pwa/register.ts`)**:
@@ -107,21 +116,24 @@ Untuk memastikan pengguna selalu mendapatkan rilis kode terbaru tanpa merusak se
    - Ketika deploy baru terdeteksi, `updated.current` dari `$app/state` menjadi `true`.
 
 ### B. Komponen Banner Non-Blokir (`src/lib/components/pwa/UpdatePrompt.svelte`)
+
 - Diletakkan di level tertinggi `src/routes/+layout.svelte` sehingga aktif di seluruh rute (termasuk halaman `/auth/*`).
-- Banner muncul secara elegan di pojok kanan bawah (`fixed bottom-4 right-4 z-50`) dengan teks: *"Versi baru tersedia"*.
+- Banner muncul secara elegan di pojok kanan bawah (`fixed bottom-4 right-4 z-50`) dengan teks: _"Versi baru tersedia"_.
 - **Tombol "Nanti"**: Menutup banner untuk sesi saat ini tanpa mengganggu aktivitas kerja user.
 - **Tombol "Perbarui sekarang"**:
   1. Memeriksa apakah ada formulir/drawer yang sedang aktif (`document.body.dataset.scrollLocked === 'true'`).
-  2. Jika ada, menampilkan konfirmasi SweetAlert2: *"Terdapat dialog atau formulir yang belum selesai... Tetap perbarui sekarang?"*. Jika user menunda, reload dibatalkan.
+  2. Jika ada, menampilkan konfirmasi SweetAlert2: _"Terdapat dialog atau formulir yang belum selesai... Tetap perbarui sekarang?"_. Jika user menunda, reload dibatalkan.
   3. Jika aman, mengirim pesan `{ type: 'SKIP_WAITING' }` ke worker baru.
   4. Mendengarkan event `controllerchange` satu kali (`{ once: true }`) lalu mengeksekusi `window.location.reload()`.
   5. Dilengkapi flag penjaga `sessionStorage.setItem('pwa_refreshing', 'true')` untuk memastikan reload hanya terjadi tepat **SEKALI** (mencegah infinite reload loop).
 
 ### C. Proteksi Navigasi Bersih (`beforeNavigate`)
+
 Saat tab lama dibiarkan terbuka lalu user mengeklik menu navigasi setelah deploy baru:
+
 - `beforeNavigate` mendeteksi bahwa versi baru telah siap (`updated.current || $pwaStore.updateReady`).
 - Jika tidak ada form modal yang terbuka, navigasi otomatis dialihkan ke `location.href = to.url.href` (native browser navigation).
-- Hal ini memaksa peramban memuat dokumen HTML shell baru beserta hash chunk JS/CSS yang sesuai, meniadakan error chunk hash mismatch (*"Failed to fetch dynamically imported module"*).
+- Hal ini memaksa peramban memuat dokumen HTML shell baru beserta hash chunk JS/CSS yang sesuai, meniadakan error chunk hash mismatch (_"Failed to fetch dynamically imported module"_).
 
 ---
 
@@ -130,37 +142,44 @@ Saat tab lama dibiarkan terbuka lalu user mengeklik menu navigasi setelah deploy
 Aplikasi menyediakan sarana pemasangan yang ramah pengguna, non-intrusif, dan berorientasi inisiatif pengguna tanpa memunculkan popup banner otomatis yang mengganggu di halaman login.
 
 ### A. Utilitas Deteksi Platform (`src/lib/utils/pwa-platform.ts`)
+
 Modul fungsi murni yang mendeteksi platform peramban klien tanpa efek samping:
+
 - `isStandalone()`: Memeriksa apakah aplikasi berjalan dalam jendela aplikasi terpasang (via CSS `display-mode: standalone` atau properti legacy iOS `navigator.standalone`).
 - `isIOS()`: Mendeteksi iPhone, iPad, iPod, serta iPadOS 13+ (yang melaporkan diri sebagai desktop Macintosh dengan `maxTouchPoints > 1`).
 - `isIOSSafari()`: Membedakan Safari resmi iOS dari browser pihak ketiga (Chrome/CriOS, Firefox/FxiOS, Edge/EdgiOS) yang tidak memiliki akses API Add-to-Home-Screen Apple.
 - `canShowIOSInstallHint()`: Menentukan kelayakan petunjuk manual khusus pengguna iOS Safari.
 
 ### B. State Management Instalasi (`src/lib/stores/pwa.ts`)
+
 Store melacak siklus instalasi browser:
+
 - `deferredPrompt`: Menyimpan event `beforeinstallprompt` Chromium setelah dicegah (`e.preventDefault()`).
 - `canInstall`: Boolean reaktif penanda ketersediaan prompt native.
 - `isInstalled`: Boolean penanda apakah aplikasi sudah terpasang di OS / home screen.
 - Event `appinstalled`: Menghapus prompt tersimpan dan menandai `isInstalled: true`.
 
 ### C. Komponen `InstallButton.svelte`
+
 Komponen adaptif yang mendukung 2 varian utama:
+
 1. **Varian Menu Akun (`variant="menu"`)**:
-   - Diletakkan di dalam popup menu profil `AppSidebar.svelte`, persis di atas tombol *"Pengaturan"*.
+   - Diletakkan di dalam popup menu profil `AppSidebar.svelte`, persis di atas tombol _"Pengaturan"_.
    - Otomatis disembunyikan jika aplikasi sudah berjalan dalam mode standalone.
 2. **Varian Kartu Pengaturan (`variant="card"`)**:
    - Diletakkan di halaman `/settings` pada tab Profil pengguna.
-   - Menampilkan status *"Aplikasi Terpasang"* dengan lencana hijau saat standalone, atau tombol *"Pasang Aplikasi"* saat dibuka dari browser.
+   - Menampilkan status _"Aplikasi Terpasang"_ dengan lencana hijau saat standalone, atau tombol _"Pasang Aplikasi"_ saat dibuka dari browser.
 
 ### D. Perilaku Berdasarkan Browser & Platform
+
 - **Android & Chromium Desktop (Chrome / Edge / Brave / Samsung Internet)**:
   Memicu dialog instalasi native browser via `triggerInstallPrompt()`. Jika pengguna menyetujui, aplikasi langsung terinstal ke desktop/home screen.
 - **Apple iOS Safari**:
   Menampilkan modal panduan ramah pengguna dengan 3 langkah jelas:
   1. Tekan tombol **Bagikan** (ikon kotak panah atas) di menu Safari.
-  2. Gulir dan pilih **Tambah ke Layar Utama** (*Add to Home Screen*).
+  2. Gulir dan pilih **Tambah ke Layar Utama** (_Add to Home Screen_).
   3. Tekan **Tambah** di sudut kanan atas.
-  *Catatan Khusus iOS*: Diberikan pemberitahuan transparan bahwa pada iOS WebClip, pengguna perlu melakukan login satu kali lagi karena isolasi container penyimpanan Apple.
+     _Catatan Khusus iOS_: Diberikan pemberitahuan transparan bahwa pada iOS WebClip, pengguna perlu melakukan login satu kali lagi karena isolasi container penyimpanan Apple.
 - **Peramban Lainnya (Firefox desktop / browser non-PWA)**:
   Menampilkan panduan informatif untuk menggunakan peramban yang mendukung atau memasang shortcut melalui menu peramban.
 
@@ -169,9 +188,10 @@ Komponen adaptif yang mendukung 2 varian utama:
 ## 6. Halaman Offline (`static/offline.html`)
 
 Halaman offline dirancang mandiri tanpa dependensi JavaScript eksternal:
-- Berbahasa Indonesia ramah pengguna: *"Anda sedang offline"*.
+
+- Berbahasa Indonesia ramah pengguna: _"Anda sedang offline"_.
 - Mengedukasi bahwa pembaruan aktivitas, mutasi stok, dan pencatatan keuangan memerlukan koneksi aktif demi integritas data.
-- Tombol aksi *"Coba lagi"* (`location.reload()`).
+- Tombol aksi _"Coba lagi"_ (`location.reload()`).
 - Tampilan responsif dengan dukungan Dark Mode otomatis berbasis `@media (prefers-color-scheme: dark)`.
 - Menggunakan logo kecil dari ikon yang telah di-precache (`/icons/icon-192.png`).
 
@@ -179,14 +199,15 @@ Halaman offline dirancang mandiri tanpa dependensi JavaScript eksternal:
 
 ## 7. Palet Warna & Metadata Tema
 
-| Elemen | Mode Terang (Light) | Mode Gelap (Dark) | Keterangan |
-|---|---|---|---|
-| Background Halaman | `#f3f4f6` | `#262626` | Warna latar dasar aplikasi |
-| Card & TopNav | `#ffffff` | `#000000` | Header atas & kartu komponen |
-| Primary Accent | `#4f46e5` | `#4f46e5` | Warna utama (Indigo) |
-| `theme-color` Meta | `#ffffff` | `#000000` | Warna status bar browser / PWA shell |
+| Elemen             | Mode Terang (Light) | Mode Gelap (Dark) | Keterangan                           |
+| ------------------ | ------------------- | ----------------- | ------------------------------------ |
+| Background Halaman | `#f3f4f6`           | `#262626`         | Warna latar dasar aplikasi           |
+| Card & TopNav      | `#ffffff`           | `#000000`         | Header atas & kartu komponen         |
+| Primary Accent     | `#4f46e5`           | `#4f46e5`         | Warna utama (Indigo)                 |
+| `theme-color` Meta | `#ffffff`           | `#000000`         | Warna status bar browser / PWA shell |
 
 ### Sinkronisasi Dinamis di Runtime
+
 Pada `src/routes/+layout.svelte`, listener `theme.subscribe()` memantau perubahan tema secara real-time. Ketika pengguna menekan tombol toggle tema di TopNav, elemen `<meta name="theme-color">` pada DOM diperbarui seketika (`#ffffff` untuk light, `#000000` untuk dark) sehingga status bar ponsel berubah selaras dengan tema aplikasi.
 
 ---
@@ -214,7 +235,9 @@ File manifest berlokasi di `frontend/static/manifest.webmanifest` dengan propert
 ```
 
 ### App Shortcuts
+
 PWA menyediakan akses cepat (long-press pada ikon aplikasi di home screen):
+
 1. **Dashboard** (`/dashboard`)
 2. **Project** (`/projects`)
 3. **Aktivitas** (`/activities`)
@@ -226,12 +249,12 @@ PWA menyediakan akses cepat (long-press pada ikon aplikasi di home screen):
 
 Semua aset ikon di-generate dari master `frontend/static/indogreen.png` (resolusi 1254x1254, latar solid) dan disimpan di `frontend/static/icons/`:
 
-| Nama File | Dimensi | Format & Tipe | Tujuan (Purpose) | Keterangan |
-|---|---|---|---|---|
-| `icon-192.png` | 192x192 px | PNG RGB, latar solid | `any` | Home screen & splash screen Android standar |
-| `icon-512.png` | 512x512 px | PNG RGB, latar solid | `any` | PWA installation dialog & high-res display |
-| `icon-maskable-512.png` | 512x512 px | PNG RGB, latar solid | `maskable` | Konten berada dalam safe zone 80% (radius aman 204.8 px) agar tidak terpotong adaptive icon Android |
-| `apple-touch-icon-180.png` | 180x180 px | PNG RGB, latar solid | iOS Web Clip | Home screen icon Safari iOS (tanpa transparansi) |
+| Nama File                  | Dimensi    | Format & Tipe        | Tujuan (Purpose) | Keterangan                                                                                          |
+| -------------------------- | ---------- | -------------------- | ---------------- | --------------------------------------------------------------------------------------------------- |
+| `icon-192.png`             | 192x192 px | PNG RGB, latar solid | `any`            | Home screen & splash screen Android standar                                                         |
+| `icon-512.png`             | 512x512 px | PNG RGB, latar solid | `any`            | PWA installation dialog & high-res display                                                          |
+| `icon-maskable-512.png`    | 512x512 px | PNG RGB, latar solid | `maskable`       | Konten berada dalam safe zone 80% (radius aman 204.8 px) agar tidak terpotong adaptive icon Android |
+| `apple-touch-icon-180.png` | 180x180 px | PNG RGB, latar solid | iOS Web Clip     | Home screen icon Safari iOS (tanpa transparansi)                                                    |
 
 > ⚠️ **Catatan Penting:** Master `frontend/static/indogreen.png` dipertahankan dan tidak diubah/ditimpa karena tetap digunakan untuk favicon dan logo sidebar navigasi.
 
@@ -243,9 +266,20 @@ Tag berikut disematkan di dalam `<head>` pada `frontend/src/app.html`:
 
 ```html
 <link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-<link rel="apple-touch-icon" href="%sveltekit.assets%/icons/apple-touch-icon-180.png" />
+<meta
+  name="theme-color"
+  content="#ffffff"
+  media="(prefers-color-scheme: light)"
+/>
+<meta
+  name="theme-color"
+  content="#000000"
+  media="(prefers-color-scheme: dark)"
+/>
+<link
+  rel="apple-touch-icon"
+  href="%sveltekit.assets%/icons/apple-touch-icon-180.png"
+/>
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="Indogreen" />
@@ -254,7 +288,65 @@ Tag berikut disematkan di dalam `<head>` pada `frontend/src/app.html`:
 
 ---
 
-## 11. Status Roadmap PWA
+## 11. Ketahanan Konektivitas & Pengalaman Standalone (Fase 7)
+
+### A. Store Konektivitas Reaktif (`src/lib/stores/connectivity.ts`)
+
+Store `isOnline` memantau ketersediaan jaringan secara realtime menggunakan event standar peramban (`window.addEventListener('online')` dan `window.addEventListener('offline')`) dengan inisialisasi aman terhadap SSR:
+
+- Menguji ketersediaan `typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean'` sehingga tidak menghasilkan `undefined` pada lingkungan server/Node 26.
+- Menjadi single source of truth untuk mendeteksi apakah peramban kehilangan sinyal atau koneksi internet terputus.
+
+### B. Banner Offline Non-Blokir (`src/routes/+layout.svelte`)
+
+Ketika `$isOnline === false`, layout aplikasi menampilkan bar notifikasi tipis di posisi paling atas (`sticky top-0 z-50`):
+
+- **Teks:** `"Anda offline. Perubahan tidak dapat disimpan."`
+- **Gaya:** Bar ramping kuning-oranye (`bg-amber-600`, teks putih `text-xs font-medium`) dengan ikon pemutus jaringan.
+- **Prinsip Non-Blokir:** Banner tidak menghalangi interaksi pengguna pada data yang sudah termuat di layar (read-only browsing tetap berjalan).
+
+### C. Standardisasi Kategorisasi Error API (`src/lib/utils/errors.ts`)
+
+Fungsi `extractApiErrors(err)` mengelompokkan error menjadi 3 kasus terarah:
+
+1. **Kasus a — Permintaan Tanpa Respons (ERR_NETWORK / timeout / browser offline):**
+   - Menghasilkan pesan: `"Tidak dapat terhubung ke server. Periksa koneksi internet Anda."`
+   - Terpicu saat request gagal mencapai backend (koneksi terputus, DNS gagal, timeout Axios, atau sinyal mati sebelum server merespons).
+2. **Kasus b — Server Gateway / Service Unavailable (502 / 503 / 504):**
+   - Menghasilkan pesan: `"Server sedang tidak dapat dihubungi. Coba lagi beberapa saat."`
+   - Terpicu saat backend Laravel mati, process PHP-FPM down, atau Cloudflare Tunnel tidak dapat menghubungi upstream backend.
+3. **Kasus c — Penanganan Respons API Normal & Validasi:**
+   - Mengekstrak pesan validasi form Laravel 422 (`errors` bag), pesan khusus API (`message` atau `error`), atau pesan fallback `"Terjadi kesalahan. Silakan coba lagi."`.
+
+### D. Kebijakan Formulir Modal & Submit
+
+- **Tanpa Perubahan Massal Komponen:** Seluruh modal formulir di aplikasi (proyek, aktivitas, mutasi stok, dsb.) secara otomatis menggunakan `extractApiErrors(err)` dan `showToast`/`showError`. Dengan penyempurnaan di utilitas terpusat ini, seluruh form langsung menampilkan feedback yang akurat saat offline atau server mati tanpa perlu mengubah lusinan berkas modal.
+- **Opsi Lanjutan:** Penonaktifan tombol submit formulir secara otomatis saat `!$isOnline` dicatat sebagai opsi peningkatan masa depan jika alur offline-drafting/background sync kelak diimplementasikan.
+
+### E. Polish Mode Standalone (Berdasarkan Uji Perangkat)
+
+1. **Tombol "Kembali" di TopNav untuk Halaman Detail:**
+   - Berada di `src/lib/components/layout/TopNav.svelte`.
+   - Menggunakan helper murni `getDetailParentHref(pathname)` di `nav.ts`.
+   - **HANYA muncul saat:** Aplikasi berjalan dalam mode standalone (`isStandalone() === true`) DAN pengguna berada di halaman detail berikut:
+     - `/projects/[id]` (kembali ke `/projects`)
+     - `/activities/[id]` (kembali ke `/activities`)
+     - `/mitras/[id]` (kembali ke `/mitras`)
+     - `/certificates/[id]` (kembali ke `/certificates`)
+     - `/barang-certificates/[id]` (kembali ke `/barang-certificates`)
+   - **Mekanisme Navigasi:** Memanggil `window.history.back()` jika riwayat tersedia (`history.length > 1`), atau fallback instan via `goto(parentHref)` jika pengguna membuka detail secara langsung.
+2. **Evaluasi Safe Area TopNav:**
+   - Konfigurasi `<meta name="apple-mobile-web-app-status-bar-style" content="default">` menempatkan bilah status sistem iOS di luar viewport webview PWA, sehingga penambahan `padding-top: env(safe-area-inset-top)` pada TopNav tidak diperlukan dan berpotensi menimbulkan whitespace ganda yang tidak estetik.
+3. **Evaluasi Pull-to-Refresh & Overscroll:**
+   - Modul `src/lib/utils/scroll-lock.ts` sudah secara otomatis mengunci `overflow: hidden` pada elemen `body` saat Modal atau Drawer dibuka, sehingga pull-to-refresh tidak mengganggu interaksi form. Pembatasan global `overscroll-behavior-y: contain` tidak dipaksakan guna mempertahankan kenyamanan scrolling elastis native di iOS dan Android.
+4. **Verifikasi Tautan Keluar dan Pengunduhan Lampiran:**
+   - Berkas lampiran di aplikasi menggunakan tautan `<a href={file.url} target="_blank" rel="noopener" download>`.
+   - Rute `/storage/*` dan permintaan lintas origin ke host API (`https://api-pm-idg.zed.ai.id`) secara eksplisit di-bypass oleh Service Worker (`sw-routing.ts`).
+   - Pada iOS Safari standalone, tautan `target="_blank"` membuka penampil dokumen sistem dengan tombol bagikan/simpan ke Files. Pada Android Chrome standalone, download manager langsung mengunduh berkas ke folder Download.
+
+---
+
+## 12. Status Roadmap PWA
 
 - [x] **Fase 0:** Audit Kesiapan PWA & Arsitektur
 - [x] **Fase 1:** Konfigurasi Dev HTTPS via Cloudflare Tunnel
@@ -263,4 +355,4 @@ Tag berikut disematkan di dalam `<head>` pada `frontend/src/app.html`:
 - [x] **Fase 4:** Caching Aset Immutable (Cache-First) & Aset Statis (Stale-While-Revalidate)
 - [x] **Fase 5:** Mekanisme Pembaruan Versi, UpdatePrompt UI, & Pencegahan Chunk Error
 - [x] **Fase 6:** Fitur Instalasi PWA Multi-Platform & Deteksi Standalone (Menu Akun & Pengaturan)
-
+- [x] **Fase 7:** Ketahanan Konektivitas, Banner Offline, Kategorisasi Error, Navigasi Standalone, & Audit Unduhan Lampiran

@@ -21,12 +21,12 @@
 
 ### Struktur
 
-| Jenis          | Lokasi                            | Keterangan                        |
-| -------------- | --------------------------------- | --------------------------------- |
-| Page           | `src/routes/{module}/`            | File-based routing SvelteKit      |
-| Layout         | `src/routes/+layout.svelte`       | Shared layout (sidebar, topnav)   |
-| Reusable UI    | `src/lib/components/`             | Komponen yang dipakai > 1 halaman |
-| Page-specific  | `src/routes/{module}/_components/`| Komponen khusus halaman tertentu  |
+| Jenis         | Lokasi                             | Keterangan                        |
+| ------------- | ---------------------------------- | --------------------------------- |
+| Page          | `src/routes/{module}/`             | File-based routing SvelteKit      |
+| Layout        | `src/routes/+layout.svelte`        | Shared layout (sidebar, topnav)   |
+| Reusable UI   | `src/lib/components/`              | Komponen yang dipakai > 1 halaman |
+| Page-specific | `src/routes/{module}/_components/` | Komponen khusus halaman tertentu  |
 
 ### Konvensi penamaan
 
@@ -45,10 +45,10 @@ Contoh pola:
 
 ```typescript
 // src/lib/services/projectService.ts
-import axiosClient from '$lib/axiosClient';
+import axiosClient from "$lib/axiosClient";
 
 export async function getProjects(params) {
-  const { data } = await axiosClient.get('/projects', { params });
+  const { data } = await axiosClient.get("/projects", { params });
   return data;
 }
 ```
@@ -61,7 +61,8 @@ export async function getProjects(params) {
   - `user.ts` — Data user yang sedang login
   - `permissions.ts` — Roles dan permissions user
   - `theme.ts` — Dark/light theme preference
-  - `pwa.ts` — Status pembaruan PWA (`updateReady`, `registration`)
+  - `pwa.ts` — Status pembaruan PWA (`updateReady`, `registration`, `deferredPrompt`, `canInstall`, `isInstalled`)
+  - `connectivity.ts` — Status konektivitas jaringan pengguna (`isOnline`)
 
 ## Aturan Form
 
@@ -85,7 +86,11 @@ export async function getProjects(params) {
 
 - Tampilkan error message yang user-friendly dalam Bahasa Indonesia.
 - Jangan membocorkan detail internal (stack trace, SQL error).
-- Gunakan `utils/errors.ts` untuk standardisasi error handling.
+- Gunakan `utils/errors.ts` (`extractApiErrors`) untuk standardisasi error handling. Modul ini secara otomatis mengelompokkan error ke dalam 3 kategori:
+  1. **Tanpa respons / network drop / timeout:** `"Tidak dapat terhubung ke server. Periksa koneksi internet Anda."`
+  2. **Server down / gateway error (502, 503, 504):** `"Server sedang tidak dapat dihubungi. Coba lagi beberapa saat."`
+  3. **Respons normal Laravel:** mengekstrak pesan validasi form (422), pesan error endpoint, atau fallback `"Terjadi kesalahan. Silakan coba lagi."`.
+- Seluruh formulir modal mengandalkan pesan error baru ini sehingga tombol submit tidak perlu diubah secara massal. Penonaktifan submit button saat offline dicatat sebagai opsi peningkatan masa depan.
 - Gunakan `utils/toast.ts` untuk menampilkan notifikasi error.
 
 ## Format Data

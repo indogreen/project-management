@@ -172,3 +172,27 @@ export function getPageTitle(pathname: string): string {
 
   return PAGE_TITLES.get(pathname) ?? 'Dashboard';
 }
+
+const DETAIL_PARENTS: Array<{ prefix: string; parentHref: string }> = [
+  { prefix: '/barang-certificates/', parentHref: '/barang-certificates' },
+  { prefix: '/certificates/', parentHref: '/certificates' },
+  { prefix: '/projects/', parentHref: '/projects' },
+  { prefix: '/activities/', parentHref: '/activities' },
+  { prefix: '/mitras/', parentHref: '/mitras' }
+];
+
+/**
+ * Mengembalikan rute induk untuk halaman detail jika pathname cocok.
+ * Mengembalikan null jika bukan halaman detail.
+ */
+export function getDetailParentHref(pathname: string): string | null {
+  for (const item of DETAIL_PARENTS) {
+    if (pathname.startsWith(item.prefix)) {
+      const remainder = pathname.slice(item.prefix.length).trim();
+      if (remainder.length > 0) {
+        return item.parentHref;
+      }
+    }
+  }
+  return null;
+}
