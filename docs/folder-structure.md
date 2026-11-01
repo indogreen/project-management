@@ -83,6 +83,8 @@ frontend/
 │   ├── app.css                    # Global styles (Tailwind + custom CSS)
 │   ├── app.d.ts                   # TypeScript declarations
 │   ├── app.html                   # HTML template
+│   ├── hooks.server.ts            # SvelteKit server hook (security & no-cache headers)
+│   ├── hooks.server.test.ts       # Test untuk hooks.server.ts
 │   ├── service-worker.ts          # Service Worker PWA (routing & precache)
 │   ├── lib/
 │   │   ├── axiosClient.ts         # Axios instance + JWT interceptors
@@ -90,13 +92,14 @@ frontend/
 │   │   ├── inventory.ts           # Inventory helper utilities
 │   │   ├── pwa/                   # PWA Helper modules
 │   │   │   ├── register.ts        # SW registration & unregister kill-switch
-│   │   │   ├── sw-routing.ts      # Pure request classifier
+│   │   │   ├── sw-routing.ts      # Pure request classifier & cache pruning
 │   │   │   └── sw-routing.test.ts # Vitest suite for routing
 │   │   ├── components/
 │   │   │   ├── common/            # ConfirmDialog, dll
 │   │   │   ├── detail/            # Detail view components
 │   │   │   ├── form/              # Form components
 │   │   │   ├── layout/            # Sidebar, TopNav, MobileSidebar, dll
+│   │   │   ├── pwa/               # PWA UI components (UpdatePrompt, InstallButton)
 │   │   │   ├── ui/                # UI primitives
 │   │   │   ├── Drawer.svelte
 │   │   │   ├── FileAttachment.svelte
@@ -121,7 +124,11 @@ frontend/
 │   │   ├── stores/                # Svelte stores
 │   │   │   ├── user.ts            # Current user state
 │   │   │   ├── permissions.ts     # User permissions & roles
-│   │   │   └── theme.ts           # Dark/light theme
+│   │   │   ├── theme.ts           # Dark/light theme
+│   │   │   ├── pwa.ts             # PWA updateReady & install prompt state
+│   │   │   ├── pwa.test.ts        # Unit test store PWA
+│   │   │   ├── connectivity.ts    # Realtime online/offline status
+│   │   │   └── connectivity.test.ts # Unit test store konektivitas
 │   │   ├── types/                 # TypeScript type definitions
 │   │   │   ├── activity.ts
 │   │   │   ├── attachment.ts
@@ -132,9 +139,12 @@ frontend/
 │   │   │   └── project.ts
 │   │   └── utils/                 # Utility functions
 │   │       ├── badges.ts          # Badge styling helpers
-│   │       ├── errors.ts          # Error handling
+│   │       ├── errors.ts          # Error handling (network, 502/503/504, normal)
+│   │       ├── errors.test.ts     # Unit test kategorisasi error
 │   │       ├── form-data.ts       # FormData builder
 │   │       ├── formatters.ts      # Tanggal, angka, mata uang
+│   │       ├── pwa-platform.ts    # Deteksi standalone, iOS, Safari
+│   │       ├── pwa-platform.test.ts # Unit test deteksi platform
 │   │       ├── scroll-lock.ts     # Scroll lock untuk modal
 │   │       ├── toast.ts           # SweetAlert2 wrapper
 │   │       └── url.ts             # URL utility
@@ -176,27 +186,27 @@ frontend/
 
 ### Backend
 
-| Jenis File        | Lokasi                          | Keterangan                          |
-| ------------------ | ------------------------------- | ----------------------------------- |
-| Controller         | `app/Http/Controllers/`        | Satu controller per resource        |
-| Form Request       | `app/Http/Requests/`           | Validasi input per-resource         |
-| API Resource       | `app/Http/Resources/`          | Transformasi response JSON          |
-| Model              | `app/Models/`                  | Eloquent model + relations + scope  |
-| Trait              | `app/Models/Traits/`           | Reusable model behavior             |
-| Service            | `app/Services/`                | Business logic, dipanggil controller|
-| Middleware          | `app/Http/Middleware/`         | Request/response middleware         |
-| Migration          | `database/migrations/`         | Schema changes (sequential)         |
-| Seeder             | `database/seeders/`            | Data seeding                        |
+| Jenis File   | Lokasi                  | Keterangan                           |
+| ------------ | ----------------------- | ------------------------------------ |
+| Controller   | `app/Http/Controllers/` | Satu controller per resource         |
+| Form Request | `app/Http/Requests/`    | Validasi input per-resource          |
+| API Resource | `app/Http/Resources/`   | Transformasi response JSON           |
+| Model        | `app/Models/`           | Eloquent model + relations + scope   |
+| Trait        | `app/Models/Traits/`    | Reusable model behavior              |
+| Service      | `app/Services/`         | Business logic, dipanggil controller |
+| Middleware   | `app/Http/Middleware/`  | Request/response middleware          |
+| Migration    | `database/migrations/`  | Schema changes (sequential)          |
+| Seeder       | `database/seeders/`     | Data seeding                         |
 
 ### Frontend
 
-| Jenis File        | Lokasi                          | Keterangan                          |
-| ------------------ | ------------------------------- | ----------------------------------- |
-| Page               | `src/routes/`                  | SvelteKit file-based routing        |
-| Layout             | `src/routes/+layout.svelte`    | Shared layout per segment           |
-| Component          | `src/lib/components/`          | Reusable UI components              |
-| Service            | `src/lib/services/`            | API call functions                  |
-| Store              | `src/lib/stores/`              | Svelte writable stores              |
-| Type               | `src/lib/types/`               | TypeScript interfaces               |
-| Utility            | `src/lib/utils/`               | Helper functions                    |
-| Constant           | `src/lib/constants/`           | Enum values & static options        |
+| Jenis File | Lokasi                      | Keterangan                   |
+| ---------- | --------------------------- | ---------------------------- |
+| Page       | `src/routes/`               | SvelteKit file-based routing |
+| Layout     | `src/routes/+layout.svelte` | Shared layout per segment    |
+| Component  | `src/lib/components/`       | Reusable UI components       |
+| Service    | `src/lib/services/`         | API call functions           |
+| Store      | `src/lib/stores/`           | Svelte writable stores       |
+| Type       | `src/lib/types/`            | TypeScript interfaces        |
+| Utility    | `src/lib/utils/`            | Helper functions             |
+| Constant   | `src/lib/constants/`        | Enum values & static options |

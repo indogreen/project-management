@@ -1,6 +1,6 @@
 # Fitur: Progressive Web App (PWA)
 
-> **Status Fitur:** Selesai Penuh (Fase 8 Selesai: Verifikasi QA Menyeluruh, Audit Keamanan, & Laporan Performa PWA)
+> **Status Fitur:** Selesai Penuh (Fase 9 Selesai: Konsolidasi Dokumentasi, Finalisasi Spesifikasi PWA, & Rencana Rilis Produksi)
 
 ---
 
@@ -44,14 +44,30 @@ Setiap request jaringan masuk dievaluasi melalui fungsi murni `classifyRequest` 
    - Jika aset sudah ada di cache, Service Worker langsung menyajikan dari cache seketika (0ms latency), sembari melakukan fetch di background untuk memperbarui cache bila ada perubahan di server.
    - Jika aset belum ada di cache (mis. logo `/indogreen.png` pada kunjungan pertama), aset diunduh dari jaringan, disimpan ke cache, dan dibatasi maksimal 50 entri (`MAX_STATIC_ASSETS = 50`).
 
-### B. Pemangkasan Cache (Cache Pruning Logic)
+### B. Daftar Eksplisit yang TIDAK Pernah Di-Cache (Non-Cached Resources)
+
+Untuk menjamin keamanan data bisnis, integritas sesi autentikasi, dan kepatuhan audit trail, Service Worker **TIDAK PERNAH** menyimpan sumber daya berikut ke dalam Cache Storage:
+
+1. **Request Non-GET (`POST`, `PUT`, `DELETE`, `PATCH`, `OPTIONS`):** Seluruh mutasi data dikirim langsung ke server tanpa intersep.
+2. **Request Lintas Origin (Cross-Origin):** Permintaan ke domain luar tidak disentuh oleh Service Worker.
+3. **Seluruh Endpoint API (`/api/*` termasuk `/api/proxy/*`):** Data operasional, laporan keuangan, inventori, dan otentikasi selalu diambil realtime dari backend.
+4. **File Unggahan / Storage (`/storage/*`):** Berkas lampiran dan dokumen sensitif disajikan langsung oleh web server backend dengan authorization/access check.
+5. **Data SSR SvelteKit (`/__data.json`):** Payload data halaman per-user tidak disimpan agar tidak terjadi kebocoran data antar-pengguna.
+6. **Request Ber-Header `Authorization`:** Seluruh panggilan API dengan Bearer JWT token selalu di-bypass secara mutlak.
+7. **Request yang Meminta JSON (`Accept: application/json`):** Selalu diteruskan langsung ke jaringan.
+8. **Request Form Actions (`x-sveltekit-action`):** Form action SvelteKit selalu diproses oleh server aplikasi.
+9. **Dokumen Navigasi HTML Utama:** Selalu berstatus **Network-Only** (tidak pernah disimpan di cache; hanya menyajikan `/offline.html` jika jaringan putus total).
+10. **Respons Bukan HTTP 200 dan Bukan Bertipe `basic`:** Respons error (4xx, 5xx), redirect (3xx), dan respons opaque dari pihak ketiga ditolak dari cache.
+11. **Respons yang Mengandung Header `Set-Cookie`:** Respons yang membawa instruksi sesi tidak boleh disimpan di cache browser.
+
+### C. Pemangkasan Cache (Cache Pruning Logic)
 
 Untuk mencegah akumulasi penyimpanan browser tanpa kendali, modul `src/lib/pwa/sw-routing.ts` mengekspor dua fungsi murni:
 
 - `getExcessKeys(keys, maxItems)`: Menghitung daftar key yang harus dipangkas berdasarkan selisih kapasitas dengan urutan FIFO (First-In, First-Out: item tertua yang pertama kali masuk akan dihapus terlebih dahulu).
 - `pruneCache(cache, maxItems)`: Mengeksekusi pemangkasan key berlebih secara asinkron dengan penanganan error terisolasi per-item agar tidak memutus rantai proses cache lainnya.
 
-### C. Siklus Hidup (Lifecycle) Service Worker
+### D. Siklus Hidup (Lifecycle) Service Worker
 
 - **Nama Cache:** `indogreen-static-${version}` dan `indogreen-assets-${version}` (menggunakan `$service-worker` `version`).
 - **Install:** Melakukan precache **HANYA** pada daftar eksplisit:
@@ -61,7 +77,7 @@ Untuk mencegah akumulasi penyimpanan browser tanpa kendali, modul `src/lib/pwa/s
 - **Activate:** Menghapus seluruh cache lama yang berprefix `indogreen-` yang versinya tidak cocok dengan versi aktif saat ini (`CACHE_STATIC` dan `CACHE_ASSETS`). Ini memastikan saat deploy build baru, seluruh chunk versi lama langsung dibersihkan dan tidak terjadi benturan hash modul ("Failed to fetch dynamically imported module").
 - **Message Listener:** Mendengarkan pesan `{ type: 'SKIP_WAITING' }` untuk memicu `sw.skipWaiting()` saat pengguna menyetujui pembaruan versi (Fase 5).
 
-### D. Hasil Pengukuran Jaringan (First Visit vs Second Visit)
+### E. Hasil Pengukuran Jaringan (First Visit vs Second Visit)
 
 Berdasarkan hasil build produksi (`vite build`):
 
@@ -389,49 +405,93 @@ Fungsi `extractApiErrors(err)` mengelompokkan error menjadi 3 kasus terarah:
 
 ---
 
-## 13. Status Roadmap PWA
+## 13. Panduan Debugging & Pemecahan Masalah PWA bagi Pengembang
 
-### A. Matriks QA Verifikasi Multi-Platform
+### A. Memeriksa Service Worker & Cache di DevTools
 
-| No | Parameter Verifikasi | Desktop Chromium | Android Chrome | iOS Safari (Web) | iOS Standalone (PWA) | Status | Keterangan Teknis |
-|---|---|:---:|:---:|:---:|:---:|:---:|---|
-| 1 | **SW Cache Hygiene** | OK | OK | OK | OK | **PASS** | Cache Storage hanya berisi aset statis & immutable build ber-hash. Nol kebocoran data user, HTML navigasi, JSON, token, atau `Set-Cookie`. |
-| 2 | **Manajemen Sesi & Token** | OK | OK | OK | OK | **PASS** | Token JWT Bearer di `localStorage`. Arsitektur SPA (`ssr = false`) tidak mengekspos cookie sesi backend. |
-| 3 | **Alur Logout Bersih** | OK | OK | OK | OK | **PASS** | Token dihapus lokal dan di-blacklist server. Navigasi back/forward otomatis di-redirect ke `/auth/login`. |
-| 4 | **Sesi Idle / Expired** | OK | OK | OK | OK | **PASS** | 401 ditangani Axios interceptor: auto-refresh atau redirect ke `/auth/login` tanpa infinite loop. |
-| 5 | **Pengalaman iOS Standalone** | — | — | OK | OK | **PASS** | Kontainer storage terisolasi; upload file/kamera dan preview PDF berjalan native. |
-| 6 | **Rate Limiting Real IP** | OK | OK | OK | OK | **PASS** | `$middleware->trustProxies(at: '*')` aktif di Laravel; limit 5 req/60s berlaku per IP pengguna asli, bukan global `127.0.0.1`. |
-| 7 | **Header Keamanan & No-Cache** | OK | OK | OK | OK | **PASS** | `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, dan `Cache-Control: no-cache, no-store, must-revalidate` untuk SW/manifest. |
-| 8 | **Cloudflare Integration** | OK | OK | OK | OK | **PASS** | Rocket Loader nonaktif; cache bypass rule terverifikasi (`cf-cache-status: BYPASS`/`DYNAMIC`). |
-| 9 | **CORS Origin Handling** | OK | OK | OK | OK | **PASS** | Backend CORS `allowed_origins` terdokumentasi; `supports_credentials: false` selaras dengan arsitektur JWT Bearer. |
-| 10 | **Transisi DEV <-> BUILD** | OK | OK | OK | OK | **PASS** | `unregisterAndClean()` otomatis aktif di mode dev (`!import.meta.env.PROD`), mencegah cache tabrakan port 8005. |
-| 11 | **Offline Banner & Fallback** | OK | OK | OK | OK | **PASS** | Bar oranye tipis saat offline; dokumen offline menyajikan `/offline.html` saat terputus total. |
-| 12 | **Navigasi Standalone TopNav** | OK | OK | OK | OK | **PASS** | Tombol "Kembali" hanya muncul di mode standalone pada 5 rute detail dengan fallback list induk. |
-| 13 | **Installability DevTools** | OK | OK | OK | OK | **PASS** | Web App Manifest valid di panel Application DevTools; ikon 192/512/maskable valid. |
+1. Buka browser Chromium (Chrome/Edge/Brave).
+2. Tekan `F12` atau `Cmd + Option + I` lalu buka tab **Application**.
+3. **Menu Service Workers:**
+   - Status harus menunjukkan `activated and is running`.
+   - Opsi `Update on reload`: Centang saat aktif mengembangkan fitur worker agar SW langsung diperbarui saat refresh.
+   - Opsi `Bypass for network`: Centang jika ingin mengabaikan seluruh cache Service Worker sementara untuk pengujian jaringan murni.
+4. **Menu Cache Storage:**
+   - Periksa `indogreen-static-v...`: Harus berisi `/offline.html`, `/manifest.webmanifest`, `/indogreen.png`, dan `/icons/*`.
+   - Periksa `indogreen-assets-v...`: Harus berisi berkas `/_app/immutable/...` (JS chunk dan CSS).
+   - Pastikan **TIDAK ADA** entri `/api/*`, `/storage/*`, `__data.json`, atau HTML navigasi di dalam cache.
+5. **Menu Manifest:**
+   - Memastikan properti `name`, `short_name`, `start_url`, `display: standalone`, dan ikon terbaca tanpa peringatan sintaks.
 
-### B. Hasil Audit Keamanan & Temuan
-1. **Pencegahan Caching Set-Cookie:**
-   - Logika caching Service Worker diperkuat dengan pengecekan `!networkResponse.headers.has('set-cookie')` untuk aset statis dan immutable.
-2. **IP-Forwarding Laravel di Balik Tunnel:**
-   - Dikonfigurasi `$middleware->trustProxies(at: '*')` di `backend/bootstrap/app.php` dan diverifikasi dengan unit test `RateLimiterTest`. Pengguna yang berbeda di balik tunnel tidak lagi saling mengunci saat rate limit login tercapai.
-3. **Penyematan Header Server SvelteKit (`src/hooks.server.ts`):**
-   - Menambahkan hook server terpusat untuk menyematkan header keamanan HTTP (`nosniff`, `strict-origin-when-cross-origin`) dan header no-cache ketat pada berkas `/service-worker.js` dan `/manifest.webmanifest`.
+### B. Prosedur Reset Bersih Total (Clear Site Data)
 
-### C. Metrik Performa & Kapasitas Penyimpanan
+Jika ingin menguji ulang skenario _first visit_ atau menghapus worker secara manual:
 
-| Metrik Evaluasi | Sebelum PWA (Fase 0) | Sesudah PWA (Fase 8) | Peningkatan / Efisiensi |
-|---|---|---|---|
-| **Lighthouse Performance** | ~82 | **96 – 98** | +15 poin (latency aset 0ms via Service Worker Cache-First) |
-| **Lighthouse Accessibility** | 95 | **96** | Sangat baik (kontras Tailwind, label ARIA, indikator banner) |
-| **Lighthouse Best Practices** | 92 | **100** | Sempurna (HTTPS valid, nosniff, referrer-policy, no-cache SW) |
-| **Data Transferred (Kunjungan ke-2)** | ~2.5 MB | **~3.5 KB** | **> 99.8% Penghematan Bandwidth Jaringan** |
-| **Kapasitas Cache Assets (`indogreen-assets`)** | 0 MB | **~1.02 MB** | Dibatasi maksimal 150 entri chunk JS/CSS ber-hash (FIFO) |
-| **Kapasitas Cache Statis (`indogreen-static`)** | 0 MB | **~1.78 MB** | Dibatasi maksimal 50 entri logo/ikon/manifest/offline (FIFO) |
-| **Total Kapasitas Cache Storage** | 0 MB | **~2.80 MB** | Ringan, aman, dan bebas dari data sensitif |
+1. Di panel DevTools > **Application** > **Storage**.
+2. Pastikan checkbox `Service workers` dan `Cache storage` tercentang.
+3. Klik tombol **Clear site data**.
+4. Lakukan Hard Reload: `Cmd + Shift + R` (Mac) atau `Ctrl + Shift + R` (Windows/Linux).
+
+### C. Simulasi Mode Offline
+
+1. Buka panel DevTools > **Network**.
+2. Pada dropdown _Throttling_, ubah dari `No throttling` menjadi **Offline**.
+3. Amati:
+   - Banner oranye _"Anda offline. Perubahan tidak dapat disimpan"_ muncul seketika di bagian atas layar.
+   - Navigasi halaman yang belum pernah dikunjungi akan menampilkan dokumen `/offline.html`.
+   - Coba submit formulir: Toast error menampilkan pesan ramah: _"Tidak dapat terhubung ke server. Periksa koneksi internet Anda."_.
+4. Kembalikan throttling ke `No throttling`: Banner offline hilang otomatis.
 
 ---
 
-## 13. Status Roadmap PWA
+## 14. Rencana Rilis Produksi & Prosedur Rollback
+
+### A. Tahap 1 — Uji Coba Pengguna Internal (1 Minggu)
+
+- Pengujian deployment pada lingkungan staging/Cloudflare Tunnel (`app-pm-idg.zed.ai.id`).
+- Melibatkan tim internal lintas perangkat: Desktop (Chrome, Edge), Android (Chrome, Samsung Internet), dan iOS (Safari Web & Standalone PWA).
+- Skenario pengujian terfokus:
+  1. Login, refresh token, dan logout multi-user.
+  2. Alur pembuatan proyek, aktivitas, mutasi stok, dan unggah dokumen PDF/gambar.
+  3. Pengunduhan lampiran dokumen dari host API storage.
+  4. Deteksi banner konektivitas saat perangkat masuk ke mode pesawat.
+
+### B. Tahap 2 — Rilis Bertahap & Pemantauan Produksi (1–2 Minggu)
+
+- Deploy build produksi ke server aplikasi dengan `PUBLIC_PWA_ENABLED=true`.
+- **Indikator Pemantauan Utama:**
+  - Log error Nginx/PHP backend: Memastikan tidak ada lonjakan error 401, 429, atau 500 akibat rate limiter.
+  - SvelteKit version polling: Memantau keteraturan pemunculan dialog update prompt saat rilis build baru tanpa insiden chunk mismatch.
+  - Interaksi pengguna terhadap tombol _"Pasang Aplikasi"_ di menu akun dan tab pengaturan profil.
+
+### C. Kesiapan Kill-Switch Runtime (Darurat Produksi)
+
+Jika terjadi insiden kritis (misal regresi logic Service Worker di peramban klien):
+
+1. **Langkah Kill-Switch:**
+   Ubah environment variable di server frontend (`frontend/.env`):
+   ```env
+   PUBLIC_PWA_ENABLED=false
+   ```
+2. **Rebuild / Restart Frontend:**
+   ```bash
+   cd frontend && npm run build
+   # Restart proses frontend server
+   ```
+3. **Efek Seketika:**
+   Fungsi `registerServiceWorker()` otomatis mengeksekusi `unregisterAndClean()`. Seluruh peramban pengguna yang membuka atau me-refresh aplikasi seketika membatalkan registrasi Service Worker dan menghapus seluruh cache lokal `indogreen-*`.
+
+### D. Prosedur Rollback ke Versi Build Sebelumnya
+
+Jika commit aplikasi harus di-rollback ke rilis sebelumnya:
+
+1. Checkout commit sebelumnya via Git dan jalankan `npm run build`.
+2. SvelteKit version string otomatis berubah kembali ke hash rilis sebelumnya.
+3. Service Worker versi rollback akan aktif, menghapus cache versi yang ditarik pada siklus `activate`, dan mengisi ulang cache aset versi rollback tanpa benturan modul.
+4. Sebagai alternatif sementara selama proses rollback, aktifkan kill-switch `PUBLIC_PWA_ENABLED=false`.
+
+---
+
+## 15. Status Roadmap PWA
 
 - [x] **Fase 0:** Audit Kesiapan PWA & Arsitektur
 - [x] **Fase 1:** Konfigurasi Dev HTTPS via Cloudflare Tunnel
@@ -442,4 +502,4 @@ Fungsi `extractApiErrors(err)` mengelompokkan error menjadi 3 kasus terarah:
 - [x] **Fase 6:** Fitur Instalasi PWA Multi-Platform & Deteksi Standalone (Menu Akun & Pengaturan)
 - [x] **Fase 7:** Ketahanan Konektivitas, Banner Offline, Kategorisasi Error, Navigasi Standalone, & Audit Unduhan Lampiran
 - [x] **Fase 8:** Verifikasi QA Menyeluruh, Audit Keamanan, & Laporan Performa PWA
-
+- [x] **Fase 9:** Konsolidasi Dokumentasi, Finalisasi Spesifikasi, & Rencana Rilis Produksi

@@ -103,10 +103,12 @@ Saat ini `config/cors.php` menggunakan `allowed_origins => ['*']`. Untuk product
 
 - [ ] `PUBLIC_API_BASE_URL` mengarah ke backend production
 - [ ] `PUBLIC_STORAGE_BASE_URL` mengarah ke storage production
+- [ ] `PUBLIC_PWA_ENABLED=true` aktif di `.env` frontend
 - [ ] Build berhasil (`npm run build`)
 - [ ] Svelte check berhasil (`npm run check`)
 - [ ] Lint berhasil (`npm run lint`)
 - [ ] SvelteKit adapter sudah dikonfigurasi sesuai target (auto/node/static/vercel)
+- [ ] Header keamanan server aktif via `hooks.server.ts` (`nosniff`, `strict-origin`, no-cache SW/manifest)
 
 ### Umum
 
@@ -123,6 +125,10 @@ Saat ini `config/cors.php` menggunakan `allowed_origins => ['*']`. Untuk product
 - [ ] API response tidak menampilkan debug info
 - [ ] CORS tidak memblokir request frontend
 - [ ] SSL certificate valid
+- [ ] Service Worker terdaftar (DevTools Application > Service Workers: status activated and running)
+- [ ] Web App Manifest valid di panel DevTools Application
+- [ ] Cache Storage hanya berisi chunk ber-hash dan aset statis, bebas dari dokumen HTML atau respons API
+- [ ] Header respons `/service-worker.js` dan `/manifest.webmanifest` berstatus `no-cache, no-store, must-revalidate`
 
 ---
 
@@ -132,10 +138,10 @@ Lingkungan development ini digunakan untuk pengujian Progressive Web App (PWA) d
 
 ### 1. Arsitektur Domain & Port
 
-| Komponen | Domain Publik (Cloudflare) | Target Layanan Internal | Protokol & Keterangan |
-|---|---|---|---|
+| Komponen     | Domain Publik (Cloudflare)     | Target Layanan Internal | Protokol & Keterangan          |
+| ------------ | ------------------------------ | ----------------------- | ------------------------------ |
 | **Frontend** | `https://app-pm-idg.zed.ai.id` | `http://localhost:8005` | Vite dev / SvelteKit (SSR/SPA) |
-| **Backend** | `https://api-pm-idg.zed.ai.id` | `http://localhost:8004` | PHP Artisan Serve (Laravel) |
+| **Backend**  | `https://api-pm-idg.zed.ai.id` | `http://localhost:8004` | PHP Artisan Serve (Laravel)    |
 
 > ⚠️ **PENTING — Syarat Mesin:**
 > Agent `cloudflared` **WAJIB berjalan di mesin / VM yang sama** dengan kedua layanan aplikasi (Frontend & Backend). Jika `cloudflared` berjalan di server berbeda, target `http://localhost:8004` dan `http://localhost:8005` akan salah mengarah.
@@ -145,6 +151,7 @@ Lingkungan development ini digunakan untuk pengujian Progressive Web App (PWA) d
 Terdapat dua metode pengelolaan Cloudflare Tunnel:
 
 #### Cara A: Locally-Managed (`config.yml`)
+
 Simpan file konfigurasi di luar repositori Git, misalnya di `/etc/cloudflared/config.yml`:
 
 ```yaml
@@ -171,7 +178,9 @@ ingress:
 ```
 
 #### Cara B: Remote-Managed (Cloudflare Zero Trust Dashboard)
+
 Pada dashboard Cloudflare Zero Trust:
+
 1. Buka **Networks** > **Tunnels** > Pilih Tunnel Anda.
 2. Tab **Public Hostname**, tambahkan dua entri:
    - Hostname: `api-pm-idg.zed.ai.id` ➔ Service: `HTTP` `localhost:8004`
@@ -215,6 +224,6 @@ Lakukan verifikasi menggunakan smartphone dengan koneksi **DATA SELULER (bukan W
 - [ ] Login ke aplikasi: berhasil masuk, sesi bertahan setelah refresh halaman.
 - [ ] Buka modul Project dan Activity: buat aktivitas baru dan unggah lampiran file 10 MB.
 - [ ] Buka dan unduh kembali lampiran dari `https://api-pm-idg.zed.ai.id/storage/...`.
-- [ ] Periksa Console browser: tidak ada error *Mixed Content* (seluruh resource dimuat melalui HTTPS).
+- [ ] Periksa Console browser: tidak ada error _Mixed Content_ (seluruh resource dimuat melalui HTTPS).
 - [ ] Uji respons header: `curl -I https://app-pm-idg.zed.ai.id` menunjukkan header `cf-cache-status: BYPASS` atau `DYNAMIC`.
 - [ ] Uji Reboot VM: setelah server restart, seluruh service (`indogreen-backend`, `indogreen-frontend`, `cloudflared`) hidup kembali secara otomatis sesuai panduan [setup-auto-start.md](setup-auto-start.md).

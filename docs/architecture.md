@@ -246,13 +246,19 @@ Dev Host / VM Server
 
 ## Stack Komunikasi
 
-| Layer            | Teknologi                 | Keterangan                         |
-| ---------------- | ------------------------- | ---------------------------------- |
-| HTTP Client      | Axios                     | Dengan interceptor JWT             |
-| API Format       | REST + JSON               | Standard Laravel resource response |
-| Auth             | JWT (HS256)               | Disimpan di localStorage           |
-| RBAC             | Spatie Laravel Permission | Guard: `api`                       |
-| Rate Limiting    | Custom Sliding Window     | Menggunakan Laravel Cache + Lock   |
-| Validation       | Laravel Form Requests     | Server-side validation             |
-| File Upload      | Laravel Storage (local)   | Disk `public` dengan symlink       |
-| Activity Logging | Custom JSON file logger   | Per-user, per-hari                 |
+| Layer              | Teknologi                        | Keterangan                                           |
+| ------------------ | -------------------------------- | ---------------------------------------------------- |
+| HTTP Client        | Axios                            | Dengan interceptor JWT                               |
+| API Format         | REST + JSON                      | Standard Laravel resource response                   |
+| Auth               | JWT (HS256)                      | Disimpan di localStorage                             |
+| RBAC               | Spatie Laravel Permission        | Guard: `api`                                         |
+| Rate Limiting      | Custom Sliding Window            | Menggunakan Laravel Cache + Lock                     |
+| Validation         | Laravel Form Requests            | Server-side validation                               |
+| File Upload        | Laravel Storage (local)          | Disk `public` dengan symlink                         |
+| Activity Logging   | Custom JSON file logger          | Per-user, per-hari                                   |
+| PWA Service Worker | `$service-worker` + pure routing | Cache-First immutable, SWR statis, network-only HTML |
+| Server Headers     | `hooks.server.ts`                | `nosniff`, `strict-origin`, no-cache SW/manifest     |
+| Trusted Proxies    | Laravel Middleware               | `$middleware->trustProxies(at: '*')` untuk real IP   |
+| PWA Service Worker | `$service-worker` + pure routing | Cache-First immutable, SWR statis, network-only HTML |
+| Server Headers   | `hooks.server.ts`         | `nosniff`, `strict-origin`, no-cache SW/manifest |
+| Trusted Proxies  | Laravel Middleware        | `$middleware->trustProxies(at: '*')` untuk real IP |

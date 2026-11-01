@@ -1,5 +1,17 @@
 # Changelog
 
+## [2026-11-02] — docs(pwa): phase 9 documentation consolidation and production release plan
+
+- Finalisasi spesifikasi komprehensif PWA pada `docs/features/pwa.md`: detail arsitektur, strategi cache, daftar eksplisit 11 kategori yang tidak di-cache, siklus update terisolasi, 3 lapis kill-switch, batasan iOS WebKit standalone, panduan debug DevTools, dan rencana rilis bertahap 2 minggu dengan prosedur rollback.
+- Pembaruan dokumen repositori:
+  - `docs/overview.md`: pembaruan status PWA menjadi aktif dan penegasan batasan operasional offline (hanya fallback navigasi, tanpa penulisan data offline).
+  - `README.md` & `docs/README.md`: penambahan fitur PWA pada ringkasan utama dan indeks dokumentasi.
+  - `docs/architecture.md`: penambahan layer Service Worker, server security hooks, dan trusted proxies pada diagram alur dan tabel stack komunikasi.
+  - `docs/folder-structure.md`: dokumentasi lengkap file PWA, server hooks, store pwa/connectivity, utilitas platform, dan komponen UI.
+  - `docs/deployment.md`: penambahan checklist pre/post-deployment PWA dan instruksi monitoring.
+  - `docs/environment-variables.md`: dokumentasi variabel `PUBLIC_PWA_ENABLED` (kill-switch runtime).
+  - `AGENTS.md`: penambahan aturan kebersihan cache Service Worker (zero-sensitive data) dan kontrak dokumentasi PWA untuk seluruh coding assistant.
+
 ## [2026-11-01] — test(pwa): phase 8 QA matrix, security verification, and performance report
 
 - Verifikasi menyeluruh checklist keamanan PWA, performa Lighthouse, dan kapasitas Cache Storage.
