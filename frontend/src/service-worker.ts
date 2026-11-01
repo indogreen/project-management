@@ -4,7 +4,12 @@
 /// <reference lib="webworker" />
 
 import { version } from '$service-worker';
-import { classifyRequest } from './lib/pwa/sw-routing';
+import {
+  classifyRequest,
+  pruneCache,
+  MAX_IMMUTABLE_ASSETS,
+  MAX_STATIC_ASSETS
+} from './lib/pwa/sw-routing';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
@@ -52,7 +57,7 @@ sw.addEventListener('fetch', (event) => {
     headers: event.request.headers
   });
 
-  if (classification === 'bypass' || classification === 'immutable-asset') {
+  if (classification === 'bypass') {
     return;
   }
 
@@ -69,18 +74,56 @@ sw.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (classification === 'static-asset') {
+  if (classification === 'immutable-asset') {
     event.respondWith(
-      caches.match(event.request).then(async (cachedResponse) => {
+      caches.open(CACHE_ASSETS).then(async (cache) => {
+        const cachedResponse = await cache.match(event.request);
         if (cachedResponse) {
           return cachedResponse;
         }
+
         const networkResponse = await fetch(event.request);
-        if (networkResponse.ok) {
-          const cache = await caches.open(CACHE_STATIC);
+        // Simpan hanya respons status 200 bertipe basic (bukan opaque, bukan error)
+        if (networkResponse.status === 200 && networkResponse.type === 'basic') {
           await cache.put(event.request, networkResponse.clone());
+          event.waitUntil(pruneCache(cache, MAX_IMMUTABLE_ASSETS));
         }
         return networkResponse;
+      })
+    );
+    return;
+  }
+
+  if (classification === 'static-asset') {
+    event.respondWith(
+      caches.open(CACHE_STATIC).then(async (cache) => {
+        const cachedResponse = await cache.match(event.request);
+
+        const fetchPromise = fetch(event.request)
+          .then(async (networkResponse) => {
+            if (networkResponse.status === 200 && networkResponse.type === 'basic') {
+              await cache.put(event.request, networkResponse.clone());
+              await pruneCache(cache, MAX_STATIC_ASSETS);
+            }
+            return networkResponse;
+          })
+          .catch(() => null);
+
+        // Stale-While-Revalidate: sajikan cache segera jika ada, lalu revalidasi di background
+        if (cachedResponse) {
+          event.waitUntil(fetchPromise);
+          return cachedResponse;
+        }
+
+        const networkResponse = await fetchPromise;
+        if (networkResponse) {
+          return networkResponse;
+        }
+
+        return new Response('Asset not available offline', {
+          status: 503,
+          statusText: 'Service Unavailable'
+        });
       })
     );
     return;

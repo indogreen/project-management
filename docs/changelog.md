@@ -1,6 +1,22 @@
 # Changelog
 
-## [2026-10-31] — feat(pwa): phase 3 service worker, routing classifier, and offline fallback
+## [2026-11-01] — feat(pwa): phase 4 immutable asset caching and cache pruning
+
+- Implementasi strategi **Cache-First** untuk aset immutable (`/_app/immutable/**`) ke cache `indogreen-assets-${version}`.
+- Penambahan filter respons ketat: hanya menyimpan respons berstatus `status === 200` dan `type === 'basic'` (mencegah cache respons opaque, redirect, atau error).
+- Implementasi strategi **Stale-While-Revalidate (SWR)** untuk aset statis origin sendiri (`/icons/*`, `/indogreen.png`, `/favicon.*`, manifest, dan offline page) ke cache `indogreen-static-${version}`.
+- Pembuatan fungsi murni pemangkasan cache (`getExcessKeys` dan `pruneCache`) berbasis FIFO (First-In, First-Out) dengan batasan kapasitas:
+  - Maksimal 150 entri untuk cache aset immutable (`MAX_IMMUTABLE_ASSETS = 150`).
+  - Maksimal 50 entri untuk cache aset statis (`MAX_STATIC_ASSETS = 50`).
+- Penambahan 12 unit test baru di `src/lib/pwa/sw-routing.test.ts` (total 31 unit test lulus): menguji identifikasi aset logo/favicon, logika pemangkasan FIFO, penanganan batas negatif/nol, dan ketahanan terhadap error I/O storage.
+- Jaminan proteksi tetap aktif: `/api/*`, `/storage/*`, `__data.json`, navigasi HTML, non-GET, lintas origin, respons selain 200, dan request ber-Authorization tetap di-bypass 100%.
+- Pembersihan cache versi lama secara otomatis pada siklus `activate` Service Worker sehingga tidak ada benturan hash modul pada deploy berturut-turut.
+- File yang diubah:
+  - Frontend: `src/service-worker.ts`, `src/lib/pwa/sw-routing.ts`, `src/lib/pwa/sw-routing.test.ts`
+  - Docs: `docs/features/pwa.md`, `docs/architecture.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pada kunjungan kedua (second visit), transfer jaringan untuk aset JS/CSS turun menjadi **0 B** (penghematan bandwidth >99.8%).
+  - Navigasi dokumen HTML tetap Network-Only untuk menjaga kesegaran sesi dan otentikasi.
 
 - Implementasi Service Worker (`src/service-worker.ts`) menggunakan modul bawaan SvelteKit `$service-worker`.
 - Penambahan pure request classifier (`src/lib/pwa/sw-routing.ts`) dengan 19 unit test Vitest (project server): menjamin bahwa `/api/*`, `/storage/*`, `__data.json`, request non-GET, lintas origin, dan request ber-Authorization tidak pernah diintersep/dicache.

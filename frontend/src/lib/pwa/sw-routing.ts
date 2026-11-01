@@ -19,7 +19,81 @@ export interface ClassifyRequestInput {
   headers?: Headers | Record<string, string | null | undefined> | Map<string, string> | null;
 }
 
-const STATIC_EXACT_PATHS = ['/offline.html', '/manifest.webmanifest', '/manifest.json'];
+export const MAX_IMMUTABLE_ASSETS = 150;
+export const MAX_STATIC_ASSETS = 50;
+
+export const STATIC_EXACT_PATHS = [
+  '/offline.html',
+  '/manifest.webmanifest',
+  '/manifest.json',
+  '/indogreen.png',
+  '/favicon.png',
+  '/favicon.ico'
+];
+
+/**
+ * Interface minimal untuk objek Cache yang mendukung operasi pemangkasan (keys & delete).
+ * Kompatibel langsung dengan browser standard `Cache`.
+ */
+export interface CachePrunable {
+  keys(): Promise<readonly (Request | string)[]>;
+  delete(request: Request | string): Promise<boolean>;
+}
+
+/**
+ * Menghitung daftar key yang berlebih dan harus dipangkas agar jumlah entri dalam cache <= maxItems.
+ * Mengikuti prinsip FIFO (First-In, First-Out): entri tertua (posisi awal array) yang dipangkas lebih dahulu.
+ * Fungsi ini murni (pure function) tanpa efek samping I/O.
+ *
+ * @param keys Daftar request/key saat ini dalam cache (urutan insertion)
+ * @param maxItems Batas maksimum jumlah entri yang diperbolehkan
+ * @returns Array key tertua yang perlu dihapus
+ */
+export function getExcessKeys<T>(keys: readonly T[], maxItems: number): T[] {
+  if (maxItems <= 0) {
+    return [...keys];
+  }
+  if (keys.length <= maxItems) {
+    return [];
+  }
+  const excessCount = keys.length - maxItems;
+  return keys.slice(0, excessCount);
+}
+
+/**
+ * Memangkas entri tertua dalam cache hingga jumlah entri <= maxItems.
+ * Menghindari penumpukan memori/storage browser secara terukur.
+ *
+ * @param cache Objek Cache atau cache-like yang mengimplementasikan keys() dan delete()
+ * @param maxItems Batas maksimum entri yang dipertahankan
+ * @returns Jumlah item yang berhasil dihapus
+ */
+export async function pruneCache(cache: CachePrunable, maxItems: number): Promise<number> {
+  if (maxItems < 0) {
+    return 0;
+  }
+
+  try {
+    const keys = await cache.keys();
+    const toDelete = getExcessKeys(keys, maxItems);
+    let deletedCount = 0;
+
+    for (const key of toDelete) {
+      try {
+        const ok = await cache.delete(key);
+        if (ok) {
+          deletedCount++;
+        }
+      } catch {
+        // Abaikan kegagalan pada individu key agar pemangkasan item lain tetap berlanjut
+      }
+    }
+
+    return deletedCount;
+  } catch {
+    return 0;
+  }
+}
 
 function getHeaderValue(
   headers:

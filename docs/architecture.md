@@ -100,14 +100,16 @@ Browser Fetch Event
   │     │                 └── Offline / Error: caches.match('/offline.html')
   │     │
   │     ├── STATIC ASSETS Criteria:
-  │     │     └── /offline.html, /manifest.webmanifest, /icons/*
-  │     │           └──► Cache-First dari 'indogreen-static-v...'
-  │     │                 ├── Ada di Cache: Kembalikan dari cache
-  │     │                 └── Tidak ada: Ambil dari jaringan & simpan ke cache
+  │     │     └── /offline.html, /manifest.webmanifest, /indogreen.png, /icons/*
+  │     │           └──► Stale-While-Revalidate dari 'indogreen-static-v...'
+  │     │                 ├── Ada di Cache: Sajikan dari cache seketika, revalidasi di background
+  │     │                 └── Tidak ada: Unduh dari jaringan, simpan ke cache (max 50 entri)
   │     │
   │     └── IMMUTABLE ASSETS Criteria:
-  │           └── /_app/immutable/*
-  │                 └──► Bypass di Fase 3 (diaktifkan di Fase 4)
+  │           └── /_app/immutable/* (Chunk JS/CSS Vite ber-hash)
+  │                 └──► Cache-First ke 'indogreen-assets-v...'
+  │                       ├── Ada di Cache: Kembalikan langsung (0 B network transfer)
+  │                       └── Tidak ada: Unduh dari jaringan jika HTTP 200 basic (max 150 entri, FIFO prune)
   │
   └── Default: Bypass ke jaringan biasa
 ```

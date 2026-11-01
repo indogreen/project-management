@@ -1,5 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import { classifyRequest } from './sw-routing';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  classifyRequest,
+  getExcessKeys,
+  pruneCache,
+  MAX_IMMUTABLE_ASSETS,
+  MAX_STATIC_ASSETS,
+  type CachePrunable
+} from './sw-routing';
 
 const APP_ORIGIN = 'https://app-pm-idg.zed.ai.id';
 
@@ -240,6 +247,18 @@ describe('classifyRequest (Service Worker Request Classifier)', () => {
         ).toBe('static-asset');
       }
     });
+
+    it('harus mengklasifikasikan logo indogreen.png dan favicon sebagai static-asset', () => {
+      for (const path of ['/indogreen.png', '/favicon.png', '/favicon.ico']) {
+        expect(
+          classifyRequest({
+            url: `${APP_ORIGIN}${path}`,
+            method: 'GET',
+            origin: APP_ORIGIN
+          })
+        ).toBe('static-asset');
+      }
+    });
   });
 
   describe('10. Penanganan URL Aneh & Fallback', () => {
@@ -271,5 +290,109 @@ describe('classifyRequest (Service Worker Request Classifier)', () => {
       ).toBe('bypass');
     });
   });
-});
 
+  describe('11. Cache Pruning Pure Logic: getExcessKeys', () => {
+    it('harus mengembalikan array kosong jika jumlah keys <= maxItems', () => {
+      expect(getExcessKeys(['a', 'b'], 5)).toEqual([]);
+      expect(getExcessKeys(['a', 'b', 'c'], 3)).toEqual([]);
+    });
+
+    it('harus mengembalikan array kosong jika keys kosong', () => {
+      expect(getExcessKeys([], 10)).toEqual([]);
+    });
+
+    it('harus mengembalikan elemen tertua (FIFO) jika keys > maxItems', () => {
+      const keys = ['chunk-1.js', 'chunk-2.js', 'chunk-3.js', 'chunk-4.js', 'chunk-5.js'];
+      // Jika maxItems = 3, maka 2 elemen tertua (chunk-1 dan chunk-2) harus dipangkas
+      const excess = getExcessKeys(keys, 3);
+      expect(excess).toEqual(['chunk-1.js', 'chunk-2.js']);
+    });
+
+    it('harus mengembalikan seluruh keys jika maxItems <= 0', () => {
+      const keys = ['chunk-1.js', 'chunk-2.js'];
+      expect(getExcessKeys(keys, 0)).toEqual(['chunk-1.js', 'chunk-2.js']);
+      expect(getExcessKeys(keys, -5)).toEqual(['chunk-1.js', 'chunk-2.js']);
+    });
+
+    it('harus bekerja dengan objek Request browser standard', () => {
+      const req1 = new Request('https://app-pm-idg.zed.ai.id/_app/immutable/1.js');
+      const req2 = new Request('https://app-pm-idg.zed.ai.id/_app/immutable/2.js');
+      const req3 = new Request('https://app-pm-idg.zed.ai.id/_app/immutable/3.js');
+
+      const excess = getExcessKeys([req1, req2, req3], 2);
+      expect(excess).toEqual([req1]);
+    });
+  });
+
+  describe('12. Cache Pruning Async Logic: pruneCache', () => {
+    it('tidak memanggil delete jika jumlah entri dalam cache masih di bawah batas', async () => {
+      const deleteFn = vi.fn().mockResolvedValue(true);
+      const mockCache: CachePrunable = {
+        keys: vi.fn().mockResolvedValue(['entry1', 'entry2']),
+        delete: deleteFn
+      };
+
+      const deletedCount = await pruneCache(mockCache, 10);
+      expect(deletedCount).toBe(0);
+      expect(deleteFn).not.toHaveBeenCalled();
+    });
+
+    it('menghapus entri tertua hingga jumlah entri mencapai batas maxItems', async () => {
+      const deletedItems: (Request | string)[] = [];
+      const mockCache: CachePrunable = {
+        keys: vi.fn().mockResolvedValue(['old1', 'old2', 'new1', 'new2', 'new3']),
+        delete: vi.fn().mockImplementation(async (key: Request | string) => {
+          deletedItems.push(key);
+          return true;
+        })
+      };
+
+      const deletedCount = await pruneCache(mockCache, 3);
+      expect(deletedCount).toBe(2);
+      expect(deletedItems).toEqual(['old1', 'old2']);
+    });
+
+    it('mengembalikan 0 jika maxItems negatif', async () => {
+      const mockCache: CachePrunable = {
+        keys: vi.fn().mockResolvedValue(['a', 'b']),
+        delete: vi.fn().mockResolvedValue(true)
+      };
+
+      const deletedCount = await pruneCache(mockCache, -1);
+      expect(deletedCount).toBe(0);
+    });
+
+    it('tahan terhadap error jika cache.keys() melempar pengecualian (resilient)', async () => {
+      const mockCache: CachePrunable = {
+        keys: vi.fn().mockRejectedValue(new Error('Storage access denied')),
+        delete: vi.fn().mockResolvedValue(true)
+      };
+
+      const deletedCount = await pruneCache(mockCache, 5);
+      expect(deletedCount).toBe(0);
+    });
+
+    it('tetap melanjutkan pemangkasan jika salah satu operasi delete melempar error', async () => {
+      const deleteFn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Disk I/O error'))
+        .mockResolvedValueOnce(true);
+
+      const mockCache: CachePrunable = {
+        keys: vi.fn().mockResolvedValue(['item1', 'item2', 'item3', 'item4']),
+        delete: deleteFn
+      };
+
+      // Ingin pangkas dari 4 ke 2 (harus hapus item1 dan item2)
+      // item1 gagal (throw), item2 sukses
+      const deletedCount = await pruneCache(mockCache, 2);
+      expect(deletedCount).toBe(1);
+      expect(deleteFn).toHaveBeenCalledTimes(2);
+    });
+
+    it('memiliki konstanta batas entri yang terdefinisi dengan rasional', () => {
+      expect(MAX_IMMUTABLE_ASSETS).toBe(150);
+      expect(MAX_STATIC_ASSETS).toBe(50);
+    });
+  });
+});
