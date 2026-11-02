@@ -74,7 +74,7 @@ Route::group(['middleware' => ['auth:api', 'sliding_throttle:15,60,api']], funct
     Route::post('stock-movements/outbound', [StockMovementController::class, 'outbound']);
     Route::post('stock-movements/transfer', [StockMovementController::class, 'transfer']);
     Route::post('stock-movements/allocate-project', [StockMovementController::class, 'allocateProject']);
-    Route::apiResource('stock-movements', StockMovementController::class)->only(['index', 'show']);
+    Route::apiResource('stock-movements', StockMovementController::class)->only(['index', 'show', 'update', 'destroy']);
 
     // Activity Logs
     Route::get('activity-logs', [ActivityLogController::class, 'index']);

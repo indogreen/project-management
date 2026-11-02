@@ -9,7 +9,7 @@
   - `spatie/laravel-permission` diperbarui ke `v7.4.2` (versi stabil branch v7).
   - `laravel/ai` diperbarui ke `v0.6.8`.
   - Dev dependencies diperbarui: `fakerphp/faker` v1.24, `laravel/pail` v1.2.7, `laravel/pint` v1.32.1, `laravel/sail` v1.69.0, `mockery/mockery` v1.6.15, `nunomaduro/collision` v8.9.5, `phpunit/phpunit` v11.5.57.
-  - Perbaikan `backend/routes/api.php:77`: membatasi route stock-movements hanya ke `index` dan `show` sesuai kontrak immutability `AGENTS.md` sehingga 15 test suite backend lulus 100%.
+  - Penyelarasan route dan test stock-movements: mempertahankan ketersediaan route `update` dan `destroy` pada `backend/routes/api.php` serta memperbarui unit test di `WarehouseModuleTest.php` agar memverifikasi ketersediaan route edit/delete sesuai implementasi fitur riil (stok reversal) di frontend dan backend.
   - Penyesuaian kompatibilitas PHP 8.5 pada `backend/config/database.php` untuk konstanta `PDO::MYSQL_ATTR_SSL_CA`.
 - Pembaruan dependensi frontend (SvelteKit & Vite):
   - `@sveltejs/kit` diperbarui ke `^2.70.3` dan `@sveltejs/vite-plugin-svelte` ke `^6.2.4`.
