@@ -49,4 +49,3 @@ export function lockBodyScroll(lock: boolean): void {
   delete body.dataset.scrollY;
   window.scrollTo(0, y);
 }
-

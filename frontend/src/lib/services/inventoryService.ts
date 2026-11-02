@@ -252,7 +252,10 @@ export async function updateStockMovement(
   id: number,
   payload: { quantity: number; notes?: string | null; occurred_at?: string | null }
 ): Promise<StockMovement> {
-  const response = await axiosClient.put<{ data: StockMovement }>(`/stock-movements/${id}`, payload);
+  const response = await axiosClient.put<{ data: StockMovement }>(
+    `/stock-movements/${id}`,
+    payload
+  );
   return response.data.data;
 }
 
