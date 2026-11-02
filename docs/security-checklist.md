@@ -50,27 +50,86 @@
 - [ ] Foreign key constraint aktif untuk menjaga integritas data.
 - [ ] StockMovement bersifat immutable (tidak bisa diubah/dihapus).
 
-## Deployment
+## Progressive Web App (PWA) & Service Worker
 
-- [ ] HTTPS aktif untuk semua domain.
-- [ ] Header keamanan dikonfigurasi (X-Frame-Options, X-Content-Type-Options, dll).
+- [ ] Service Worker mem-bypass seluruh request `/api/*` dan `/storage/*` (tanpa caching data bisnis/keuangan).
+- [ ] Service Worker mem-bypass seluruh request non-GET (POST, PUT, DELETE, PATCH).
+- [ ] Service Worker mem-bypass seluruh request yang membawa header `Authorization` atau meminta JSON (`Accept: application/json`).
+- [ ] HTML dokumen navigasi tidak pernah disimpan ke cache (Network-Only dengan `/offline.html` fallback).
+- [ ] Cache terisolasi per versi build (`indogreen-static-${version}` & `indogreen-assets-${version}`).
+- [ ] Emergency Kill-Switch runtime tersedia (`PUBLIC_PWA_ENABLED=false`).
+- [ ] Mode development secara otomatis mematikan dan membersihkan Service Worker lama (`unregisterAndClean()`).
+
+## Deployment & Cloudflare Tunnel (PWA Dev / Staging)
+
+- [ ] HTTPS aktif untuk semua domain via Cloudflare Tunnel (`app-pm-idg.zed.ai.id`, `api-pm-idg.zed.ai.id`).
+- [ ] Agent `cloudflared` berjalan di host yang sama dengan server aplikasi dan auto-restart via systemd.
+- [ ] File kredensial tunnel (`<TUNNEL_ID>.json`) disimpan di luar repositori (`/etc/cloudflared/`).
+- [ ] Cloudflare Access (Email OTP) aktif untuk domain frontend `app-pm-idg.zed.ai.id`.
+- [ ] Bypass rule pada Cloudflare Access untuk file PWA publik (`/manifest.webmanifest`, `/icons/*`, `/service-worker.js`).
+- [x] Header keamanan dikonfigurasi (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` via `hooks.server.ts` & `app.html`).
+- [x] Header `Cache-Control: no-cache, no-store, must-revalidate` terpasang untuk `/service-worker.js` dan `/manifest.webmanifest`.
+- [x] Trusted Proxies di Laravel dikonfigurasi (`$middleware->trustProxies(at: '*')`) untuk mendukung resolusi IP per-user nyata di balik Cloudflare Tunnel.
 - [ ] Laravel debug bar/telescope dimatikan di production.
 - [ ] Log level minimal `warning` di production.
 
 ---
 
+## Content Security Policy (CSP) Recommendation
+
+> **Catatan Rekomendasi:** Penegakan Content Security Policy (CSP) ketat via HTTP header ditunda untuk audit komprehensif karena pustaka runtime UI (SweetAlert2 dialog styling, Chart.js canvas rendering, dan Tailwind CSS runtime utilities) membutuhkan evaluasi hash/nonce atau `'unsafe-inline'` agar tidak memblokir render grafis dan modal interaktif.
+>
+> Rekomendasi baseline CSP untuk tahap evaluasi:
+>
+> ```text
+> default-src 'self';
+> script-src 'self' 'unsafe-inline';
+> style-src 'self' 'unsafe-inline';
+> img-src 'self' data: blob: https://api-pm-idg.zed.ai.id;
+> connect-src 'self' https://api-pm-idg.zed.ai.id wss://app-pm-idg.zed.ai.id;
+> font-src 'self';
+> object-src 'none';
+> base-uri 'self';
+> form-action 'self';
+> frame-ancestors 'none';
+> ```
+
+---
+
+## Content Security Policy (CSP) Recommendation
+
+> **Catatan Rekomendasi:** Penegakan Content Security Policy (CSP) ketat via HTTP header ditunda untuk audit komprehensif karena pustaka runtime UI (SweetAlert2 dialog styling, Chart.js canvas rendering, dan Tailwind CSS runtime utilities) membutuhkan evaluasi hash/nonce atau `'unsafe-inline'` agar tidak memblokir render grafis dan modal interaktif.
+>
+> Rekomendasi baseline CSP untuk tahap evaluasi:
+> ```text
+> default-src 'self';
+> script-src 'self' 'unsafe-inline';
+> style-src 'self' 'unsafe-inline';
+> img-src 'self' data: blob: https://api-pm-idg.zed.ai.id;
+> connect-src 'self' https://api-pm-idg.zed.ai.id wss://app-pm-idg.zed.ai.id;
+> font-src 'self';
+> object-src 'none';
+> base-uri 'self';
+> form-action 'self';
+> frame-ancestors 'none';
+> ```
+
+---
+
 ## Security Notes
 
-### ⚠️ Temuan yang Perlu Diperhatikan
+### ⚠️ Temuan & Panduan Keamanan Penting
 
-1. **CORS terlalu permisif** — `config/cors.php` menggunakan `allowed_origins => ['*']`. Di production, ini harus dibatasi ke domain frontend saja.
+1. **CORS terlalu permisif** — `config/cors.php` saat ini menggunakan `allowed_origins => ['*']`. Jika browser memanggil API secara langsung ke `https://api-pm-idg.zed.ai.id`, disarankan membatasi `allowed_origins` ke `https://app-pm-idg.zed.ai.id`.
 
-2. **JWT di localStorage** — Token JWT disimpan di `localStorage`, yang rentan terhadap serangan XSS. Ini adalah trade-off yang umum untuk SPA, tetapi perlu dipastikan tidak ada celah XSS di frontend.
+2. **JWT di localStorage vs HttpOnly Cookie** — Token JWT saat ini disimpan di `localStorage`. Jika di masa mendatang beralih ke cookie sesi, pastikan atribut cookie adalah **Host-only** (tanpa parameter `Domain`), `HttpOnly`, `Secure`, dan `SameSite=Lax` untuk mencegah manipulasi dan kebocoran lintas domain.
 
-3. **File `.env` di repository** — File `backend/.env` dengan credential asli terdeteksi di repository. Meskipun `.gitignore` sudah mengecualikan `.env`, file ini mungkin sudah ter-commit sebelumnya. **Segera:**
-   - Hapus file `.env` dari tracking Git jika sudah ter-commit.
-   - Rotate semua secret (APP_KEY, JWT_SECRET, AI_API_KEY, DB password).
+3. **Risiko Rate Limiting di Balik Reverse Proxy / Tunnel** — Jika request ke Laravel diteruskan via proxy internal tanpa konfigurasi `$middleware->trustProxies()`, Laravel membaca semua request dari IP `127.0.0.1`. Ini menyebabkan rate limit 5 request/60s untuk login menjadi global (lockout massal) dan audit log mencatat IP internal. Header `CF-Connecting-IP` / `X-Forwarded-For` harus diteruskan dan dipercaya oleh Laravel.
 
-4. **AI API Key terekspos** — `AI_API_KEY` di file `.env` berisi key aktual. Pastikan key ini sudah di-rotate.
+4. **Risiko CSRF / Origin Validation pada Dev Server SvelteKit** — Saat diakses melalui domain tunnel publik, SvelteKit memvalidasi origin header pada form actions (POST multipart upload). Jika terjadi HTTP 403 Forbidden pada upload lampiran, origin `https://app-pm-idg.zed.ai.id` harus didaftarkan di `csrf.trustedOrigins` pada `svelte.config.js`.
 
-5. **`supports_credentials` disabled** — CORS `supports_credentials` di-set `false`, yang berarti cookie-based auth tidak akan berfungsi cross-origin. Ini konsisten dengan penggunaan JWT di header.
+5. **Akses LAN vs HTTPS PWA** — Dengan penggunaan cookie Secure dan PWA Service Worker, akses melalui IP LAN lokal (`http://192.168.1.x`) tidak lagi didukung untuk otentikasi aman; pengujian mobile bergantung sepenuhnya pada koneksi HTTPS via Cloudflare Tunnel.
+
+6. **Batas Upload Request Cloudflare** — Cloudflare Free membatasi request body maksimum 100 MB. Pastikan batch upload file lampiran tidak melebihi batas ini.
+
+7. **`supports_credentials` disabled** — CORS `supports_credentials` saat ini `false`, yang konsisten dengan otentikasi JWT Bearer token di header.

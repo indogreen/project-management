@@ -14,6 +14,9 @@
   import { theme } from '$lib/stores/theme';
   import { currentUser, setUser } from '$lib/stores/user';
   import { showError, showSuccess } from '$lib/utils/toast';
+  import { registerServiceWorker } from '$lib/pwa/register';
+  import { isOnline } from '$lib/stores/connectivity';
+  import UpdatePrompt from '$lib/components/pwa/UpdatePrompt.svelte';
 
   let { children }: { children: Snippet } = $props();
 
@@ -21,7 +24,21 @@
   let sidebarCollapsed = $state(false);
 
   onMount(() => {
-    const unsubscribe = theme.subscribe(() => {});
+    void registerServiceWorker();
+
+    const unsubscribe = theme.subscribe((currentTheme) => {
+      if (typeof document === 'undefined') return;
+      const themeColor = currentTheme === 'dark' ? '#000000' : '#ffffff';
+      const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+      if (metaTags.length > 0) {
+        metaTags.forEach((el) => el.setAttribute('content', themeColor));
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('name', 'theme-color');
+        meta.setAttribute('content', themeColor);
+        document.head.appendChild(meta);
+      }
+    });
     return unsubscribe;
   });
 
@@ -82,6 +99,32 @@
     }
   });
 </script>
+
+<UpdatePrompt />
+
+{#if !$isOnline}
+  <div
+    role="status"
+    aria-live="polite"
+    class="sticky top-0 z-50 flex items-center justify-center gap-2 bg-amber-600 px-3 py-1.5 text-center text-xs font-medium text-white shadow-xs"
+  >
+    <svg
+      class="h-4 w-4 shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a9 9 0 01-12.728 0m0 0l2.829-2.829m-2.829 2.829L3 21m2.828-12.536a5 5 0 017.072 0m-7.072 0L3 5.636"
+      />
+    </svg>
+    <span>Anda offline. Perubahan tidak dapat disimpan.</span>
+  </div>
+{/if}
 
 {#if isAuthRoute}
   {@render children()}

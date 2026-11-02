@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Koneksi Terputus - Indogreen</title>
+    <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+    <style>
+      :root {
+        --bg-color: #f3f4f6;
+        --card-bg: #ffffff;
+        --text-main: #111827;
+        --text-muted: #4b5563;
+        --border-color: #e5e7eb;
+        --primary-color: #4f46e5;
+        --primary-hover: #4338ca;
+        --btn-text: #ffffff;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-color: #262626;
+          --card-bg: #000000;
+          --text-main: #f9fafb;
+          --text-muted: #9ca3af;
+          --border-color: #374151;
+          --primary-color: #4f46e5;
+          --primary-hover: #6366f1;
+          --btn-text: #ffffff;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        padding: 2.5rem 2rem;
+        max-width: 440px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+
+      .logo {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.5rem;
+        border-radius: 12px;
+        display: block;
+        object-fit: cover;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text-main);
+      }
+
+      p {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: var(--text-muted);
+        margin-bottom: 1.75rem;
+      }
+
+      .btn {
+        display: inline-block;
+        background-color: var(--primary-color);
+        color: var(--btn-text);
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.75rem 1.75rem;
+        border-radius: 0.5rem;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        text-decoration: none;
+      }
+
+      .btn:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <img src="/icons/icon-192.png" alt="Indogreen" class="logo" width="64" height="64" />
+      <h1>Anda sedang offline</h1>
+      <p>
+        Koneksi internet Anda terputus. Pembaruan aktivitas, mutasi stok barang, dan pencatatan keuangan memerlukan koneksi aktif untuk menjaga integritas data.
+      </p>
+      <button type="button" class="btn" onclick="location.reload()">Coba lagi</button>
+    </main>
+  </body>
+</html>
+

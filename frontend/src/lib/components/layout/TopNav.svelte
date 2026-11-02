@@ -1,6 +1,11 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
+  import { browser } from '$app/environment';
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
+  import { getDetailParentHref } from '$lib/components/layout/nav';
   import { theme, toggleTheme } from '$lib/stores/theme';
+  import { isStandalone } from '$lib/utils/pwa-platform';
 
   type Props = {
     toggleMobileSidebar?: () => void;
@@ -10,6 +15,22 @@
   const noop = () => {};
 
   let { toggleMobileSidebar = noop, topnavTitle }: Props = $props();
+
+  let standalone = $state(false);
+
+  onMount(() => {
+    standalone = isStandalone();
+  });
+
+  let parentHref = $derived(getDetailParentHref(page.url.pathname));
+
+  function handleBack() {
+    if (browser && window.history.length > 1) {
+      window.history.back();
+    } else if (parentHref) {
+      void goto(parentHref);
+    }
+  }
 </script>
 
 <header
@@ -27,6 +48,25 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v18" />
       </svg>
     </button>
+
+    {#if standalone && parentHref}
+      <button
+        type="button"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label="Kembali"
+        title="Kembali ke halaman sebelumnya"
+        onclick={handleBack}
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+      </button>
+    {/if}
 
     <div class="min-w-0">
       {@render topnavTitle?.()}

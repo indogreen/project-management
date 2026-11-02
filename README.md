@@ -25,6 +25,7 @@ Aplikasi manajemen proyek internal **Indogreen** untuk mengelola proyek energi s
 - **Role & Permission** — RBAC 4-tier (super_admin, admin, staff, user) dengan permission per modul
 - **Activity Log** — Audit trail otomatis untuk semua operasi CRUD
 - **Settings** — Pengaturan profil, password, tema, dan manajemen user
+- **Progressive Web App (PWA)** — Dukungan instalasi mandiri (desktop/Android/iOS standalone), caching aset build ultra-cepat (0 B second visit), deteksi status konektivitas realtime, dan fallback navigasi offline
 
 ## Quick Start
 

@@ -1,5 +1,142 @@
 # Changelog
 
+## [2026-11-02] — docs(pwa): phase 9 documentation consolidation and production release plan
+
+- Finalisasi spesifikasi komprehensif PWA pada `docs/features/pwa.md`: detail arsitektur, strategi cache, daftar eksplisit 11 kategori yang tidak di-cache, siklus update terisolasi, 3 lapis kill-switch, batasan iOS WebKit standalone, panduan debug DevTools, dan rencana rilis bertahap 2 minggu dengan prosedur rollback.
+- Pembaruan dokumen repositori:
+  - `docs/overview.md`: pembaruan status PWA menjadi aktif dan penegasan batasan operasional offline (hanya fallback navigasi, tanpa penulisan data offline).
+  - `README.md` & `docs/README.md`: penambahan fitur PWA pada ringkasan utama dan indeks dokumentasi.
+  - `docs/architecture.md`: penambahan layer Service Worker, server security hooks, dan trusted proxies pada diagram alur dan tabel stack komunikasi.
+  - `docs/folder-structure.md`: dokumentasi lengkap file PWA, server hooks, store pwa/connectivity, utilitas platform, dan komponen UI.
+  - `docs/deployment.md`: penambahan checklist pre/post-deployment PWA dan instruksi monitoring.
+  - `docs/environment-variables.md`: dokumentasi variabel `PUBLIC_PWA_ENABLED` (kill-switch runtime).
+  - `AGENTS.md`: penambahan aturan kebersihan cache Service Worker (zero-sensitive data) dan kontrak dokumentasi PWA untuk seluruh coding assistant.
+
+## [2026-11-01] — test(pwa): phase 8 QA matrix, security verification, and performance report
+
+- Verifikasi menyeluruh checklist keamanan PWA, performa Lighthouse, dan kapasitas Cache Storage.
+- Penambahan konfigurasi Trusted Proxies di Laravel (`backend/bootstrap/app.php`: `$middleware->trustProxies(at: '*')`) agar rate limiter SlidingWindowThrottle mengenali IP pengguna asli peramban di balik Cloudflare Tunnel, dilengkapi unit test di `RateLimiterTest.php`.
+- Penguatan Service Worker caching (`src/service-worker.ts`) dengan pengecekan `!networkResponse.headers.has('set-cookie')` untuk mencegah caching respons sensitif ber-cookie.
+- Penambahan server handle hook (`src/hooks.server.ts` & unit test) yang menyematkan header keamanan HTTP (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`) dan header `Cache-Control: no-cache, no-store, must-revalidate` pada `/service-worker.js` dan `/manifest.webmanifest`.
+- Penambahan meta tag referrer policy di `src/app.html`.
+- Pengujian otomatis: 81 unit test Vitest lulus, svelte-check 0 error, build produksi Vite sukses, dan pengujian backend Laravel rate limiter lulus.
+- Pembaruan dokumen: `docs/security-checklist.md`, `docs/features/pwa.md`, `docs/troubleshooting.md`, `docs/changelog.md`.
+
+## [2026-11-01] — feat(pwa): phase 7 connectivity store, offline banner, error handling, and standalone polish
+
+- Pembuatan store reaktif `src/lib/stores/connectivity.ts` (`isOnline`) berbasis `navigator.onLine` dan event window `online`/`offline` dengan penanganan aman untuk SSR/Node 26 serta 2 unit test Vitest.
+- Pemasangan banner notifikasi offline tipis non-blokir di `src/routes/+layout.svelte` (_"Anda offline. Perubahan tidak dapat disimpan."_) dengan gaya amber ramping `sticky top-0 z-50`.
+- Standardisasi penanganan error API pada `src/lib/utils/errors.ts` (`extractApiErrors`) ke dalam 3 kategori terarah lengkap dengan 11 unit test Vitest:
+  - Kasus a (tanpa respons / network drop / timeout): _"Tidak dapat terhubung ke server. Periksa koneksi internet Anda."_
+  - Kasus b (server gateway 502/503/504): _"Server sedang tidak dapat dihubungi. Coba lagi beberapa saat."_
+  - Kasus c (respons standar Laravel): penanganan validasi 422, custom error message, atau fallback default.
+- Seluruh formulir modal aplikasi otomatis terproteksi oleh pesan error terarah tanpa perubahan massal komponen.
+- Penambahan tombol "Kembali" pada `TopNav.svelte` khusus untuk mode standalone saat berada di rute detail (`/projects/[id]`, `/activities/[id]`, `/mitras/[id]`, `/certificates/[id]`, `/barang-certificates/[id]`) dengan helper murni `getDetailParentHref(pathname)` di `nav.ts` (7 unit test) dan fallback navigasi ke rute induk.
+- Verifikasi dan dokumentasi audit pengalaman standalone: evaluasi safe-area TopNav, isolasi pull-to-refresh melalui `scroll-lock.ts`, dan mekanisme unduhan berkas lampiran lintas origin di iOS Safari & Android Chrome.
+- File yang diubah:
+  - Frontend: `src/lib/stores/connectivity.ts`, `src/lib/stores/connectivity.test.ts`, `src/lib/utils/errors.ts`, `src/lib/utils/errors.test.ts`, `src/lib/components/layout/nav.ts`, `src/lib/components/layout/nav.test.ts`, `src/lib/components/layout/TopNav.svelte`, `src/routes/+layout.svelte`
+  - Docs: `docs/features/pwa.md`, `docs/frontend-guidelines.md`, `docs/troubleshooting.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengguna mendapatkan umpan balik konektivitas seketika saat jaringan putus tanpa mengunci navigasi data yang sudah dimuat.
+  - Pengguna mode standalone di ponsel cerdas memiliki navigasi "Kembali" yang jelas di halaman detail tanpa kehilangan tombol drawer menu.
+
+## [2026-11-01] — feat(pwa): phase 6 install button, multi-platform detection, and standalone handling
+
+- Pembuatan modul pure utility `src/lib/utils/pwa-platform.ts` dengan 18 unit test: mendeteksi `isStandalone()`, `isIOS()`, `isIOSSafari()`, dan `canShowIOSInstallHint()`.
+- Perluasan store `src/lib/stores/pwa.ts`: menambahkan `deferredPrompt`, `canInstall`, `isInstalled`, penangkapan event `beforeinstallprompt` (preventDefault + capture) dan `appinstalled`, serta fungsi `triggerInstallPrompt()`.
+- Pembuatan komponen `src/lib/components/pwa/InstallButton.svelte` dengan dukungan multi-varian:
+  - Varian `menu`: tombol _"Pasang Aplikasi"_ di menu akun sidebar (`AppSidebar.svelte`), persis di atas opsi _"Pengaturan"_.
+  - Varian `card`: kartu status dan aksi _"Aplikasi Web (PWA)"_ di halaman pengaturan (`ProfileSettingsTab.svelte`).
+  - Penanganan native prompt pada peramban Chromium desktop dan Android.
+  - Dialog modal instruksi 3 langkah untuk Apple iOS Safari ("Bagikan" -> "Tambah ke Layar Utama" -> "Tambah") lengkap dengan catatan penting login ulang.
+  - Sembunyi otomatis saat aplikasi sudah berjalan dalam mode standalone.
+  - Tanpa popup banner otomatis yang mengganggu di halaman login atau saat awal memuat.
+- File yang diubah:
+  - Frontend: `src/lib/utils/pwa-platform.ts`, `src/lib/utils/pwa-platform.test.ts`, `src/lib/stores/pwa.ts`, `src/lib/stores/pwa.test.ts`, `src/lib/pwa/register.ts`, `src/lib/components/pwa/InstallButton.svelte`, `src/lib/components/layout/AppSidebar.svelte`, `src/routes/settings/_components/ProfileSettingsTab.svelte`
+  - Docs: `docs/features/pwa.md`, `docs/features/settings.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengguna di perangkat Android, Desktop, maupun iOS Safari kini dapat menginstal aplikasi PWA secara intuitif melalui menu akun atau pengaturan tanpa terganggu oleh popup banner otomatis.
+
+## [2026-11-01] — feat(pwa): phase 5 update prompt UI, version polling, and chunk reload guard
+
+- Pembuatan store PWA terpusat (`src/lib/stores/pwa.ts`) dengan properti writable `{ updateReady, registration }` dan unit test Vitest lengkap.
+- Penambahan deteksi worker baru pada `src/lib/pwa/register.ts`: deteksi status `waiting` dan event `updatefound -> statechange 'installed'` saat controller aktif.
+- Penambahan polling berkala `registration.update()` pada Service Worker saat tab `visibilityState === 'visible'` dan tiap ~60 menit.
+- Pengaktifan SvelteKit version polling `kit.version.pollInterval: 300000` (5 menit) pada `svelte.config.js`.
+- Pembuatan komponen banner update non-blokir (`src/lib/components/pwa/UpdatePrompt.svelte`) dengan tombol "Perbarui sekarang" dan "Nanti":
+  - Komunikasi `postMessage({ type: 'SKIP_WAITING' })` ke worker baru.
+  - Listener `controllerchange` dengan guard flag `pwa_refreshing` untuk mencegah reload loop.
+  - Proteksi modal/drawer terbuka (`body[data-scroll-locked='true']`): menunda auto-reload dan menampilkan dialog konfirmasi SweetAlert2 sebelum user menyetujui reload.
+- Penanganan navigasi stale tab via hook `beforeNavigate`: memaksa full reload native saat versi baru terdeteksi sehingga terhindar dari chunk mismatch error (_"Failed to fetch dynamically imported module"_).
+- Pemasangan `<UpdatePrompt />` di root layout (`src/routes/+layout.svelte`) agar aktif di seluruh rute termasuk halaman autentikasi.
+- File yang diubah:
+  - Frontend: `src/lib/stores/pwa.ts`, `src/lib/stores/pwa.test.ts`, `src/lib/pwa/register.ts`, `src/lib/components/pwa/UpdatePrompt.svelte`, `src/routes/+layout.svelte`, `svelte.config.js`
+  - Docs: `docs/features/pwa.md`, `docs/frontend-guidelines.md`, `docs/troubleshooting.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengguna secara otomatis mendapatkan pemberitahuan visual elegan saat versi baru dirilis tanpa kehilangan pekerjaan yang sedang diinput di dalam modal atau formulir.
+  - Navigasi pada tab lama setelah deploy baru akan memuat bundle terbaru secara mulus tanpa error modul.
+
+## [2026-11-01] — feat(pwa): phase 4 immutable asset caching and cache pruning
+
+- Implementasi strategi **Cache-First** untuk aset immutable (`/_app/immutable/**`) ke cache `indogreen-assets-${version}`.
+- Penambahan filter respons ketat: hanya menyimpan respons berstatus `status === 200` dan `type === 'basic'` (mencegah cache respons opaque, redirect, atau error).
+- Implementasi strategi **Stale-While-Revalidate (SWR)** untuk aset statis origin sendiri (`/icons/*`, `/indogreen.png`, `/favicon.*`, manifest, dan offline page) ke cache `indogreen-static-${version}`.
+- Pembuatan fungsi murni pemangkasan cache (`getExcessKeys` dan `pruneCache`) berbasis FIFO (First-In, First-Out) dengan batasan kapasitas:
+  - Maksimal 150 entri untuk cache aset immutable (`MAX_IMMUTABLE_ASSETS = 150`).
+  - Maksimal 50 entri untuk cache aset statis (`MAX_STATIC_ASSETS = 50`).
+- Penambahan 12 unit test baru di `src/lib/pwa/sw-routing.test.ts` (total 31 unit test lulus): menguji identifikasi aset logo/favicon, logika pemangkasan FIFO, penanganan batas negatif/nol, dan ketahanan terhadap error I/O storage.
+- Jaminan proteksi tetap aktif: `/api/*`, `/storage/*`, `__data.json`, navigasi HTML, non-GET, lintas origin, respons selain 200, dan request ber-Authorization tetap di-bypass 100%.
+- Pembersihan cache versi lama secara otomatis pada siklus `activate` Service Worker sehingga tidak ada benturan hash modul pada deploy berturut-turut.
+- File yang diubah:
+  - Frontend: `src/service-worker.ts`, `src/lib/pwa/sw-routing.ts`, `src/lib/pwa/sw-routing.test.ts`
+  - Docs: `docs/features/pwa.md`, `docs/architecture.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pada kunjungan kedua (second visit), transfer jaringan untuk aset JS/CSS turun menjadi **0 B** (penghematan bandwidth >99.8%).
+  - Navigasi dokumen HTML tetap Network-Only untuk menjaga kesegaran sesi dan otentikasi.
+
+## [2026-10-31] — feat(pwa): phase 3 service worker, routing classifier, and offline fallback
+
+- Implementasi Service Worker (`src/service-worker.ts`) menggunakan modul bawaan SvelteKit `$service-worker`.
+- Penambahan pure request classifier (`src/lib/pwa/sw-routing.ts`) dengan 19 unit test Vitest (project server): menjamin bahwa `/api/*`, `/storage/*`, `__data.json`, request non-GET, lintas origin, dan request ber-Authorization tidak pernah diintersep/dicache.
+- Pembuatan halaman offline mandiri (`static/offline.html`) dengan CSS inline, dukungan Dark Mode, dan tombol muat ulang.
+- Strategi caching terpisah: precache eksplisit untuk aset statis dasar (offline, manifest, icons), network-only untuk navigasi dokumen HTML dengan offline fallback, dan bypass penuh untuk request dinamis.
+- Modul pendaftaran dan kill-switch runtime (`src/lib/pwa/register.ts`) dengan auto-cleanup saat berada di mode DEV atau saat `PUBLIC_PWA_ENABLED=false`.
+- Konfigurasi `svelte.config.js` (`kit.serviceWorker.register = false`) untuk registrasi manual terkontrol.
+- File yang diubah:
+  - Frontend: `src/service-worker.ts`, `src/lib/pwa/sw-routing.ts`, `src/lib/pwa/sw-routing.test.ts`, `src/lib/pwa/register.ts`, `static/offline.html`, `svelte.config.js`, `src/routes/+layout.svelte`, `.env.example`
+  - Docs: `docs/features/pwa.md`, `docs/architecture.md`, `docs/security-checklist.md`, `docs/troubleshooting.md`, `docs/folder-structure.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Aplikasi kini memiliki Service Worker aktif pada mode produksi yang menyediakan fallback halaman offline saat koneksi terputus.
+  - Perilaku jaringan untuk API, upload/unduh berkas, dan autentikasi tetap 100% normal tanpa risiko stale data.
+
+## [2026-10-31] — feat(pwa): phase 2 manifest, icons, and theme synchronization
+
+- Penambahan file Web App Manifest (`manifest.webmanifest`) dengan metadata PWA lengkap dan 4 shortcut aplikasi (Dashboard, Project, Aktivitas, Keuangan).
+- Pembuatan aset ikon standar di `frontend/static/icons/`: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (safe zone 80% terverifikasi), dan `apple-touch-icon-180.png` dari master `indogreen.png`.
+- Pemasangan metadata PWA dan link manifest pada `src/app.html`.
+- Sinkronisasi dinamis `<meta name="theme-color">` pada `src/routes/+layout.svelte` saat toggle tema manual.
+- Pembuatan dokumentasi fitur `docs/features/pwa.md` dan pembaruan `folder-structure.md` serta `frontend-guidelines.md`.
+- File yang diubah:
+  - Frontend: `frontend/static/manifest.webmanifest`, `frontend/static/icons/*`, `frontend/src/app.html`, `frontend/src/routes/+layout.svelte`
+  - Docs: `docs/features/pwa.md`, `docs/folder-structure.md`, `docs/frontend-guidelines.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Browser mobile kini dapat mengenali aplikasi sebagai Progressive Web App (PWA) yang siap di-install.
+  - Perilaku aplikasi dan alur auth `/auth/*` tetap identik dengan sebelumnya.
+
+## [2026-10-31] — feat(pwa): phase 1 cloudflare tunnel setup & dev environment
+
+- Konfigurasi environment development HTTPS via Cloudflare Tunnel untuk pengujian PWA mobile via data seluler.
+- Penambahan dukungan `DEV_ALLOWED_HOSTS`, `HMR_PROTOCOL`, dan `HMR_CLIENT_PORT` pada `vite.config.ts`.
+- Template ingress `cloudflared` (locally-managed dan remote-managed) untuk port 8005 (frontend) dan port 8004 (backend).
+- Dokumentasi unit systemd auto-start (`setup-auto-start.md`), checklist dashboard Cloudflare, troubleshooting tunnel, dan pembaruan arsitektur.
+- File yang diubah:
+  - Frontend: `frontend/vite.config.ts`, `frontend/.env.example`
+  - Backend: `backend/.env.example`
+  - Docs: `docs/deployment.md`, `docs/setup-auto-start.md`, `docs/environment-variables.md`, `docs/security-checklist.md`, `docs/troubleshooting.md`, `docs/architecture.md`, `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Operator dapat menjalankan dev server di belakang Cloudflare Tunnel tanpa error `Invalid Host header` atau HMR WebSocket failure.
+  - Akses LAN via HTTP tidak lagi mendukung pengujian session login jika menggunakan cookie Secure.
+
 ## [2026-09-25] — feat(activities): add Purchase Requisition category
 
 - Menambahkan opsi kategori 'Purchase Requisition' pada aktivitas proyek (DB enum, validasi request backend, AI document extraction, factory, serta tipe dan opsi frontend).

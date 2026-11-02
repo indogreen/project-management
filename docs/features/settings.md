@@ -41,6 +41,12 @@ Halaman settings memungkinkan user mengelola profil, mengubah password, mengatur
 - Mengelola role dan permission per user
 - Lihat dokumentasi [Role & Permission](../role-permission.md) untuk detail
 
+### 5. Aplikasi Web (PWA)
+- Komponen: `src/lib/components/pwa/InstallButton.svelte` (varian card)
+- Terintegrasi di tab Profile settings untuk memfasilitasi pemasangan PWA mandiri ke desktop maupun perangkat seluler.
+- Menampilkan lencana status *"Aplikasi Terpasang"* saat diakses dalam mode standalone (terpasang).
+- Menyediakan panduan visual interaktif untuk pengguna Apple iOS Safari.
+
 ## Status
 
-✅ Aktif — Profil, password, tema, dan manajemen user sudah berfungsi.
+✅ Aktif — Profil, password, tema, manajemen user, dan status PWA sudah berfungsi.

@@ -103,10 +103,12 @@ Saat ini `config/cors.php` menggunakan `allowed_origins => ['*']`. Untuk product
 
 - [ ] `PUBLIC_API_BASE_URL` mengarah ke backend production
 - [ ] `PUBLIC_STORAGE_BASE_URL` mengarah ke storage production
+- [ ] `PUBLIC_PWA_ENABLED=true` aktif di `.env` frontend
 - [ ] Build berhasil (`npm run build`)
 - [ ] Svelte check berhasil (`npm run check`)
 - [ ] Lint berhasil (`npm run lint`)
 - [ ] SvelteKit adapter sudah dikonfigurasi sesuai target (auto/node/static/vercel)
+- [ ] Header keamanan server aktif via `hooks.server.ts` (`nosniff`, `strict-origin`, no-cache SW/manifest)
 
 ### Umum
 
@@ -123,3 +125,105 @@ Saat ini `config/cors.php` menggunakan `allowed_origins => ['*']`. Untuk product
 - [ ] API response tidak menampilkan debug info
 - [ ] CORS tidak memblokir request frontend
 - [ ] SSL certificate valid
+- [ ] Service Worker terdaftar (DevTools Application > Service Workers: status activated and running)
+- [ ] Web App Manifest valid di panel DevTools Application
+- [ ] Cache Storage hanya berisi chunk ber-hash dan aset statis, bebas dari dokumen HTML atau respons API
+- [ ] Header respons `/service-worker.js` dan `/manifest.webmanifest` berstatus `no-cache, no-store, must-revalidate`
+
+---
+
+## Dev via Cloudflare Tunnel
+
+Lingkungan development ini digunakan untuk pengujian Progressive Web App (PWA) di perangkat mobile (Android/iOS) melalui jaringan seluler nyata. Service Worker dan Web App Install Banner **wajib menggunakan protokol HTTPS valid**.
+
+### 1. Arsitektur Domain & Port
+
+| Komponen     | Domain Publik (Cloudflare)     | Target Layanan Internal | Protokol & Keterangan          |
+| ------------ | ------------------------------ | ----------------------- | ------------------------------ |
+| **Frontend** | `https://app-pm-idg.zed.ai.id` | `http://localhost:8005` | Vite dev / SvelteKit (SSR/SPA) |
+| **Backend**  | `https://api-pm-idg.zed.ai.id` | `http://localhost:8004` | PHP Artisan Serve (Laravel)    |
+
+> ⚠️ **PENTING — Syarat Mesin:**
+> Agent `cloudflared` **WAJIB berjalan di mesin / VM yang sama** dengan kedua layanan aplikasi (Frontend & Backend). Jika `cloudflared` berjalan di server berbeda, target `http://localhost:8004` dan `http://localhost:8005` akan salah mengarah.
+
+### 2. Konfigurasi Ingress `cloudflared`
+
+Terdapat dua metode pengelolaan Cloudflare Tunnel:
+
+#### Cara A: Locally-Managed (`config.yml`)
+
+Simpan file konfigurasi di luar repositori Git, misalnya di `/etc/cloudflared/config.yml`:
+
+```yaml
+tunnel: <TUNNEL_UUID>
+credentials-file: /etc/cloudflared/<TUNNEL_UUID>.json
+
+ingress:
+  # 1. Backend Laravel API & Storage
+  - hostname: api-pm-idg.zed.ai.id
+    service: http://localhost:8004
+    originRequest:
+      connectTimeout: 30s
+      noTLSVerify: true
+
+  # 2. Frontend SvelteKit / Vite Dev Server
+  - hostname: app-pm-idg.zed.ai.id
+    service: http://localhost:8005
+    originRequest:
+      connectTimeout: 30s
+      noTLSVerify: true
+
+  # 3. Catch-all fallback
+  - service: http_status:404
+```
+
+#### Cara B: Remote-Managed (Cloudflare Zero Trust Dashboard)
+
+Pada dashboard Cloudflare Zero Trust:
+
+1. Buka **Networks** > **Tunnels** > Pilih Tunnel Anda.
+2. Tab **Public Hostname**, tambahkan dua entri:
+   - Hostname: `api-pm-idg.zed.ai.id` ➔ Service: `HTTP` `localhost:8004`
+   - Hostname: `app-pm-idg.zed.ai.id` ➔ Service: `HTTP` `localhost:8005`
+3. Jalankan `cloudflared` menggunakan token:
+   ```bash
+   cloudflared tunnel run --token <TUNNEL_TOKEN>
+   ```
+
+### 3. Checklist Manual Dashboard Cloudflare
+
+Lakukan langkah konfigurasi berikut pada dashboard Cloudflare:
+
+1. **Cache Rules (Bypass Cache untuk Dev):**
+   - Buka **Caching** > **Cache Rules** > **Create Rule**.
+   - Rule 1 (Frontend): `(http.host eq "app-pm-idg.zed.ai.id")` ➔ **Bypass Cache**.
+   - Rule 2 (Backend API & Storage): `(http.host eq "api-pm-idg.zed.ai.id" and (starts_with(http.request.uri.path, "/api/") or starts_with(http.request.uri.path, "/storage/")))` ➔ **Bypass Cache**.
+2. **Speed & Optimization:**
+   - **Matikan Rocket Loader** (Speed > Optimization > Content Optimization) untuk mencegah interferensi eksekusi script Svelte 5 hydration.
+   - **Aktifkan Always Use HTTPS** (SSL/TLS > Edge Certificates).
+   - **HSTS (HTTP Strict Transport Security):** Ditunda sampai Fase 10 (Production Readiness).
+3. **Cloudflare Access (Zero Trust Email OTP):**
+   - Direkomendasikan melindungi `https://app-pm-idg.zed.ai.id` dengan Cloudflare Access Policy (Email OTP).
+   - **WAJIB Bypass Policy** untuk file manifest dan worker agar browser mobile dapat mengunduh aset PWA tanpa terhalang login Access:
+     - Path: `/manifest.webmanifest`
+     - Path: `/icons/*`
+     - Path: `/service-worker.js`
+4. **Batas Upload Request:**
+   - Paket Cloudflare Free memiliki batas upload **100 MB per HTTP request**.
+   - Konfigurasi aplikasi mengizinkan upload hingga 10 file x 10 MB per request (maksimal 100 MB). Operator harus memastikan total payload tidak melampaui batas 100 MB Cloudflare.
+5. **CORS Recommendation:**
+   - Konfigurasi backend `config/cors.php` saat ini masih menggunakan `allowed_origins => ['*']`.
+   - Direkomendasikan membatasi origin ke `https://app-pm-idg.zed.ai.id` saat pengujian domain publik berlangsung.
+
+### 4. Checklist Verifikasi (Pengujian Mobile dengan Data Seluler)
+
+Lakukan verifikasi menggunakan smartphone dengan koneksi **DATA SELULER (bukan WiFi kantor/LAN)**:
+
+- [ ] Buka `https://app-pm-idg.zed.ai.id` di Chrome (Android) dan Safari (iOS): halaman terbuka tanpa pesan `Invalid Host header` atau `Host not allowed`.
+- [ ] Buka DevTools / Console: Hot Module Replacement (HMR) terhubung via `wss://app-pm-idg.zed.ai.id` tanpa reconnecting loop.
+- [ ] Login ke aplikasi: berhasil masuk, sesi bertahan setelah refresh halaman.
+- [ ] Buka modul Project dan Activity: buat aktivitas baru dan unggah lampiran file 10 MB.
+- [ ] Buka dan unduh kembali lampiran dari `https://api-pm-idg.zed.ai.id/storage/...`.
+- [ ] Periksa Console browser: tidak ada error _Mixed Content_ (seluruh resource dimuat melalui HTTPS).
+- [ ] Uji respons header: `curl -I https://app-pm-idg.zed.ai.id` menunjukkan header `cf-cache-status: BYPASS` atau `DYNAMIC`.
+- [ ] Uji Reboot VM: setelah server restart, seluruh service (`indogreen-backend`, `indogreen-frontend`, `cloudflared`) hidup kembali secara otomatis sesuai panduan [setup-auto-start.md](setup-auto-start.md).

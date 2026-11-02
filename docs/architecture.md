@@ -74,6 +74,46 @@ Laravel Backend
         └── JSON Response → Browser
 ```
 
+## Alur Request Service Worker (PWA)
+
+Pada mode produksi, Service Worker bertindak sebagai programmable network proxy di browser klien:
+
+```
+Browser Fetch Event
+  │
+  ├── classifyRequest()
+  │     │
+  │     ├── BYPASS Criteria:
+  │     │     ├── Method bukan GET (POST / PUT / DELETE)
+  │     │     ├── Lintas Origin (bukan domain frontend)
+  │     │     ├── Path /api/* atau /storage/*
+  │     │     ├── Path /__data.json
+  │     │     ├── Header x-sveltekit-action
+  │     │     ├── Header Accept: application/json
+  │     │     └── Header Authorization (Bearer JWT)
+  │     │     └──► RETURN LANGSUNG (Browser menangani normal tanpa intersep)
+  │     │
+  │     ├── NAVIGATION Criteria:
+  │     │     └── Mode: 'navigate'
+  │     │           └──► Network-Only via fetch(event.request)
+  │     │                 ├── Online: Kembalikan HTML dari server (HTML TIDAK DICACHE)
+  │     │                 └── Offline / Error: caches.match('/offline.html')
+  │     │
+  │     ├── STATIC ASSETS Criteria:
+  │     │     └── /offline.html, /manifest.webmanifest, /indogreen.png, /icons/*
+  │     │           └──► Stale-While-Revalidate dari 'indogreen-static-v...'
+  │     │                 ├── Ada di Cache: Sajikan dari cache seketika, revalidasi di background
+  │     │                 └── Tidak ada: Unduh dari jaringan, simpan ke cache (max 50 entri)
+  │     │
+  │     └── IMMUTABLE ASSETS Criteria:
+  │           └── /_app/immutable/* (Chunk JS/CSS Vite ber-hash)
+  │                 └──► Cache-First ke 'indogreen-assets-v...'
+  │                       ├── Ada di Cache: Kembalikan langsung (0 B network transfer)
+  │                       └── Tidak ada: Unduh dari jaringan jika HTTP 200 basic (max 150 entri, FIFO prune)
+  │
+  └── Default: Bypass ke jaringan biasa
+```
+
 ## Alur Autentikasi JWT
 
 ```
@@ -177,15 +217,48 @@ Model Event (created/updated/deleted)
        per user via admin       per user via admin
 ```
 
+## Topologi Development via Cloudflare Tunnel (PWA Testing)
+
+Untuk mendukung pengetesan PWA dan Service Worker di perangkat mobile (Android/iOS) via jaringan seluler, lingkungan development dijalankan melalui Cloudflare Tunnel dengan HTTPS valid:
+
+```
+Mobile Browser (Data Seluler / HTTPS)
+  │
+  ├── https://app-pm-idg.zed.ai.id (Frontend PWA)
+  └── https://api-pm-idg.zed.ai.id (Backend API & Storage)
+  │
+  ▼
+Cloudflare Edge Network (TLS Termination, WAF, Zero Trust Access)
+  │
+  │ Cloudflare Tunnel (QUIC / gRPC outbound connection)
+  ▼
+Dev Host / VM Server
+  ├── cloudflared daemon
+  │     ├── app-pm-idg.zed.ai.id ──► http://localhost:8005 (Vite Dev Server)
+  │     └── api-pm-idg.zed.ai.id ──► http://localhost:8004 (Laravel Artisan Serve)
+  │
+  ├── Vite Dev Server (:8005)
+  │     └── HMR WebSocket: wss://app-pm-idg.zed.ai.id:443
+  │
+  └── Laravel Backend (:8004)
+        └── Storage files: public/storage symlink
+```
+
 ## Stack Komunikasi
 
-| Layer            | Teknologi                 | Keterangan                         |
-| ---------------- | ------------------------- | ---------------------------------- |
-| HTTP Client      | Axios                     | Dengan interceptor JWT             |
-| API Format       | REST + JSON               | Standard Laravel resource response |
-| Auth             | JWT (HS256)               | Disimpan di localStorage           |
-| RBAC             | Spatie Laravel Permission | Guard: `api`                       |
-| Rate Limiting    | Custom Sliding Window     | Menggunakan Laravel Cache + Lock   |
-| Validation       | Laravel Form Requests     | Server-side validation             |
-| File Upload      | Laravel Storage (local)   | Disk `public` dengan symlink       |
-| Activity Logging | Custom JSON file logger   | Per-user, per-hari                 |
+| Layer              | Teknologi                        | Keterangan                                           |
+| ------------------ | -------------------------------- | ---------------------------------------------------- |
+| HTTP Client        | Axios                            | Dengan interceptor JWT                               |
+| API Format         | REST + JSON                      | Standard Laravel resource response                   |
+| Auth               | JWT (HS256)                      | Disimpan di localStorage                             |
+| RBAC               | Spatie Laravel Permission        | Guard: `api`                                         |
+| Rate Limiting      | Custom Sliding Window            | Menggunakan Laravel Cache + Lock                     |
+| Validation         | Laravel Form Requests            | Server-side validation                               |
+| File Upload        | Laravel Storage (local)          | Disk `public` dengan symlink                         |
+| Activity Logging   | Custom JSON file logger          | Per-user, per-hari                                   |
+| PWA Service Worker | `$service-worker` + pure routing | Cache-First immutable, SWR statis, network-only HTML |
+| Server Headers     | `hooks.server.ts`                | `nosniff`, `strict-origin`, no-cache SW/manifest     |
+| Trusted Proxies    | Laravel Middleware               | `$middleware->trustProxies(at: '*')` untuk real IP   |
+| PWA Service Worker | `$service-worker` + pure routing | Cache-First immutable, SWR statis, network-only HTML |
+| Server Headers   | `hooks.server.ts`         | `nosniff`, `strict-origin`, no-cache SW/manifest |
+| Trusted Proxies  | Laravel Middleware        | `$middleware->trustProxies(at: '*')` untuk real IP |

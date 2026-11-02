@@ -10,13 +10,13 @@ Baca file ini sepenuhnya sebelum mengerjakan task apapun.
 
 **Indogreen Project Management** adalah aplikasi manajemen proyek internal berbasis arsitektur separated fullstack:
 
-| Layer    | Teknologi                                          |
-|----------|----------------------------------------------------|
-| Frontend | SvelteKit 5, Svelte 5 Runes, Tailwind CSS 4, Vite 7 |
-| Backend  | Laravel 13, PHP 8.4                                |
-| Auth     | JWT (HS256) via `php-open-source-saver/jwt-auth`   |
+| Layer    | Teknologi                                                           |
+| -------- | ------------------------------------------------------------------- |
+| Frontend | SvelteKit 5, Svelte 5 Runes, Tailwind CSS 4, Vite 7                 |
+| Backend  | Laravel 13, PHP 8.4                                                 |
+| Auth     | JWT (HS256) via `php-open-source-saver/jwt-auth`                    |
 | RBAC     | Spatie Laravel Permission (4 tier: super_admin, admin, staff, user) |
-| Database | MySQL — diakses via Eloquent ORM                   |
+| Database | MySQL — diakses via Eloquent ORM                                    |
 
 Frontend dan backend berjalan sebagai dua aplikasi terpisah dan berkomunikasi melalui **REST API + JWT Bearer Token**.
 
@@ -85,6 +85,7 @@ Sebelum mengubah apapun, pahami hierarki kepercayaan ini:
 - Tipe data didefinisikan di `src/lib/types/`.
 - Teks UI dalam **Bahasa Indonesia** kecuali istilah teknis.
 - Format mata uang: **Rupiah**. Format tanggal: **Bahasa Indonesia**.
+- **PWA & Service Worker Hygiene** — Dilarang keras menambahkan `/api/*`, `/storage/*`, `__data.json`, atau request ber-`Authorization` ke dalam cache Service Worker. Caching hanya untuk aset statis terverifikasi dan chunk build ber-hash (`/_app/immutable/**`). Dokumen HTML navigasi wajib Network-Only.
 
 ---
 
@@ -92,20 +93,21 @@ Sebelum mengubah apapun, pahami hierarki kepercayaan ini:
 
 Setiap task **wajib melewati documentation gate** ini. Jika area berikut berubah, cek dan update dokumen terkait:
 
-| Area Perubahan | Dokumen yang Wajib Dicek & Diperbarui |
-|---|---|
-| API endpoint baru atau berubah | `docs/api-reference.md` |
-| Fitur atau halaman baru | `docs/features/{fitur}.md` (buat jika belum ada) |
-| Database schema atau migration | `docs/database-schema.md`, `docs/database-migrations.md` |
-| Auth, session, atau token | `docs/jwt-auth.md`, `docs/security-checklist.md` |
-| Role atau permission | `docs/role-permission.md` |
-| Environment variable | `docs/environment-variables.md` |
-| Deployment atau CI | `docs/deployment.md` |
-| Struktur folder | `docs/folder-structure.md` |
-| Security-related | `docs/security-checklist.md` |
-| Setup atau onboarding | `docs/setup-local.md`, `README.md` |
-| Bug fix yang menyentuh edge case | `docs/troubleshooting.md` |
-| Perubahan arsitektur | `docs/architecture.md` |
+| Area Perubahan                             | Dokumen yang Wajib Dicek & Diperbarui                    |
+| ------------------------------------------ | -------------------------------------------------------- |
+| API endpoint baru atau berubah             | `docs/api-reference.md`                                  |
+| Fitur atau halaman baru                    | `docs/features/{fitur}.md` (buat jika belum ada)         |
+| PWA, Service Worker, atau Web App Manifest | `docs/features/pwa.md`                                   |
+| Database schema atau migration             | `docs/database-schema.md`, `docs/database-migrations.md` |
+| Auth, session, atau token                  | `docs/jwt-auth.md`, `docs/security-checklist.md`         |
+| Role atau permission                       | `docs/role-permission.md`                                |
+| Environment variable                       | `docs/environment-variables.md`                          |
+| Deployment atau CI                         | `docs/deployment.md`                                     |
+| Struktur folder                            | `docs/folder-structure.md`                               |
+| Security-related                           | `docs/security-checklist.md`                             |
+| Setup atau onboarding                      | `docs/setup-local.md`, `README.md`                       |
+| Bug fix yang menyentuh edge case           | `docs/troubleshooting.md`                                |
+| Perubahan arsitektur                       | `docs/architecture.md`                                   |
 
 > Jika tidak ada dokumentasi yang perlu diperbarui, final response **tetap wajib menyebutkan alasannya**.
 
@@ -151,16 +153,16 @@ or documentation updates when relevant.
 
 ### Type
 
-| Type | Kapan Digunakan |
-|---|---|
-| `feat` | Fitur baru |
-| `fix` | Bug fix |
-| `docs` | Dokumentasi atau instruksi agent |
+| Type       | Kapan Digunakan                          |
+| ---------- | ---------------------------------------- |
+| `feat`     | Fitur baru                               |
+| `fix`      | Bug fix                                  |
+| `docs`     | Dokumentasi atau instruksi agent         |
 | `refactor` | Restrukturisasi tanpa perubahan behavior |
-| `test` | Penambahan atau perubahan test |
-| `chore` | Maintenance, dependency, tooling |
-| `build` | Build tooling atau dependency |
-| `perf` | Optimasi performa |
+| `test`     | Penambahan atau perubahan test           |
+| `chore`    | Maintenance, dependency, tooling         |
+| `build`    | Build tooling atau dependency            |
+| `perf`     | Optimasi performa                        |
 
 ### Scope
 
@@ -215,18 +217,18 @@ Setiap perubahan signifikan (fitur baru, fix penting, breaking change, perubahan
 
 Tabel berikut mendefinisikan apa yang boleh dikerjakan agent secara mandiri vs. yang membutuhkan konfirmasi user eksplisit:
 
-| Aksi | Status |
-|---|---|
-| Membaca dan menganalisa file apapun | ✅ Mandiri |
-| Mengubah kode frontend (komponen, service, type, utility) | ✅ Mandiri |
-| Mengubah kode backend (controller, service, resource, request) | ✅ Mandiri |
-| Membuat migration baru | ✅ Mandiri (dengan penjelasan di final response) |
-| Mengubah atau menghapus migration lama | ❌ Butuh konfirmasi eksplisit |
-| Menambah dependency baru | ❌ Butuh konfirmasi eksplisit |
-| Mengubah `routes/api.php` secara struktural | ❌ Butuh konfirmasi eksplisit |
-| Menghapus file atau folder | ❌ Butuh konfirmasi eksplisit |
-| Mengekspos atau mengubah `.env` aktual | ❌ Dilarang sepenuhnya |
-| Membuat commit Git secara otomatis | ❌ Dilarang kecuali diminta eksplisit |
+| Aksi                                                           | Status                                           |
+| -------------------------------------------------------------- | ------------------------------------------------ |
+| Membaca dan menganalisa file apapun                            | ✅ Mandiri                                       |
+| Mengubah kode frontend (komponen, service, type, utility)      | ✅ Mandiri                                       |
+| Mengubah kode backend (controller, service, resource, request) | ✅ Mandiri                                       |
+| Membuat migration baru                                         | ✅ Mandiri (dengan penjelasan di final response) |
+| Mengubah atau menghapus migration lama                         | ❌ Butuh konfirmasi eksplisit                    |
+| Menambah dependency baru                                       | ❌ Butuh konfirmasi eksplisit                    |
+| Mengubah `routes/api.php` secara struktural                    | ❌ Butuh konfirmasi eksplisit                    |
+| Menghapus file atau folder                                     | ❌ Butuh konfirmasi eksplisit                    |
+| Mengekspos atau mengubah `.env` aktual                         | ❌ Dilarang sepenuhnya                           |
+| Membuat commit Git secara otomatis                             | ❌ Dilarang kecuali diminta eksplisit            |
 
 ---
 
@@ -246,16 +248,16 @@ Tabel berikut mendefinisikan apa yang boleh dikerjakan agent secara mandiri vs. 
 
 Beberapa agent memiliki kapabilitas berbeda. Gunakan panduan ini untuk memilih agent yang tepat:
 
-| Kapabilitas | Antigravity | Qoder | Claude Code | Codex | OpenClaw | Hermes |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| Baca & tulis file | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Jalankan terminal command | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Buka browser / DevTools | ✅ | — | — | — | — | — |
-| Spawn subagent | ✅ | — | — | — | — | — |
-| Akses internet / search web | ✅ | — | ✅ | — | ✅ | ✅ |
+| Kapabilitas                 | Antigravity | Qoder | Claude Code | Codex | OpenClaw | Hermes |
+| --------------------------- | :---------: | :---: | :---------: | :---: | :------: | :----: |
+| Baca & tulis file           |     ✅      |  ✅   |     ✅      |  ✅   |    ✅    |   ✅   |
+| Jalankan terminal command   |     ✅      |  ✅   |     ✅      |  ✅   |    ✅    |   ✅   |
+| Buka browser / DevTools     |     ✅      |   —   |      —      |   —   |    —     |   —    |
+| Spawn subagent              |     ✅      |   —   |      —      |   —   |    —     |   —    |
+| Akses internet / search web |     ✅      |   —   |     ✅      |   —   |    ✅    |   ✅   |
 
 > Kolom `—` berarti kapabilitas tidak diketahui atau tidak relevan untuk agent tersebut. Update tabel ini saat menemukan perbedaan behavior aktual.
 
 ---
 
-*File ini adalah living document. Update jika ada perubahan workflow, konvensi baru, atau temuan penting saat bekerja dengan agent di repo ini.*
+_File ini adalah living document. Update jika ada perubahan workflow, konvensi baru, atau temuan penting saat bekerja dengan agent di repo ini._
