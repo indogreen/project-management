@@ -55,6 +55,7 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate --ansi
+          php artisan jwt:secret --force --ansi
           php artisan config:clear --ansi
 
       - name: Run Backend Tests
@@ -62,6 +63,8 @@ jobs:
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
+          JWT_SECRET: testing_secret_key_for_jwt_auth_testing_minimum_32_chars
+          JWT_ALGO: HS256
 
   frontend:
     name: Frontend (SvelteKit 5 / Vite 7)
@@ -80,6 +83,9 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+
+      - name: Prepare Frontend Environment
+        run: cp .env.example .env
 
       - name: Install NPM Dependencies
         run: npm ci

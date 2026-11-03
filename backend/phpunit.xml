@@ -30,5 +30,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="JWT_SECRET" value="testing_secret_key_for_jwt_auth_testing_minimum_32_chars"/>
+        <env name="JWT_ALGO" value="HS256"/>
     </php>
 </phpunit>

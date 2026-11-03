@@ -5,8 +5,8 @@
 - Penambahan GitHub Actions workflow (`.github/workflows/ci.yml`):
   - Dikonfigurasi untuk berjalan otomatis hanya pada branch `main` dan `development` (push & pull_request) serta mendukung pemicu manual `workflow_dispatch`.
   - Menggunakan concurrency group untuk membatalkan build usang saat commit baru didorong.
-  - Job `backend`: setup PHP 8.4, dependency cache Composer, verifikasi environment, dan eksekusi test suite Laravel dengan database SQLite in-memory.
-  - Job `frontend`: setup Node.js 22, dependency cache NPM, pengecekan lint & style (Prettier + ESLint), typecheck (svelte-check), instalasi browser Playwright Chromium, unit & component test runner (Vitest), dan verifikasi build produksi (Vite).
+  - Job `backend`: setup PHP 8.4, dependency cache Composer, verifikasi environment (generasi `APP_KEY` dan `JWT_SECRET`), serta fallback `JWT_SECRET` di `phpunit.xml` untuk test execution in-memory SQLite.
+  - Job `frontend`: setup Node.js 22, dependency cache NPM, otomatisasi penyiapan `.env` dari `.env.example` sebelum `svelte-kit sync`, pengecekan lint & style (Prettier + ESLint), typecheck (svelte-check), instalasi browser Playwright Chromium, unit & component test runner (Vitest), dan verifikasi build produksi (Vite).
 - Penambahan skill `security-audit` dari workspace `catatz`:
   - Diintegrasikan ke `.agents/skills/security-audit/` dan `.claude/skills/security-audit/` lengkap dengan 20 panduan domain, skema laporan vulnerability, dan script verifikasi finding.
   - Pembaruan pemetaan skill pada `CLAUDE.md`, `AGENTS.md`, `docs/folder-structure.md`, dan `docs/deployment.md`.
