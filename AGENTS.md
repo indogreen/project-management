@@ -271,7 +271,7 @@ Repositori ini telah mengintegrasikan framework **ECC (Everything Claude Code)**
    - `commands/`: Shims slash command (`/plan`, `/tdd`, `/code-review`, `/build-fix`, `/quality-gate`, `/security-scan`, `/refactor-clean`, dll).
    - `skills/`: Workflow skills tervalidasi untuk domain proyek.
 3. **`.agents/skills/` (Universal Agent Skills)**:
-   - Menyediakan skill ECC yang sama (`laravel-patterns`, `laravel-security`, `laravel-tdd`, `vite-patterns`, `tdd-workflow`, `database-migrations`, `git-workflow`, `security-review`, `docs-governance`) untuk digunakan oleh **Antigravity**, **Codex**, dan **OpenClaw**.
+   - Menyediakan skill agentik yang sama (`laravel-patterns`, `laravel-security`, `laravel-tdd`, `laravel-verification`, `vite-patterns`, `tdd-workflow`, `database-migrations`, `git-workflow`, `security-review`, `security-audit`, `docs-governance`) untuk digunakan oleh **Antigravity**, **Codex**, dan **OpenClaw**.
 
 ---
 

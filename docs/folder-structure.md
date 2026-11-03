@@ -11,6 +11,8 @@ project-management/
 │   ├── commands/          # Slash command definitions
 │   ├── rules/             # Modular coding & security rules
 │   └── skills/            # Domain & framework workflow skills
+├── .github/               # GitHub workflows & CI configuration
+│   └── workflows/         # GitHub Actions workflows (ci.yml)
 ├── backend/               # Laravel 13 API backend
 ├── docs/                  # Dokumentasi proyek & AI operating manual
 ├── frontend/              # SvelteKit 5 frontend SPA

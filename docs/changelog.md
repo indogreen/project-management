@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-11-03] — feat(ci): add GitHub Actions workflow and security-audit skill
+
+- Penambahan GitHub Actions workflow (`.github/workflows/ci.yml`):
+  - Dikonfigurasi untuk berjalan otomatis hanya pada branch `main` dan `development` (push & pull_request) serta mendukung pemicu manual `workflow_dispatch`.
+  - Menggunakan concurrency group untuk membatalkan build usang saat commit baru didorong.
+  - Job `backend`: setup PHP 8.4, dependency cache Composer, verifikasi environment, dan eksekusi test suite Laravel dengan database SQLite in-memory.
+  - Job `frontend`: setup Node.js 22, dependency cache NPM, pengecekan lint & style (Prettier + ESLint), typecheck (svelte-check), instalasi browser Playwright Chromium, unit & component test runner (Vitest), dan verifikasi build produksi (Vite).
+- Penambahan skill `security-audit` dari workspace `catatz`:
+  - Diintegrasikan ke `.agents/skills/security-audit/` dan `.claude/skills/security-audit/` lengkap dengan 20 panduan domain, skema laporan vulnerability, dan script verifikasi finding.
+  - Pembaruan pemetaan skill pada `CLAUDE.md`, `AGENTS.md`, `docs/folder-structure.md`, dan `docs/deployment.md`.
+- File yang diubah:
+  - `.github/workflows/ci.yml`, `.agents/skills/security-audit/**`, `.claude/skills/security-audit/**`, `CLAUDE.md`, `AGENTS.md`, `docs/deployment.md`, `docs/folder-structure.md`, `docs/changelog.md`.
+- Dampak yang perlu diketahui:
+  - Setiap perubahan ke branch `main` dan `development` akan divalidasi secara otomatis dan terisolasi di GitHub CI. Tim pengembang dan AI assistant kini dapat menjalankan audit keamanan mendalam berbasis artefak evidence terstruktur.
+
 ## [2026-11-03] — feat(agents): implement ECC framework for multi-agent workflows
 
 - Integrasi framework Everything Claude Code (ECC, `affaan-m/ECC`) ke dalam repositori:

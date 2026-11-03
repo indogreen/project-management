@@ -141,7 +141,7 @@ Use the following ECC skills when working with related files and subsystems:
 | `database/migrations/*.php` | `database-migrations` | `.claude/skills/database-migrations/` |
 | General TDD & Unit Testing | `tdd-workflow` | `.claude/skills/tdd-workflow/` |
 | Git Commits & PRs | `conventional-commit-review`, `git-workflow` | `.claude/skills/conventional-commit-review/` |
-| Security Audits | `security-review` | `.claude/skills/security-review/` |
+| Security Audits & Pen-testing | `security-audit`, `security-review` | `.claude/skills/security-audit/`, `.claude/skills/security-review/` |
 | Documentation Maintenance | `docs-governance` | `.claude/skills/docs-governance/` |
 
 ---
