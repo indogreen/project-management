@@ -43,7 +43,7 @@ class AIDocumentExtractionService
         }
 
         $context = $this->buildProjectContext($projectId);
-        $mimeType = $file->getClientMimeType();
+        $mimeType = $file->getMimeType() ?? $file->getClientMimeType();
         // Menentukan apakah file adalah gambar untuk menggunakan Vision API atau sekadar teks
         $isImage  = in_array($mimeType, self::IMAGE_MIMES, true);
 

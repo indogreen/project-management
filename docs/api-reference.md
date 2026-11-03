@@ -29,7 +29,7 @@ Authorization: Bearer {access_token}
 
 | Method | Endpoint                | Auth | Deskripsi                      |
 | ------ | ----------------------- | ---- | ------------------------------ |
-| POST   | `/auth/register`        | No   | Registrasi user baru           |
+| POST   | `/auth/register`        | No   | Registrasi user baru (khusus email resmi `@indogreen.id`, dapat dinonaktifkan via `AUTH_REGISTRATION_ENABLED`) |
 | POST   | `/auth/login`           | No   | Login dan dapatkan JWT token   |
 | POST   | `/auth/logout`          | Yes  | Invalidate token               |
 | POST   | `/auth/refresh`         | Yes  | Refresh JWT token              |
@@ -42,7 +42,7 @@ Authorization: Bearer {access_token}
 | Method | Endpoint                | Auth | Role Required          | Deskripsi                |
 | ------ | ----------------------- | ---- | ---------------------- | ------------------------ |
 | GET    | `/auth/role/users`      | Yes  | `super_admin`, `admin` | Daftar user yang dikelola|
-| PUT    | `/auth/role`            | Yes  | `super_admin`, `admin` | Update role & permission |
+| PUT    | `/auth/role`            | Yes  | `super_admin`, `admin` | Update role & permission (dibatasi ketat pada allowlist peran dan permission kanonikal, `PM-AC-001`) |
 | GET    | `/auth/role/config`     | Yes  | `super_admin`, `admin` | Config modul & aksi      |
 
 ## Projects
@@ -62,10 +62,14 @@ Authorization: Bearer {access_token}
 | Method | Endpoint              | Auth | Deskripsi                |
 | ------ | --------------------- | ---- | ------------------------ |
 | GET    | `/activities`         | Yes  | List aktivitas (paginated, filterable) |
-| POST   | `/activities`         | Yes  | Buat aktivitas (multipart/form-data untuk file) |
+| POST   | `/activities`         | Yes  | Buat aktivitas (multipart/form-data untuk file) atau ekstraksi AI (`action=extract`) |
 | GET    | `/activities/{id}`    | Yes  | Detail aktivitas         |
 | PUT    | `/activities/{id}`    | Yes  | Update aktivitas         |
 | DELETE | `/activities/{id}`    | Yes  | Hapus aktivitas          |
+
+> **Catatan Keamanan Lampiran & AI (`PM-INJ-001`, `PM-INJ-002`):**
+> - Lampiran file diinspeksi secara server-side via magic bytes (`finfo`) untuk mencegah MIME header spoofing.
+> - Pada payload `action=extract`, kegagalan ekstraksi AI mengembalikan response error sanitasi (HTTP 500) tanpa membocorkan trace atau kredensial internal.
 
 **Filter query:** `project_id`, `jenis`, `kategori`, `mitra_id`, `date_from`, `date_to`, `search`, `sort_by`, `sort_dir`
 

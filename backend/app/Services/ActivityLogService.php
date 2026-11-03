@@ -48,7 +48,7 @@ class ActivityLogService
     /**
      * Get activity logs (for a specific user or all users)
      */
-    public function getLogs($filters = [], $userId = null)
+    public function getLogs(array $filters = [], ?int $userId = null): array
     {
         $allLogs = [];
         
@@ -78,7 +78,7 @@ class ActivityLogService
     /**
      * Get activity logs for a specific user (legacy wrapper)
      */
-    public function getUserLogs($userId, $filters = [])
+    public function getUserLogs(int $userId, array $filters = []): array
     {
         return $this->getLogs($filters, $userId);
     }
@@ -86,7 +86,7 @@ class ActivityLogService
     /**
      * Get recent activity logs
      */
-    public function getRecentLogs($limit = 10, $userId = null)
+    public function getRecentLogs(int $limit = 10, ?int $userId = null): array
     {
         $allLogs = [];
         
@@ -198,15 +198,24 @@ class ActivityLogService
     }
 
     /**
+     * Resolves a sanitized user directory path (PM-LOG-001).
+     */
+    protected function getUserDirectory(int $userId): string
+    {
+        return "{$this->logPath}/user_" . (int) $userId;
+    }
+
+    /**
      * Write log data to file
      */
-    protected function writeToFile($userId, $logData)
+    protected function writeToFile(int $userId, array $logData): void
     {
         $filename = $this->getCurrentFilename($userId);
-        $filepath = "{$this->logPath}/user_{$userId}/{$filename}";
+        $userDir = $this->getUserDirectory($userId);
+        $filepath = "{$userDir}/{$filename}";
         
         // Create directory if not exists
-        Storage::makeDirectory("{$this->logPath}/user_{$userId}");
+        Storage::makeDirectory($userDir);
         
         // Read existing logs
         $logs = [];
@@ -232,10 +241,10 @@ class ActivityLogService
     /**
      * Read user logs from files
      */
-    protected function readUserLogs($userId)
+    protected function readUserLogs(int $userId): array
     {
         $logs = [];
-        $userDir = "{$this->logPath}/user_{$userId}";
+        $userDir = $this->getUserDirectory($userId);
         
         if (!Storage::exists($userDir)) {
             return $logs;
@@ -258,7 +267,7 @@ class ActivityLogService
     /**
      * Get current filename for user
      */
-    protected function getCurrentFilename($userId)
+    protected function getCurrentFilename(int $userId): string
     {
         return date('Y-m-d') . '.json';
     }
@@ -266,11 +275,12 @@ class ActivityLogService
     /**
      * Rotate log file
      */
-    protected function rotateFile($userId, $filename)
+    protected function rotateFile(int $userId, string $filename): void
     {
-        $oldPath = "{$this->logPath}/user_{$userId}/{$filename}";
+        $userDir = $this->getUserDirectory($userId);
+        $oldPath = "{$userDir}/{$filename}";
         // Mengubah nama file lama dengan menyertakan timestamp agar unik sebelum membuat file baru
-        $newPath = "{$this->logPath}/user_{$userId}/" . date('Y-m-d_H-i-s') . '.json';
+        $newPath = "{$userDir}/" . date('Y-m-d_H-i-s') . '.json';
         
         if (Storage::exists($oldPath)) {
             Storage::move($oldPath, $newPath);
@@ -283,9 +293,9 @@ class ActivityLogService
     /**
      * Clean old log files
      */
-    protected function cleanOldFiles($userId)
+    protected function cleanOldFiles(int $userId): void
     {
-        $userDir = "{$this->logPath}/user_{$userId}";
+        $userDir = $this->getUserDirectory($userId);
         $files = Storage::files($userDir);
         
         // Jika jumlah file melebihi batas (100 file), hapus file yang paling lama dimodifikasi
@@ -307,14 +317,14 @@ class ActivityLogService
     /**
      * Get all users who have logs
      */
-    protected function getAllUsers()
+    protected function getAllUsers(): array
     {
         $users = [];
         $directories = Storage::directories($this->logPath);
         
         foreach ($directories as $dir) {
             if (preg_match('/user_(\d+)$/', $dir, $matches)) {
-                $users[] = $matches[1];
+                $users[] = (int) $matches[1];
             }
         }
         

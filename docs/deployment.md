@@ -9,6 +9,26 @@ Aplikasi ini terdiri dari dua bagian yang perlu di-deploy terpisah:
 
 > **Catatan:** Belum ada konfigurasi Vercel atau deployment platform lain yang terdeteksi di repository. Panduan ini bersifat umum.
 
+## Continuous Integration (GitHub Actions)
+
+Workflow CI didefinisikan pada `.github/workflows/ci.yml` dan berjalan otomatis saat terdapat `push` atau `pull_request` ke branch **`main`** dan **`development`** (serta mendukung pemicu manual `workflow_dispatch`):
+
+1. **Backend Job (`backend`)**:
+   - Runner: `ubuntu-latest`, PHP 8.4 (shivammathur/setup-php@v2).
+   - Ekstensi: `mbstring`, `xml`, `ctype`, `iconv`, `intl`, `pdo`, `sqlite`, `pdo_sqlite`, `bcmath`, `curl`, `zip`.
+   - Dependency Caching: Cache direktori composer files.
+   - Setup Environment: Salin `.env.example`, generate app key, dan clear config cache.
+   - Test Execution: Menjalankan `php artisan test` menggunakan database SQLite in-memory (`:memory:`).
+
+2. **Frontend Job (`frontend`)**:
+   - Runner: `ubuntu-latest`, Node.js 22 (actions/setup-node@v4 dengan cache npm).
+   - Dependency Installation: `npm ci`.
+   - Code Style & Linter: `npm run lint` (Prettier code style + ESLint 9).
+   - Type Safety Diagnostics: `npm run check` (`svelte-check` dengan tsconfig).
+   - Browser Component Dependencies: `npx playwright install --with-deps chromium`.
+   - Unit & Component Tests: `npm run test` (Vitest test runner).
+   - Production Build: `npm run build` (Vite 7 build verification).
+
 ## Prasyarat Production
 
 ### Backend

@@ -5,9 +5,10 @@
 - [ ] `APP_DEBUG=false` di production.
 - [ ] `APP_KEY` dan `JWT_SECRET` di-generate per environment (jangan pakai value dari `.env.example` atau dari repository).
 - [ ] File `.env` tidak ter-commit ke Git (sudah ada di `.gitignore`).
-- [ ] CORS dibatasi ke domain frontend saja di production (saat ini `allowed_origins => ['*']`).
+- [x] CORS dibatasi ke domain frontend terdaftar (`FRONTEND_URL` & `CORS_ALLOWED_ORIGINS`), wildcard origin dihapus (`PM-CORS-001`).
 - [ ] Rate limiting aktif untuk semua endpoint (Sliding Window Throttle).
 - [ ] Semua input divalidasi melalui Form Request.
+- [x] Sanitasi tipe data log audit aktif (`int $userId` dan parsing folder integer) untuk mencegah path traversal pada user logging (`PM-LOG-001`).
 - [ ] Password di-hash menggunakan bcrypt (12 rounds).
 - [ ] Password baru harus minimal 8 karakter, mengandung huruf besar dan kecil.
 
@@ -18,14 +19,17 @@
 - [ ] Token disimpan di `localStorage` — memahami risiko XSS.
 - [ ] Token TTL dikonfigurasi dengan tepat (default 60 menit).
 - [ ] Refresh token berfungsi untuk perpanjangan session otomatis.
-- [ ] Endpoint `/auth/login` dan `/auth/register` memiliki rate limiting ketat (5 req/60s).
+- [x] Endpoint `/auth/login` dan `/auth/register` memiliki rate limiting ketat (5 req/60s).
+- [x] Registrasi publik dibatasi khusus email resmi perusahaan (`@indogreen.id`) dan mendukung sakelar disable (`PM-BIZ-001`).
+- [x] Model `User` mengimplementasikan interface `MustVerifyEmail`.
 
 ## Role & Permission
 
-- [ ] RBAC aktif menggunakan Spatie Laravel Permission.
-- [ ] Endpoint manajemen role hanya bisa diakses `super_admin` dan `admin`.
-- [ ] Admin tidak bisa mengubah user setingkat atau di atasnya.
-- [ ] User tidak bisa mengubah role dirinya sendiri.
+- [x] RBAC aktif menggunakan Spatie Laravel Permission.
+- [x] Endpoint manajemen role hanya bisa diakses `super_admin` dan `admin`.
+- [x] Admin tidak bisa mengubah user setingkat atau di atasnya.
+- [x] User tidak bisa mengubah role dirinya sendiri.
+- [x] Role dan permission allowlist aktif; pembuatan dinamis via `firstOrCreate` dihapus (`PM-AC-001`).
 - [ ] Permission diperiksa di backend (bukan hanya di frontend).
 
 ## File Upload / Storage
@@ -33,14 +37,17 @@
 - [ ] File upload menggunakan Laravel Storage disk `public`.
 - [ ] Symlink `storage:link` sudah dibuat.
 - [ ] Pastikan tidak ada file upload yang bisa di-execute sebagai kode (PHP, shell).
-- [ ] Validasi MIME type dan ukuran file di backend.
+- [x] Validasi MIME type dan ukuran file di backend (deteksi server-side via finfo `$file->getMimeType()` pada `ActivityService`, `CertificateService`, `ItemService`, dan `AIDocumentExtractionService`, `PM-INJ-001`).
 
 ## Frontend
 
 - [ ] Tidak ada secret yang disimpan di variable `PUBLIC_*`.
-- [ ] Error message tidak membocorkan detail internal (SQL, stack trace).
+- [x] Error message tidak membocorkan detail internal (SQL, stack trace, atau exception message pihak ketiga) (`PM-INJ-002`).
 - [ ] Axios interceptor menangani 401 dan redirect ke login.
 - [ ] Token dihapus dari `localStorage` saat logout atau refresh gagal.
+- [x] Proteksi Open Redirect aktif pada redirect login/register via `getSafeInternalRedirect` (`PM-REDIRECT-001`).
+- [x] Sanitasi URL lampiran aktif via `safeAttachmentUrl` untuk mencegah eksekusi skema berbahaya (`javascript:`).
+- [x] Header keamanan lengkap terpasang di `hooks.server.ts` (`X-Frame-Options: SAMEORIGIN`, `Permissions-Policy`, baseline CSP, dan HSTS).
 
 ## Database
 
@@ -67,7 +74,7 @@
 - [ ] File kredensial tunnel (`<TUNNEL_ID>.json`) disimpan di luar repositori (`/etc/cloudflared/`).
 - [ ] Cloudflare Access (Email OTP) aktif untuk domain frontend `app-pm-idg.zed.ai.id`.
 - [ ] Bypass rule pada Cloudflare Access untuk file PWA publik (`/manifest.webmanifest`, `/icons/*`, `/service-worker.js`).
-- [x] Header keamanan dikonfigurasi (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` via `hooks.server.ts` & `app.html`).
+- [x] Header keamanan dikonfigurasi (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: SAMEORIGIN`, `Permissions-Policy`, baseline CSP, dan HSTS via `hooks.server.ts` & `app.html`).
 - [x] Header `Cache-Control: no-cache, no-store, must-revalidate` terpasang untuk `/service-worker.js` dan `/manifest.webmanifest`.
 - [x] Trusted Proxies di Laravel dikonfigurasi (`$middleware->trustProxies(at: '*')`) untuk mendukung resolusi IP per-user nyata di balik Cloudflare Tunnel.
 - [ ] Laravel debug bar/telescope dimatikan di production.
@@ -81,26 +88,6 @@
 >
 > Rekomendasi baseline CSP untuk tahap evaluasi:
 >
-> ```text
-> default-src 'self';
-> script-src 'self' 'unsafe-inline';
-> style-src 'self' 'unsafe-inline';
-> img-src 'self' data: blob: https://api-pm-idg.zed.ai.id;
-> connect-src 'self' https://api-pm-idg.zed.ai.id wss://app-pm-idg.zed.ai.id;
-> font-src 'self';
-> object-src 'none';
-> base-uri 'self';
-> form-action 'self';
-> frame-ancestors 'none';
-> ```
-
----
-
-## Content Security Policy (CSP) Recommendation
-
-> **Catatan Rekomendasi:** Penegakan Content Security Policy (CSP) ketat via HTTP header ditunda untuk audit komprehensif karena pustaka runtime UI (SweetAlert2 dialog styling, Chart.js canvas rendering, dan Tailwind CSS runtime utilities) membutuhkan evaluasi hash/nonce atau `'unsafe-inline'` agar tidak memblokir render grafis dan modal interaktif.
->
-> Rekomendasi baseline CSP untuk tahap evaluasi:
 > ```text
 > default-src 'self';
 > script-src 'self' 'unsafe-inline';
