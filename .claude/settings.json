@@ -1,0 +1,15 @@
+{
+  "rules": [
+    ".claude/rules/ecc-guardrails.md",
+    ".claude/rules/common/security.md",
+    ".claude/rules/common/coding-style.md",
+    ".claude/rules/common/testing.md",
+    ".claude/rules/common/git-workflow.md",
+    ".claude/rules/common/code-review.md",
+    ".claude/rules/php/coding-style.md",
+    ".claude/rules/php/patterns.md",
+    ".claude/rules/php/security.md",
+    ".claude/rules/typescript/coding-style.md",
+    ".claude/rules/typescript/patterns.md"
+  ]
+}

@@ -4,8 +4,18 @@
 
 ```
 project-management/
+├── .agents/               # ECC universal skills untuk Antigravity, Codex, dsb
+│   └── skills/            # Reusable agent skills
+├── .claude/               # ECC Claude Code workspace configuration
+│   ├── agents/            # Subagent personas (planner, reviewer, etc.)
+│   ├── commands/          # Slash command definitions
+│   ├── rules/             # Modular coding & security rules
+│   └── skills/            # Domain & framework workflow skills
 ├── backend/               # Laravel 13 API backend
+├── docs/                  # Dokumentasi proyek & AI operating manual
 ├── frontend/              # SvelteKit 5 frontend SPA
+├── AGENTS.md              # Repository-level AI operating manual
+├── CLAUDE.md              # ECC project kernel untuk Claude Code
 ├── LICENSE                # MIT License
 └── README.md              # Entry point dokumentasi
 ```

@@ -260,4 +260,19 @@ Beberapa agent memiliki kapabilitas berbeda. Gunakan panduan ini untuk memilih a
 
 ---
 
+## 12. ECC (Everything Claude Code) Framework Integration
+
+Repositori ini telah mengintegrasikan framework **ECC (Everything Claude Code)** ([affaan-m/ECC](https://github.com/affaan-m/ECC)) yang disesuaikan secara presisi dengan arsitektur **Laravel 13 + SvelteKit 5**:
+
+1. **`CLAUDE.md` (Project Kernel)**: Entry point utama untuk Claude Code di root repositori yang memuat Prompt Defense Baseline, arsitektur, standar coding, perintah slash, daftar subagent, dan pemetaan skill.
+2. **`.claude/` (Claude Code Workspace)**:
+   - `rules/`: Memuat aturan prompt defense (`ecc-guardrails.md`), `common/` (security, testing, git-workflow, code-review), `php/` (Laravel/PHP 8.4 standards), dan `typescript/` (Svelte 5/Vite standards).
+   - `agents/`: Subagent terspesialisasi (`planner`, `code-reviewer`, `tdd-guide`, `architect`, `database-reviewer`, `security-reviewer`, `build-error-resolver`, `doc-updater`, `php-reviewer`, `typescript-reviewer`).
+   - `commands/`: Shims slash command (`/plan`, `/tdd`, `/code-review`, `/build-fix`, `/quality-gate`, `/security-scan`, `/refactor-clean`, dll).
+   - `skills/`: Workflow skills tervalidasi untuk domain proyek.
+3. **`.agents/skills/` (Universal Agent Skills)**:
+   - Menyediakan skill ECC yang sama (`laravel-patterns`, `laravel-security`, `laravel-tdd`, `vite-patterns`, `tdd-workflow`, `database-migrations`, `git-workflow`, `security-review`, `docs-governance`) untuk digunakan oleh **Antigravity**, **Codex**, dan **OpenClaw**.
+
+---
+
 _File ini adalah living document. Update jika ada perubahan workflow, konvensi baru, atau temuan penting saat bekerja dengan agent di repo ini._

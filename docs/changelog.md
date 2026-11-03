@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-11-03] — feat(agents): implement ECC framework for multi-agent workflows
+
+- Integrasi framework Everything Claude Code (ECC, `affaan-m/ECC`) ke dalam repositori:
+  - Penambahan `CLAUDE.md` di root sebagai project kernel untuk Claude Code dengan Prompt Defense Baseline, arsitektur sistem, aturan coding, daftar perintah slash, daftar subagent, dan pemetaan skill.
+  - Penambahan konfigurasi `.claude/` yang memuat aturan modular (`rules/`), subagent personas (`agents/`), perintah slash (`commands/`), dan workflow skills (`skills/`).
+  - Penambahan `.agents/skills/` untuk menyediakan skill ECC universal yang dapat diakses oleh Antigravity, Codex, dan OpenClaw.
+  - Kurasi skill & aturan yang diselaraskan dengan stack proyek: Laravel 13 (`laravel-patterns`, `laravel-security`, `laravel-tdd`, `laravel-verification`), SvelteKit 5 & Vite 7 (`vite-patterns`), serta alur kualitas (`tdd-workflow`, `conventional-commit-review`, `database-migrations`, `git-workflow`, `security-review`, `docs-governance`).
+  - Pembaruan `AGENTS.md`, `docs/folder-structure.md`, dan `docs/ai-development-rules.md` untuk sinkronisasi dokumentasi AI agent.
+- File yang diubah:
+  - `CLAUDE.md`, `.claude/**`, `.agents/**`, `AGENTS.md`, `docs/folder-structure.md`, `docs/ai-development-rules.md`, `docs/changelog.md`.
+- Dampak yang perlu diketahui:
+  - Claude Code, Antigravity, dan AI coding assistant lainnya kini dapat mendelegasikan tugas ke subagent spesifik, menjalankan workflow TDD/code review, dan mengikuti standar keamanan secara konsisten tanpa overhead token berlebih.
+
 ## [2026-11-03] — chore(deps): upgrade dependencies to latest stable versions across frontend and backend
 
 - Pembaruan dependensi backend (Laravel 13):
