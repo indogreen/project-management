@@ -1,5 +1,35 @@
 # Changelog
 
+## [2026-11-03] — fix(frontend): eliminate open redirect and harden client security headers (PM-REDIRECT-001, PM-AUTH-001)
+
+- Penuntasan temuan keamanan Fase 3 (`PM-REDIRECT-001` - Medium Severity & `PM-AUTH-001` / Client Hardening):
+  - Mitigasi Open Redirect (`PM-REDIRECT-001`):
+    - Penambahan fungsi sanitasi terpusat `getSafeInternalRedirect` di `frontend/src/lib/utils/url.ts` yang memvalidasi bahwa path redirect diawali tepat satu slash (`/`), secara ketat menolak URL protokol-relatif (`//`), backslash (`/\` atau `/\\`), skema absolut (`javascript:`, `https:`), dan rute loop `/auth/*`.
+    - Mengganti fungsi redirect lokal di `frontend/src/routes/auth/login/+page.svelte` dan `frontend/src/routes/auth/register/_components/RegisterPageClient.svelte` dengan `getSafeInternalRedirect`.
+  - Hardening Header Keamanan Server (`PM-AUTH-001` / Hygiene):
+    - Memperbarui `frontend/src/hooks.server.ts` dengan menyematkan `X-Frame-Options: SAMEORIGIN` (proteksi clickjacking), `Permissions-Policy: camera=(), microphone=(), geolocation=()`, baseline `Content-Security-Policy` yang kompatibel dengan runtime UI Svelte/Tailwind/Chart.js/SweetAlert2, serta `Strict-Transport-Security` untuk koneksi HTTPS.
+  - Sanitasi Skema Tautan Lampiran:
+    - Menambahkan `safeAttachmentUrl` dan memperketat `storageUrl` di `frontend/src/lib/utils/url.ts` untuk menolak skema manipulatif (`javascript:`, `data:`, `vbscript:`).
+    - Memperbarui komponen `CertificateFormModal.svelte`, `ActivityFormModal.svelte`, `ActivityDetail.svelte`, dan `CertificatesDetail.svelte` agar menggunakan `safeAttachmentUrl`.
+  - Penambahan Unit Tests:
+    - Membuat `frontend/src/lib/utils/url.test.ts` (11 test case) untuk memverifikasi seluruh vektor eksploitasi URL dan sanitasi lampiran.
+    - Memperbarui `frontend/src/hooks.server.test.ts` untuk memverifikasi kehadiran seluruh header keamanan modern.
+- File yang diubah:
+  - `frontend/src/lib/utils/url.ts`
+  - `frontend/src/routes/auth/login/+page.svelte`
+  - `frontend/src/routes/auth/register/_components/RegisterPageClient.svelte`
+  - `frontend/src/hooks.server.ts`
+  - `frontend/src/lib/components/form/CertificateFormModal.svelte`
+  - `frontend/src/lib/components/form/ActivityFormModal.svelte`
+  - `frontend/src/lib/components/detail/ActivityDetail.svelte`
+  - `frontend/src/lib/components/detail/CertificatesDetail.svelte`
+  - `frontend/src/lib/utils/url.test.ts`
+  - `frontend/src/hooks.server.test.ts`
+  - `docs/security-checklist.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengguna tidak lagi dapat diarahkan ke situs eksternal phishing via parameter redirect atau next pada halaman login dan registrasi. Seluruh render halaman frontend kini terlindungi dari clickjacking dan eksploitasi skema URI berbahaya.
+
 ## [2026-11-03] — fix(security): enforce strict CORS allowlist and restrict registration to @indogreen.id (PM-CORS-001, PM-BIZ-001)
 
 - Penuntasan temuan keamanan Fase 2 (`PM-CORS-001` & `PM-BIZ-001` - Medium Severity):

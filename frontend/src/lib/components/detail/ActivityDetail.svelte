@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatCurrency, formatDate, formatFileSize } from '$lib/utils/formatters';
-  import { storageUrl } from '$lib/utils/url';
+  import { safeAttachmentUrl, storageUrl } from '$lib/utils/url';
   import type { Activity, Attachment } from '$lib/types';
 
   type LegacyAttachment = Attachment & {
@@ -50,11 +50,12 @@
 
     if (typeof attachment === 'string') {
       const filename = filenameFromPath(attachment);
-      return { url: storageUrl(attachment), filename, displayName: filename };
+      const url = safeAttachmentUrl(attachment);
+      return url ? { url, filename, displayName: filename } : null;
     }
 
     const rawPath = attachment.path ?? attachment.file ?? attachment.file_path ?? '';
-    const url = attachment.url ?? (rawPath ? storageUrl(rawPath) : '');
+    const url = safeAttachmentUrl(attachment.url ?? rawPath);
     if (!url) return null;
 
     const filename = filenameFromPath(rawPath || attachment.url || '');

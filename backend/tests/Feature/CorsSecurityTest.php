@@ -10,14 +10,16 @@ class CorsSecurityTest extends TestCase
 {
     public function test_cors_allows_configured_frontend_origin(): void
     {
+        $allowedOrigin = config('cors.allowed_origins.0', 'http://localhost:5173');
+
         $response = $this->withHeaders([
-            'Origin' => 'http://localhost:5173',
+            'Origin' => $allowedOrigin,
             'Access-Control-Request-Method' => 'GET',
             'Access-Control-Request-Headers' => 'Authorization, Content-Type',
         ])->options('/api/projects');
 
         $response->assertStatus(204);
-        $response->assertHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+        $response->assertHeader('Access-Control-Allow-Origin', $allowedOrigin);
     }
 
     public function test_cors_blocks_unauthorized_external_origin_pm_cors_001(): void
@@ -38,8 +40,10 @@ class CorsSecurityTest extends TestCase
 
     public function test_cors_allowed_methods_are_explicit_not_wildcard(): void
     {
+        $allowedOrigin = config('cors.allowed_origins.0', 'http://localhost:5173');
+
         $response = $this->withHeaders([
-            'Origin' => 'http://localhost:5173',
+            'Origin' => $allowedOrigin,
             'Access-Control-Request-Method' => 'POST',
         ])->options('/api/projects');
 

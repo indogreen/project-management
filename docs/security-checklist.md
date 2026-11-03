@@ -44,6 +44,9 @@
 - [ ] Error message tidak membocorkan detail internal (SQL, stack trace).
 - [ ] Axios interceptor menangani 401 dan redirect ke login.
 - [ ] Token dihapus dari `localStorage` saat logout atau refresh gagal.
+- [x] Proteksi Open Redirect aktif pada redirect login/register via `getSafeInternalRedirect` (`PM-REDIRECT-001`).
+- [x] Sanitasi URL lampiran aktif via `safeAttachmentUrl` untuk mencegah eksekusi skema berbahaya (`javascript:`).
+- [x] Header keamanan lengkap terpasang di `hooks.server.ts` (`X-Frame-Options: SAMEORIGIN`, `Permissions-Policy`, baseline CSP, dan HSTS).
 
 ## Database
 
@@ -70,7 +73,7 @@
 - [ ] File kredensial tunnel (`<TUNNEL_ID>.json`) disimpan di luar repositori (`/etc/cloudflared/`).
 - [ ] Cloudflare Access (Email OTP) aktif untuk domain frontend `app-pm-idg.zed.ai.id`.
 - [ ] Bypass rule pada Cloudflare Access untuk file PWA publik (`/manifest.webmanifest`, `/icons/*`, `/service-worker.js`).
-- [x] Header keamanan dikonfigurasi (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` via `hooks.server.ts` & `app.html`).
+- [x] Header keamanan dikonfigurasi (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: SAMEORIGIN`, `Permissions-Policy`, baseline CSP, dan HSTS via `hooks.server.ts` & `app.html`).
 - [x] Header `Cache-Control: no-cache, no-store, must-revalidate` terpasang untuk `/service-worker.js` dan `/manifest.webmanifest`.
 - [x] Trusted Proxies di Laravel dikonfigurasi (`$middleware->trustProxies(at: '*')`) untuk mendukung resolusi IP per-user nyata di balik Cloudflare Tunnel.
 - [ ] Laravel debug bar/telescope dimatikan di production.

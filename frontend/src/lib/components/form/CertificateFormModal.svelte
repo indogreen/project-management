@@ -2,6 +2,7 @@
   import FileAttachment from '$lib/components/FileAttachment.svelte';
   import Modal from '$lib/components/Modal.svelte';
   import { formatFileSize } from '$lib/utils/formatters';
+  import { safeAttachmentUrl } from '$lib/utils/url';
   import type { ExistingAttachment, Option } from '$lib/types';
 
   type ModalExistingAttachment = Omit<ExistingAttachment, 'path' | 'url'> & {
@@ -247,7 +248,7 @@
             <div class="space-y-2 rounded border px-3 py-2 text-sm dark:border-gray-700">
               <a
                 class="truncate text-indigo-600 hover:underline dark:text-indigo-400"
-                href={attachment.url ?? attachment.path}
+                href={safeAttachmentUrl(attachment.url ?? attachment.path)}
                 target="_blank"
                 rel="noreferrer">{attachment.original_name ?? attachment.name}</a
               >

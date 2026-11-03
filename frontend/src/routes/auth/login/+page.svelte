@@ -5,6 +5,7 @@
   import { login } from '$lib/services/authService';
   import { theme, toggleTheme } from '$lib/stores/theme';
   import { extractApiErrors } from '$lib/utils/errors';
+  import { getSafeInternalRedirect } from '$lib/utils/url';
 
   let email = $state('');
   let password = $state('');
@@ -12,17 +13,11 @@
   let loading = $state(false);
   let error = $state<string | null>(null);
 
-  // helper redirect yang aman
-  function getSafeRedirect(u: URL) {
-    const r = u.searchParams.get('redirect') || '';
-    return r.startsWith('/') && !r.startsWith('/auth/') ? r : '/dashboard';
-  }
-
   // ⬇️ Jika sudah login dan buka /auth/login, langsung redirect
   onMount(() => {
     const token = localStorage.getItem('jwt_token');
     if (token) {
-      goto(getSafeRedirect($page.url));
+      goto(getSafeInternalRedirect($page.url));
     }
   });
 
@@ -36,7 +31,7 @@
       if (!token) throw new Error('Token tidak ditemukan');
       localStorage.setItem('jwt_token', token);
 
-      goto(getSafeRedirect($page.url)); // ⬅️ gunakan redirect bila ada
+      goto(getSafeInternalRedirect($page.url)); // ⬅️ gunakan redirect bila ada
     } catch (err) {
       error = extractApiErrors(err);
       console.error('Login failed:', err);

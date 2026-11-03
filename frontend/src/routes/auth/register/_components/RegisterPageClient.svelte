@@ -6,6 +6,7 @@
   import { theme, toggleTheme } from '$lib/stores/theme';
   import { extractApiErrors } from '$lib/utils/errors';
   import { showSuccess } from '$lib/utils/toast';
+  import { getSafeInternalRedirect } from '$lib/utils/url';
 
   let name = $state('');
   let email = $state('');
@@ -16,16 +17,11 @@
   let loading = $state(false);
   let error = $state<string | null>(null);
 
-  function getSafeNext(u: URL) {
-    const n = u.searchParams.get('next') || '';
-    return n.startsWith('/') && !n.startsWith('/auth/') ? n : '/dashboard';
-  }
-
   // ⬇️ Jika sudah login, jangan boleh buka register
   onMount(() => {
     const token = localStorage.getItem('jwt_token');
     if (token) {
-      goto(getSafeNext($page.url));
+      goto(getSafeInternalRedirect($page.url));
     }
   });
 
@@ -46,8 +42,9 @@
       });
       showSuccess('Registrasi berhasil! Silakan login.');
 
-      const next = $page.url.searchParams.get('next');
-      goto(`/auth/login${next ? `?next=${encodeURIComponent(next)}` : ''}`);
+      const nextParam = $page.url.searchParams.get('next') || $page.url.searchParams.get('redirect');
+      const safeNext = nextParam ? getSafeInternalRedirect(nextParam, '') : '';
+      goto(`/auth/login${safeNext ? `?redirect=${encodeURIComponent(safeNext)}` : ''}`);
     } catch (err) {
       error = extractApiErrors(err);
       console.error('Registration failed:', err);
