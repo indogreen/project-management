@@ -16,4 +16,3 @@ describe('Connectivity Store (connectivity.ts)', () => {
     expect(get(isOnline)).toBe(true);
   });
 });
-

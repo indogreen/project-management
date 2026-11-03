@@ -1,5 +1,36 @@
 # Changelog
 
+## [2026-11-03] — chore(deps): upgrade dependencies to latest stable versions across frontend and backend
+
+- Pembaruan dependensi backend (Laravel 13):
+  - `laravel/framework` diperbarui dari `v13.12.0` ke `v13.39.0`.
+  - `laravel/sanctum` diperbarui ke `v4.3.3`.
+  - `php-open-source-saver/jwt-auth` diperbarui ke `v2.9.3`.
+  - `spatie/laravel-permission` diperbarui ke `v7.4.2` (versi stabil branch v7).
+  - `laravel/ai` diperbarui ke `v0.6.8`.
+  - Dev dependencies diperbarui: `fakerphp/faker` v1.24, `laravel/pail` v1.2.7, `laravel/pint` v1.32.1, `laravel/sail` v1.69.0, `mockery/mockery` v1.6.15, `nunomaduro/collision` v8.9.5, `phpunit/phpunit` v11.5.57.
+  - Penyelarasan route dan test stock-movements: mempertahankan ketersediaan route `update` dan `destroy` pada `backend/routes/api.php` serta memperbarui unit test di `WarehouseModuleTest.php` agar memverifikasi ketersediaan route edit/delete sesuai implementasi fitur riil (stok reversal) di frontend dan backend.
+  - Penyesuaian kompatibilitas PHP 8.5 pada `backend/config/database.php` untuk konstanta `PDO::MYSQL_ATTR_SSL_CA`.
+- Pembaruan dependensi frontend (SvelteKit & Vite):
+  - `@sveltejs/kit` diperbarui ke `^2.70.3` dan `@sveltejs/vite-plugin-svelte` ke `^6.2.4`.
+  - `svelte` diperbarui ke `^5.57.3` dan `svelte-check` ke `^4.7.8`.
+  - `vite` diperbarui ke `^7.3.7`.
+  - `tailwindcss` dan `@tailwindcss/vite` diperbarui ke `^4.3.3`.
+  - `@tailwindplus/elements` diperbarui ke `^1.0.22`.
+  - `axios` diperbarui ke `^1.21.0`.
+  - `chart.js` diperbarui ke `^4.6.1`.
+  - `sweetalert2` diperbarui ke `^11.26.25`.
+  - `typescript` diperbarui ke `^5.9.3` dan `typescript-eslint` ke `^8.72.1`.
+  - `eslint` diperbarui ke `^9.39.5` dan `eslint-plugin-svelte` ke `^3.23.1`.
+  - `vitest` dan `@vitest/browser` diperbarui ke `^3.2.7`, `playwright` ke `^1.64.1`.
+  - `postcss` diperbarui ke `^8.5.32`, `autoprefixer` ke `^10.6.2`.
+- Validasi & Stabilitas:
+  - Frontend typecheck (`svelte-check`), linting (`eslint` + `prettier`), unit tests (`vitest`), dan build produksi (`vite build`) lulus tanpa error.
+  - Backend automated tests (`php artisan test`) 15 passed, 81 assertions lulus 100%.
+- Dampak yang perlu diketahui:
+  - Seluruh pustaka runtime dan dev-tools beroperasi pada rilis mutakhir dan aman dari kerentanan tanpa mengubah arsitektur, struktur routing, atau fungsionalitas UI yang berjalan.
+
+
 ## [2026-11-02] — docs(pwa): phase 9 documentation consolidation and production release plan
 
 - Finalisasi spesifikasi komprehensif PWA pada `docs/features/pwa.md`: detail arsitektur, strategi cache, daftar eksplisit 11 kategori yang tidak di-cache, siklus update terisolasi, 3 lapis kill-switch, batasan iOS WebKit standalone, panduan debug DevTools, dan rencana rilis bertahap 2 minggu dengan prosedur rollback.

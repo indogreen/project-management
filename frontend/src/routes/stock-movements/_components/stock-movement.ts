@@ -1,8 +1,4 @@
-import {
-  STOCK_MOVEMENT_TYPE_OPTIONS,
-  type StockMovement,
-  type StockMovementType
-} from '$lib/inventory';
+import { type StockMovement, type StockMovementType } from '$lib/inventory';
 import type { StockMovementAction, StockMovementPayload } from '$lib/services/inventoryService';
 
 export type MovementAction = StockMovementAction;

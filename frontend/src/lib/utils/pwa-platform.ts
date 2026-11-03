@@ -116,4 +116,3 @@ export function canShowIOSInstallHint(options?: PlatformCheckOptions): boolean {
   }
   return isIOSSafari(options);
 }
-

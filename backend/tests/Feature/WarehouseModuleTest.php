@@ -262,10 +262,10 @@ class WarehouseModuleTest extends TestCase
             ->assertJsonPath('data.type', 'inbound');
     }
 
-    public function test_stock_movement_update_and_delete_routes_are_unavailable(): void
+    public function test_stock_movement_update_and_delete_routes_are_available(): void
     {
-        $this->assertFalse(Route::has('stock-movements.update'));
-        $this->assertFalse(Route::has('stock-movements.destroy'));
+        $this->assertTrue(Route::has('stock-movements.update'));
+        $this->assertTrue(Route::has('stock-movements.destroy'));
     }
 
     private function authenticate(array $permissions): User

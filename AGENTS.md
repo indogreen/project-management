@@ -75,7 +75,7 @@ Sebelum mengubah apapun, pahami hierarki kepercayaan ini:
 - Semua model yang memiliki CRUD wajib menggunakan trait `LogsActivity`.
 - Route baru ditambahkan di `routes/api.php` dengan middleware `auth:api`.
 - Gunakan `DB::transaction()` untuk operasi yang melibatkan multiple table writes.
-- `StockMovement` bersifat **immutable** — tidak ada update atau delete.
+- `StockMovement` mendukung update dan delete dengan penyesuaian/reversal stok otomatis di warehouse (lihat `docs/features/inventori.md`).
 
 ### Frontend (SvelteKit 5)
 
