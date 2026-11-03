@@ -26,8 +26,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   // HSTS (HTTP Strict Transport Security) when served over HTTPS
   const isHttps =
-    event.url.protocol === 'https:' ||
-    event.request?.headers?.get('x-forwarded-proto') === 'https';
+    event.url.protocol === 'https:' || event.request?.headers?.get('x-forwarded-proto') === 'https';
   if (isHttps) {
     response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }

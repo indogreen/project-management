@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getCertificateStatusBadgeClasses } from '$lib/utils/badges';
   import { formatDate, formatFileSize } from '$lib/utils/formatters';
-  import { safeAttachmentUrl, storageUrl } from '$lib/utils/url';
+  import { safeAttachmentUrl } from '$lib/utils/url';
   import type { Attachment } from '$lib/types';
 
   type LegacyAttachment = Omit<Attachment, 'path' | 'url'> & {

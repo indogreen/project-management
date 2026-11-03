@@ -18,8 +18,10 @@ describe('Server Security Headers Hook (hooks.server.ts)', () => {
     expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
     expect(response.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
     expect(response.headers.get('X-Frame-Options')).toBe('SAMEORIGIN');
-    expect(response.headers.get('Permissions-Policy')).toBe('camera=(), microphone=(), geolocation=()');
-    
+    expect(response.headers.get('Permissions-Policy')).toBe(
+      'camera=(), microphone=(), geolocation=()'
+    );
+
     const csp = response.headers.get('Content-Security-Policy');
     expect(csp).toBeTruthy();
     expect(csp).toContain("default-src 'self'");

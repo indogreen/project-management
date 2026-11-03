@@ -42,7 +42,9 @@ describe('getSafeInternalRedirect (PM-REDIRECT-001)', () => {
     const urlWithRedirect = new URL('http://localhost:5173/auth/login?redirect=/projects/10');
     expect(getSafeInternalRedirect(urlWithRedirect)).toBe('/projects/10');
 
-    const urlWithMaliciousRedirect = new URL('http://localhost:5173/auth/login?redirect=//evil.com');
+    const urlWithMaliciousRedirect = new URL(
+      'http://localhost:5173/auth/login?redirect=//evil.com'
+    );
     expect(getSafeInternalRedirect(urlWithMaliciousRedirect)).toBe('/dashboard');
 
     const urlWithNext = new URL('http://localhost:5173/auth/register?next=/activities');

@@ -42,7 +42,8 @@
       });
       showSuccess('Registrasi berhasil! Silakan login.');
 
-      const nextParam = $page.url.searchParams.get('next') || $page.url.searchParams.get('redirect');
+      const nextParam =
+        $page.url.searchParams.get('next') || $page.url.searchParams.get('redirect');
       const safeNext = nextParam ? getSafeInternalRedirect(nextParam, '') : '';
       goto(`/auth/login${safeNext ? `?redirect=${encodeURIComponent(safeNext)}` : ''}`);
     } catch (err) {

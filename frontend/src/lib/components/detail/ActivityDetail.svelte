@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatCurrency, formatDate, formatFileSize } from '$lib/utils/formatters';
-  import { safeAttachmentUrl, storageUrl } from '$lib/utils/url';
+  import { safeAttachmentUrl } from '$lib/utils/url';
   import type { Activity, Attachment } from '$lib/types';
 
   type LegacyAttachment = Attachment & {
