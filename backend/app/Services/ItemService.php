@@ -109,7 +109,7 @@ class ItemService
                 'name'        => $displayName,
                 'description' => $desc,
                 'file_path'   => $path,
-                'mime'        => $file->getClientMimeType(),
+                'mime'        => $file->getMimeType() ?? 'application/octet-stream',
                 'size'        => $file->getSize(),
             ]);
         }

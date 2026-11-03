@@ -1,5 +1,37 @@
 # Changelog
 
+## [2026-11-03] — fix(security): enforce server-side MIME detection, sanitize error messages, and type-hint activity logging (PM-INJ-001, PM-INJ-002, PM-LOG-001)
+
+- Penuntasan temuan keamanan Fase 4 (`PM-INJ-001`, `PM-INJ-002`, `PM-LOG-001`):
+  - Deteksi MIME Server-Side untuk Lampiran File (`PM-INJ-001`):
+    - Mengganti penggunaan `$file->getClientMimeType()` yang berasal dari header untrusted klien dengan `$file->getMimeType() ?? 'application/octet-stream'` berbasis file inspection (`finfo` PHP/Symfony) pada `ActivityService`, `CertificateService`, dan `ItemService`.
+    - Memperbarui `AIDocumentExtractionService` untuk mendeteksi MIME server-side pada ekstraksi dokumen AI.
+  - Sanitasi Pesan Kesalahan Ekstraksi AI & Controller (`PM-INJ-002`):
+    - Membersihkan blok `catch (\Exception $e)` pada `ActivityController` (metode `extract` dan `show`) agar tidak lagi mengembalikan pesan exception mentah (`$e->getMessage()`) ke response JSON klien.
+    - Menjaga audit trail internal tetap lengkap dengan mencatat detail stack trace aman ke `Log::error`.
+  - Sanitasi Tipe Data & Proteksi Path Traversal pada Audit Logging (`PM-LOG-001`):
+    - Memperketat `ActivityLogService` dengan type-hinting integer eksplisit (`int $userId`, `?int $userId`) untuk mencegah interpolasi string atau path traversal pada direktori penyimpanan log pengguna.
+    - Memperbarui `getUserDirectory` dan `getAllUsers` agar memvalidasi integer disk format (`user_{id}`) secara aman.
+  - Penambahan Tests:
+    - Menambahkan `AttachmentMimeSecurityTest` (3 feature tests) yang memvalidasi bahwa spoofing MIME header oleh klien ditolak dan MIME server-side tersimpan dengan benar di database.
+    - Menambahkan `ExceptionDisclosureSecurityTest` untuk memverifikasi bahwa kegagalan AI tidak membocorkan exception internal atau kredensial ke response API.
+    - Menambahkan `ActivityLogServiceSecurityTest` (2 unit tests) untuk menguji proteksi path traversal dan sanitasi folder logging pengguna.
+- File yang diubah:
+  - `backend/app/Services/ActivityService.php`
+  - `backend/app/Services/CertificateService.php`
+  - `backend/app/Services/ItemService.php`
+  - `backend/app/Services/AIDocumentExtractionService.php`
+  - `backend/app/Http/Controllers/ActivityController.php`
+  - `backend/app/Services/ActivityLogService.php`
+  - `backend/tests/Feature/AttachmentMimeSecurityTest.php`
+  - `backend/tests/Feature/ExceptionDisclosureSecurityTest.php`
+  - `backend/tests/Unit/ActivityLogServiceSecurityTest.php`
+  - `docs/security-checklist.md`
+  - `docs/troubleshooting.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - MIME type lampiran file di database kini mencerminkan isi biner berkas yang sebenarnya, bukan klaim peramban. Respon API pada kegagalan layanan AI tidak lagi mengekspos rincian exception teknis.
+
 ## [2026-11-03] — fix(frontend): eliminate open redirect and harden client security headers (PM-REDIRECT-001, PM-AUTH-001)
 
 - Penuntasan temuan keamanan Fase 3 (`PM-REDIRECT-001` - Medium Severity & `PM-AUTH-001` / Client Hardening):

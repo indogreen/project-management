@@ -8,6 +8,7 @@
 - [x] CORS dibatasi ke domain frontend terdaftar (`FRONTEND_URL` & `CORS_ALLOWED_ORIGINS`), wildcard origin dihapus (`PM-CORS-001`).
 - [ ] Rate limiting aktif untuk semua endpoint (Sliding Window Throttle).
 - [ ] Semua input divalidasi melalui Form Request.
+- [x] Sanitasi tipe data log audit aktif (`int $userId` dan parsing folder integer) untuk mencegah path traversal pada user logging (`PM-LOG-001`).
 - [ ] Password di-hash menggunakan bcrypt (12 rounds).
 - [ ] Password baru harus minimal 8 karakter, mengandung huruf besar dan kecil.
 
@@ -36,12 +37,12 @@
 - [ ] File upload menggunakan Laravel Storage disk `public`.
 - [ ] Symlink `storage:link` sudah dibuat.
 - [ ] Pastikan tidak ada file upload yang bisa di-execute sebagai kode (PHP, shell).
-- [ ] Validasi MIME type dan ukuran file di backend.
+- [x] Validasi MIME type dan ukuran file di backend (deteksi server-side via finfo `$file->getMimeType()` pada `ActivityService`, `CertificateService`, `ItemService`, dan `AIDocumentExtractionService`, `PM-INJ-001`).
 
 ## Frontend
 
 - [ ] Tidak ada secret yang disimpan di variable `PUBLIC_*`.
-- [ ] Error message tidak membocorkan detail internal (SQL, stack trace).
+- [x] Error message tidak membocorkan detail internal (SQL, stack trace, atau exception message pihak ketiga) (`PM-INJ-002`).
 - [ ] Axios interceptor menangani 401 dan redirect ke login.
 - [ ] Token dihapus dari `localStorage` saat logout atau refresh gagal.
 - [x] Proteksi Open Redirect aktif pada redirect login/register via `getSafeInternalRedirect` (`PM-REDIRECT-001`).
@@ -87,26 +88,6 @@
 >
 > Rekomendasi baseline CSP untuk tahap evaluasi:
 >
-> ```text
-> default-src 'self';
-> script-src 'self' 'unsafe-inline';
-> style-src 'self' 'unsafe-inline';
-> img-src 'self' data: blob: https://api-pm-idg.zed.ai.id;
-> connect-src 'self' https://api-pm-idg.zed.ai.id wss://app-pm-idg.zed.ai.id;
-> font-src 'self';
-> object-src 'none';
-> base-uri 'self';
-> form-action 'self';
-> frame-ancestors 'none';
-> ```
-
----
-
-## Content Security Policy (CSP) Recommendation
-
-> **Catatan Rekomendasi:** Penegakan Content Security Policy (CSP) ketat via HTTP header ditunda untuk audit komprehensif karena pustaka runtime UI (SweetAlert2 dialog styling, Chart.js canvas rendering, dan Tailwind CSS runtime utilities) membutuhkan evaluasi hash/nonce atau `'unsafe-inline'` agar tidak memblokir render grafis dan modal interaktif.
->
-> Rekomendasi baseline CSP untuk tahap evaluasi:
 > ```text
 > default-src 'self';
 > script-src 'self' 'unsafe-inline';

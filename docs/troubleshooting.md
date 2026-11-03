@@ -123,6 +123,30 @@ Pastikan folder `storage/app/public` writable.
 
 ---
 
+## Ekstraksi Dokumen AI gagal — "Gagal memproses dokumen via AI"
+
+**Kemungkinan penyebab:**
+
+- Kredensial AI (`GEMINI_API_KEY` atau provider AI) tidak valid, kuota habis, atau belum dikonfigurasi di backend.
+- Dokumen yang diunggah tidak terbaca atau rusak.
+- Server pihak ketiga sedang mengalami downtime atau timeout jaringan.
+
+**Penjelasan Keamanan (PM-INJ-002):**
+
+- Pesan kesalahan internal (seperti exception class, raw response provider, token, atau path file) sengaja tidak dikembalikan ke browser klien untuk mencegah kebocoran informasi teknis.
+- Detail exception teknis dicatat secara aman di log internal Laravel (`storage/logs/laravel.log`).
+
+**Solusi:**
+
+1. Periksa file log backend:
+   ```bash
+   tail -n 50 backend/storage/logs/laravel.log
+   ```
+2. Pastikan konfigurasi environment variable AI API terisi dengan benar di backend `.env`.
+3. Coba upload ulang dokumen berformat standar (PDF atau gambar yang jelas).
+
+---
+
 ## Migration gagal — foreign key error
 
 **Kemungkinan penyebab:**
