@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-11-04] — docs(security): synchronize documentation and complete full regression quality gate (Fase 5)
+
+- Penuntasan Fase 5 (Comprehensive Quality Gate & Documentation Synchronization):
+  - Sinkronisasi Dokumentasi Sistem:
+    - Memperbarui `docs/api-reference.md` dengan batasan domain `@indogreen.id` pada `/auth/register`, *allowlist* RBAC pada `/auth/role`, serta catatan deteksi MIME server-side dan penanganan error pada `/activities`.
+    - Melakukan verifikasi konsistensi seluruh dokumen panduan (`docs/role-permission.md`, `docs/jwt-auth.md`, `docs/environment-variables.md`, `docs/security-checklist.md`, `docs/troubleshooting.md`).
+  - Eksekusi Full Regression Quality Gate:
+    - Backend: 40/40 test suite PHPUnit berhasil lolos (190 assertions, 0 failures).
+    - Frontend: 93/93 test suite Vitest berhasil lolos (8 test files, 0 failures).
+    - Type check: `svelte-check` 0 error, 0 warning.
+    - Production build: `vite build` selesai dengan sukses tanpa peringatan atau error *bundling*.
+  - Seluruh 8 temuan audit keamanan (`PM-AC-001`, `PM-CORS-001`, `PM-BIZ-001`, `PM-REDIRECT-001`, `PM-AUTH-001`, `PM-INJ-001`, `PM-INJ-002`, `PM-LOG-001`) dinyatakan tuntas termitigasi.
+- File yang diubah:
+  - `docs/api-reference.md`
+  - `docs/changelog.md`
+
 ## [2026-11-03] — fix(security): enforce server-side MIME detection, sanitize error messages, and type-hint activity logging (PM-INJ-001, PM-INJ-002, PM-LOG-001)
 
 - Penuntasan temuan keamanan Fase 4 (`PM-INJ-001`, `PM-INJ-002`, `PM-LOG-001`):
