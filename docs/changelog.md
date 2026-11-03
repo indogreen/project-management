@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-11-03] — fix(auth): enforce strict role and permission allowlist in RoleController (PM-AC-001)
+
+- Penuntasan temuan keamanan Fase 1 (`PM-AC-001` - High Severity):
+  - Menghapus sink dinamis `Role::firstOrCreate` dan `Permission::firstOrCreate` pada `backend/app/Http/Controllers/RoleController.php`.
+  - Menerapkan *allowlist* kanonikal untuk role (`Rule::in(['staff', 'user'])` untuk admin, dan `['super_admin', 'admin', 'staff', 'user']` untuk super_admin).
+  - Menerapkan validasi ketat terhadap 38 permission kanonikal; setiap key permission tak dikenal langsung ditolak dengan status HTTP 422.
+  - Menambahkan konfigurasi `system_roles` dan `system_modules` pada `backend/config/permission.php`.
+  - Mengamankan endpoint `/auth/role/config` agar hanya menyajikan role resmi aplikasi.
+  - Penambahan comprehensive test suite `backend/tests/Feature/RolePermissionSecurityTest.php` (11 test case) mencakup pencegahan injeksi role arbitrer, pencegahan injeksi permission liar, isolasi hierarki admin, serta verifikasi pembaruan sah.
+- File yang diubah:
+  - `backend/app/Http/Controllers/RoleController.php`
+  - `backend/config/permission.php`
+  - `backend/tests/Feature/RolePermissionSecurityTest.php`
+  - `docs/role-permission.md`
+  - `docs/security-checklist.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Aktor admin maupun super_admin tidak lagi dapat menyuntikkan nama role baru atau permission liar ke dalam database via API role assignment. Seluruh role dan permission wajib terdaftar dan ter-seed sebelumnya.
+
 ## [2026-11-03] — feat(ci): add GitHub Actions workflow and security-audit skill
 
 - Penambahan GitHub Actions workflow (`.github/workflows/ci.yml`):

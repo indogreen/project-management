@@ -22,10 +22,11 @@
 
 ## Role & Permission
 
-- [ ] RBAC aktif menggunakan Spatie Laravel Permission.
-- [ ] Endpoint manajemen role hanya bisa diakses `super_admin` dan `admin`.
-- [ ] Admin tidak bisa mengubah user setingkat atau di atasnya.
-- [ ] User tidak bisa mengubah role dirinya sendiri.
+- [x] RBAC aktif menggunakan Spatie Laravel Permission.
+- [x] Endpoint manajemen role hanya bisa diakses `super_admin` dan `admin`.
+- [x] Admin tidak bisa mengubah user setingkat atau di atasnya.
+- [x] User tidak bisa mengubah role dirinya sendiri.
+- [x] Role dan permission allowlist aktif; pembuatan dinamis via `firstOrCreate` dihapus (`PM-AC-001`).
 - [ ] Permission diperiksa di backend (bukan hanya di frontend).
 
 ## File Upload / Storage

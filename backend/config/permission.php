@@ -199,4 +199,27 @@ return [
 
         'store' => 'default',
     ],
+
+    /*
+     * Application Canonical Roles & Modules Allowlist
+     */
+    'system_roles' => [
+        'super_admin',
+        'admin',
+        'staff',
+        'user',
+    ],
+
+    'system_modules' => [
+        'project' => ['view', 'create', 'update', 'delete'],
+        'activity' => ['view', 'create', 'update', 'delete'],
+        'mitra' => ['view', 'create', 'update', 'delete'],
+        'bc' => ['view', 'create', 'update', 'delete'],
+        'certificate' => ['view', 'create', 'update', 'delete'],
+        'finance' => ['view', 'update'],
+        'category' => ['view', 'create', 'update', 'delete'],
+        'warehouse' => ['view', 'create', 'update', 'delete'],
+        'item' => ['view', 'create', 'update', 'delete'],
+        'stock-movement' => ['view', 'create', 'update', 'delete'],
+    ],
 ];
