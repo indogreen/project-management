@@ -21,14 +21,36 @@ class AuthController extends Controller
 
     public function register(Request $request): UserResource|JsonResponse
     {
+        $registrationEnabled = (bool) config('auth.registration.enabled', true);
+        if (! $registrationEnabled) {
+            return response()->json([
+                'message' => 'Pendaftaran akun publik saat ini dinonaktifkan.',
+            ], 403);
+        }
+
+        $allowedDomain = config('auth.registration.allowed_domain', 'indogreen.id');
+        $emailRules = ['required', 'string', 'email', 'max:255', 'unique:users,email'];
+
+        if (! empty($allowedDomain)) {
+            $domainSuffix = '@' . ltrim(strtolower($allowedDomain), '@');
+            $emailRules[] = function (string $attribute, mixed $value, \Closure $fail) use ($domainSuffix) {
+                if (! is_string($value) || ! str_ends_with(strtolower($value), $domainSuffix)) {
+                    $fail("Pendaftaran akun hanya diizinkan untuk alamat email resmi perusahaan ({$domainSuffix}).");
+                }
+            };
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => $emailRules,
             'password' => 'required|confirmed|min:8',
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json([
+                'message' => 'Data yang diberikan tidak valid.',
+                'errors' => $validator->errors(),
+            ], 422);
         }
 
         $user = $this->authService->register($validator->validated());

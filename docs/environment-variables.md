@@ -32,6 +32,20 @@ Lokasi file: `backend/.env` (salin dari `backend/.env.example`)
 | `JWT_SECRET` | Server | Yes      | —       | Secret key JWT (generate via artisan) |
 | `JWT_ALGO`   | Server | No       | `HS256` | Algoritma signing JWT                 |
 
+### Frontend & CORS Security
+
+| Variable               | Scope  | Required | Default                 | Deskripsi                                                        |
+| ---------------------- | ------ | -------- | ----------------------- | ---------------------------------------------------------------- |
+| `FRONTEND_URL`         | Server | No       | `http://localhost:5173` | Origin utama frontend yang diizinkan CORS                        |
+| `CORS_ALLOWED_ORIGINS` | Server | No       | —                       | Daftar origin tambahan yang diizinkan CORS (dipisahkan tanda koma)|
+
+### Registration Governance
+
+| Variable                           | Scope  | Required | Default        | Deskripsi                                                        |
+| ---------------------------------- | ------ | -------- | -------------- | ---------------------------------------------------------------- |
+| `AUTH_REGISTRATION_ENABLED`        | Server | No       | `true`         | Sakelar pendaftaran publik (`true`/`false`)                     |
+| `AUTH_REGISTRATION_ALLOWED_DOMAIN` | Server | No       | `indogreen.id` | Domain email resmi perusahaan yang diizinkan untuk registrasi    |
+
 ### AI Integration
 
 | Variable      | Scope  | Required | Default | Deskripsi                    |

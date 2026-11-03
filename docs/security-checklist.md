@@ -5,7 +5,7 @@
 - [ ] `APP_DEBUG=false` di production.
 - [ ] `APP_KEY` dan `JWT_SECRET` di-generate per environment (jangan pakai value dari `.env.example` atau dari repository).
 - [ ] File `.env` tidak ter-commit ke Git (sudah ada di `.gitignore`).
-- [ ] CORS dibatasi ke domain frontend saja di production (saat ini `allowed_origins => ['*']`).
+- [x] CORS dibatasi ke domain frontend terdaftar (`FRONTEND_URL` & `CORS_ALLOWED_ORIGINS`), wildcard origin dihapus (`PM-CORS-001`).
 - [ ] Rate limiting aktif untuk semua endpoint (Sliding Window Throttle).
 - [ ] Semua input divalidasi melalui Form Request.
 - [ ] Password di-hash menggunakan bcrypt (12 rounds).
@@ -18,7 +18,9 @@
 - [ ] Token disimpan di `localStorage` — memahami risiko XSS.
 - [ ] Token TTL dikonfigurasi dengan tepat (default 60 menit).
 - [ ] Refresh token berfungsi untuk perpanjangan session otomatis.
-- [ ] Endpoint `/auth/login` dan `/auth/register` memiliki rate limiting ketat (5 req/60s).
+- [x] Endpoint `/auth/login` dan `/auth/register` memiliki rate limiting ketat (5 req/60s).
+- [x] Registrasi publik dibatasi khusus email resmi perusahaan (`@indogreen.id`) dan mendukung sakelar disable (`PM-BIZ-001`).
+- [x] Model `User` mengimplementasikan interface `MustVerifyEmail`.
 
 ## Role & Permission
 

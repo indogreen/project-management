@@ -1,5 +1,36 @@
 # Changelog
 
+## [2026-11-03] — fix(security): enforce strict CORS allowlist and restrict registration to @indogreen.id (PM-CORS-001, PM-BIZ-001)
+
+- Penuntasan temuan keamanan Fase 2 (`PM-CORS-001` & `PM-BIZ-001` - Medium Severity):
+  - Pengamanan Boundary CORS (`PM-CORS-001`):
+    - Mengganti wildcard origin `['*']` dan header `['*']` di `backend/config/cors.php` dengan origin terdaftar berbasis `FRONTEND_URL` (default: `http://localhost:5173`) dan `CORS_ALLOWED_ORIGINS`.
+    - Membatasi HTTP methods ke `['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']` dan HTTP headers eksplisit (`Content-Type`, `Authorization`, `Accept`, `X-Requested-With`, `X-CSRF-TOKEN`).
+    - Penambahan `CorsSecurityTest` untuk memvalidasi pemblokiran origin asing (`https://malicious-external-site.com`) tanpa eksposur header ACAO wildcard.
+  - Tata Kelola & Pengamanan Registrasi Publik (`PM-BIZ-001`):
+    - Membatasi endpoint `POST /api/auth/register` khusus untuk domain email resmi perusahaan (`@indogreen.id`) via konfigurasi `auth.registration.allowed_domain`.
+    - Menambahkan sakelar enable/disable registrasi (`AUTH_REGISTRATION_ENABLED`).
+    - Mengaktifkan interface `MustVerifyEmail` pada model `App\Models\User`.
+    - Menyelaraskan format response error validasi registrasi menjadi standard bag (`errors`) untuk konsistensi integrasi dengan client SvelteKit.
+    - Penambahan `AuthRegistrationSecurityTest` (5 test cases) memvalidasi penolakan domain luar, keberhasilan domain resmi (case-insensitive), sakelar disable registrasi (HTTP 403), dan validasi password.
+  - Pembaruan konfigurasi lingkungan:
+    - Menambahkan placeholder `FRONTEND_URL`, `CORS_ALLOWED_ORIGINS`, `AUTH_REGISTRATION_ENABLED`, dan `AUTH_REGISTRATION_ALLOWED_DOMAIN` pada `backend/.env.example`.
+- File yang diubah:
+  - `backend/config/cors.php`
+  - `backend/config/auth.php`
+  - `backend/app/Http/Controllers/AuthController.php`
+  - `backend/app/Models/User.php`
+  - `backend/.env.example`
+  - `backend/tests/Feature/CorsSecurityTest.php`
+  - `backend/tests/Feature/AuthRegistrationSecurityTest.php`
+  - `docs/jwt-auth.md`
+  - `docs/environment-variables.md`
+  - `docs/security-checklist.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Seluruh request API lintas domain dari origin tidak terdaftar akan diblokir oleh Same-Origin Policy browser.
+  - Pendaftaran akun baru di aplikasi kini secara ketat mewajibkan alamat email `@indogreen.id`.
+
 ## [2026-11-03] — fix(auth): enforce strict role and permission allowlist in RoleController (PM-AC-001)
 
 - Penuntasan temuan keamanan Fase 1 (`PM-AC-001` - High Severity):
