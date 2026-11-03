@@ -45,12 +45,17 @@ Permission mengikuti format `{module}-{action}`.
 
 ### Aturan modifikasi role
 
-1. **Super Admin** dapat memodifikasi role & permission semua user kecuali dirinya sendiri.
+1. **Super Admin** dapat memodifikasi role & permission semua user kecuali dirinya sendiri (hanya memilih dari role kanonikal: `super_admin`, `admin`, `staff`, `user`).
 2. **Admin** dapat memodifikasi role & permission user `staff` dan `user` saja.
 3. **Admin TIDAK boleh:**
    - Mengubah user yang memiliki role `admin` atau `super_admin`
    - Memberikan role `admin` atau `super_admin` ke user lain
 4. **Semua user** tidak boleh mengubah role dirinya sendiri.
+5. **Proteksi Injeksi Role & Permission (PM-AC-001):**
+   - Role wajib divalidasi terhadap *allowlist* kanonikal sistem via `Rule::in()`. Admin hanya diizinkan memilih `staff` atau `user`.
+   - Nama role arbitrer atau tak terdaftar langsung ditolak dengan HTTP 422.
+   - Permission wajib berupa bagian dari 38 permission kanonikal sistem; setiap permission tak dikenal akan ditolak dengan HTTP 422.
+   - Endpoint menggunakan lookup role/permission yang sudah terdaftar (`first()` dan `whereIn()`), bukan `firstOrCreate()`, sehingga menjamin integritas tabel `roles` dan `permissions` dari manipulasi input.
 
 ### Endpoint manajemen role
 

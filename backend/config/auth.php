@@ -117,4 +117,20 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | User Registration Governance
+    |--------------------------------------------------------------------------
+    |
+    | Pengaturan tata kelola registrasi akun baru pada aplikasi manajemen
+    | proyek internal. Pendaftaran dibatasi khusus untuk domain email resmi
+    | perusahaan (@indogreen.id) dan dapat dinonaktifkan sesuai kebutuhan.
+    |
+    */
+
+    'registration' => [
+        'enabled' => env('AUTH_REGISTRATION_ENABLED', true),
+        'allowed_domain' => env('AUTH_REGISTRATION_ALLOWED_DOMAIN', 'indogreen.id'),
+    ],
+
 ];

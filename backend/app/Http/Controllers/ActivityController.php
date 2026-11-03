@@ -50,10 +50,12 @@ class ActivityController extends Controller
                     'data' => $extractedData,
                 ]);
             } catch (\Exception $e) {
-                Log::error('AI Extraction Error: ' . $e->getMessage());
+                Log::error('AI Extraction Error: ' . $e->getMessage(), [
+                    'exception' => $e,
+                ]);
                 return response()->json([
                     'message' => 'Failed to extract document',
-                    'error' => $e->getMessage(),
+                    'error' => 'Gagal memproses dokumen via AI. Silakan coba beberapa saat lagi atau hubungi administrator.',
                 ], 500);
             }
         }
@@ -80,10 +82,12 @@ class ActivityController extends Controller
                 'form_dependencies' => $this->activityService->getFormDependencies()
             ]);
         } catch (\Exception $e) {
-            Log::error('Error showing activity: ' . $e->getMessage());
+            Log::error('Error showing activity: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
             return response()->json([
                 'message' => 'Failed to retrieve activity',
-                'error' => $e->getMessage()
+                'error' => 'Gagal mengambil data aktivitas. Silakan coba beberapa saat lagi.',
             ], 500);
         }
     }

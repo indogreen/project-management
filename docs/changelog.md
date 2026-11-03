@@ -1,5 +1,133 @@
 # Changelog
 
+## [2026-11-04] — docs(security): synchronize documentation and complete full regression quality gate (Fase 5)
+
+- Penuntasan Fase 5 (Comprehensive Quality Gate & Documentation Synchronization):
+  - Sinkronisasi Dokumentasi Sistem:
+    - Memperbarui `docs/api-reference.md` dengan batasan domain `@indogreen.id` pada `/auth/register`, *allowlist* RBAC pada `/auth/role`, serta catatan deteksi MIME server-side dan penanganan error pada `/activities`.
+    - Melakukan verifikasi konsistensi seluruh dokumen panduan (`docs/role-permission.md`, `docs/jwt-auth.md`, `docs/environment-variables.md`, `docs/security-checklist.md`, `docs/troubleshooting.md`).
+  - Eksekusi Full Regression Quality Gate:
+    - Backend: 40/40 test suite PHPUnit berhasil lolos (190 assertions, 0 failures).
+    - Frontend: 93/93 test suite Vitest berhasil lolos (8 test files, 0 failures).
+    - Type check: `svelte-check` 0 error, 0 warning.
+    - Production build: `vite build` selesai dengan sukses tanpa peringatan atau error *bundling*.
+  - Seluruh 8 temuan audit keamanan (`PM-AC-001`, `PM-CORS-001`, `PM-BIZ-001`, `PM-REDIRECT-001`, `PM-AUTH-001`, `PM-INJ-001`, `PM-INJ-002`, `PM-LOG-001`) dinyatakan tuntas termitigasi.
+- File yang diubah:
+  - `docs/api-reference.md`
+  - `docs/changelog.md`
+
+## [2026-11-03] — fix(security): enforce server-side MIME detection, sanitize error messages, and type-hint activity logging (PM-INJ-001, PM-INJ-002, PM-LOG-001)
+
+- Penuntasan temuan keamanan Fase 4 (`PM-INJ-001`, `PM-INJ-002`, `PM-LOG-001`):
+  - Deteksi MIME Server-Side untuk Lampiran File (`PM-INJ-001`):
+    - Mengganti penggunaan `$file->getClientMimeType()` yang berasal dari header untrusted klien dengan `$file->getMimeType() ?? 'application/octet-stream'` berbasis file inspection (`finfo` PHP/Symfony) pada `ActivityService`, `CertificateService`, dan `ItemService`.
+    - Memperbarui `AIDocumentExtractionService` untuk mendeteksi MIME server-side pada ekstraksi dokumen AI.
+  - Sanitasi Pesan Kesalahan Ekstraksi AI & Controller (`PM-INJ-002`):
+    - Membersihkan blok `catch (\Exception $e)` pada `ActivityController` (metode `extract` dan `show`) agar tidak lagi mengembalikan pesan exception mentah (`$e->getMessage()`) ke response JSON klien.
+    - Menjaga audit trail internal tetap lengkap dengan mencatat detail stack trace aman ke `Log::error`.
+  - Sanitasi Tipe Data & Proteksi Path Traversal pada Audit Logging (`PM-LOG-001`):
+    - Memperketat `ActivityLogService` dengan type-hinting integer eksplisit (`int $userId`, `?int $userId`) untuk mencegah interpolasi string atau path traversal pada direktori penyimpanan log pengguna.
+    - Memperbarui `getUserDirectory` dan `getAllUsers` agar memvalidasi integer disk format (`user_{id}`) secara aman.
+  - Penambahan Tests:
+    - Menambahkan `AttachmentMimeSecurityTest` (3 feature tests) yang memvalidasi bahwa spoofing MIME header oleh klien ditolak dan MIME server-side tersimpan dengan benar di database.
+    - Menambahkan `ExceptionDisclosureSecurityTest` untuk memverifikasi bahwa kegagalan AI tidak membocorkan exception internal atau kredensial ke response API.
+    - Menambahkan `ActivityLogServiceSecurityTest` (2 unit tests) untuk menguji proteksi path traversal dan sanitasi folder logging pengguna.
+- File yang diubah:
+  - `backend/app/Services/ActivityService.php`
+  - `backend/app/Services/CertificateService.php`
+  - `backend/app/Services/ItemService.php`
+  - `backend/app/Services/AIDocumentExtractionService.php`
+  - `backend/app/Http/Controllers/ActivityController.php`
+  - `backend/app/Services/ActivityLogService.php`
+  - `backend/tests/Feature/AttachmentMimeSecurityTest.php`
+  - `backend/tests/Feature/ExceptionDisclosureSecurityTest.php`
+  - `backend/tests/Unit/ActivityLogServiceSecurityTest.php`
+  - `docs/security-checklist.md`
+  - `docs/troubleshooting.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - MIME type lampiran file di database kini mencerminkan isi biner berkas yang sebenarnya, bukan klaim peramban. Respon API pada kegagalan layanan AI tidak lagi mengekspos rincian exception teknis.
+
+## [2026-11-03] — fix(frontend): eliminate open redirect and harden client security headers (PM-REDIRECT-001, PM-AUTH-001)
+
+- Penuntasan temuan keamanan Fase 3 (`PM-REDIRECT-001` - Medium Severity & `PM-AUTH-001` / Client Hardening):
+  - Mitigasi Open Redirect (`PM-REDIRECT-001`):
+    - Penambahan fungsi sanitasi terpusat `getSafeInternalRedirect` di `frontend/src/lib/utils/url.ts` yang memvalidasi bahwa path redirect diawali tepat satu slash (`/`), secara ketat menolak URL protokol-relatif (`//`), backslash (`/\` atau `/\\`), skema absolut (`javascript:`, `https:`), dan rute loop `/auth/*`.
+    - Mengganti fungsi redirect lokal di `frontend/src/routes/auth/login/+page.svelte` dan `frontend/src/routes/auth/register/_components/RegisterPageClient.svelte` dengan `getSafeInternalRedirect`.
+  - Hardening Header Keamanan Server (`PM-AUTH-001` / Hygiene):
+    - Memperbarui `frontend/src/hooks.server.ts` dengan menyematkan `X-Frame-Options: SAMEORIGIN` (proteksi clickjacking), `Permissions-Policy: camera=(), microphone=(), geolocation=()`, baseline `Content-Security-Policy` yang kompatibel dengan runtime UI Svelte/Tailwind/Chart.js/SweetAlert2, serta `Strict-Transport-Security` untuk koneksi HTTPS.
+  - Sanitasi Skema Tautan Lampiran:
+    - Menambahkan `safeAttachmentUrl` dan memperketat `storageUrl` di `frontend/src/lib/utils/url.ts` untuk menolak skema manipulatif (`javascript:`, `data:`, `vbscript:`).
+    - Memperbarui komponen `CertificateFormModal.svelte`, `ActivityFormModal.svelte`, `ActivityDetail.svelte`, dan `CertificatesDetail.svelte` agar menggunakan `safeAttachmentUrl`.
+  - Penambahan Unit Tests:
+    - Membuat `frontend/src/lib/utils/url.test.ts` (11 test case) untuk memverifikasi seluruh vektor eksploitasi URL dan sanitasi lampiran.
+    - Memperbarui `frontend/src/hooks.server.test.ts` untuk memverifikasi kehadiran seluruh header keamanan modern.
+- File yang diubah:
+  - `frontend/src/lib/utils/url.ts`
+  - `frontend/src/routes/auth/login/+page.svelte`
+  - `frontend/src/routes/auth/register/_components/RegisterPageClient.svelte`
+  - `frontend/src/hooks.server.ts`
+  - `frontend/src/lib/components/form/CertificateFormModal.svelte`
+  - `frontend/src/lib/components/form/ActivityFormModal.svelte`
+  - `frontend/src/lib/components/detail/ActivityDetail.svelte`
+  - `frontend/src/lib/components/detail/CertificatesDetail.svelte`
+  - `frontend/src/lib/utils/url.test.ts`
+  - `frontend/src/hooks.server.test.ts`
+  - `docs/security-checklist.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengguna tidak lagi dapat diarahkan ke situs eksternal phishing via parameter redirect atau next pada halaman login dan registrasi. Seluruh render halaman frontend kini terlindungi dari clickjacking dan eksploitasi skema URI berbahaya.
+
+## [2026-11-03] — fix(security): enforce strict CORS allowlist and restrict registration to @indogreen.id (PM-CORS-001, PM-BIZ-001)
+
+- Penuntasan temuan keamanan Fase 2 (`PM-CORS-001` & `PM-BIZ-001` - Medium Severity):
+  - Pengamanan Boundary CORS (`PM-CORS-001`):
+    - Mengganti wildcard origin `['*']` dan header `['*']` di `backend/config/cors.php` dengan origin terdaftar berbasis `FRONTEND_URL` (default: `http://localhost:5173`) dan `CORS_ALLOWED_ORIGINS`.
+    - Membatasi HTTP methods ke `['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']` dan HTTP headers eksplisit (`Content-Type`, `Authorization`, `Accept`, `X-Requested-With`, `X-CSRF-TOKEN`).
+    - Penambahan `CorsSecurityTest` untuk memvalidasi pemblokiran origin asing (`https://malicious-external-site.com`) tanpa eksposur header ACAO wildcard.
+  - Tata Kelola & Pengamanan Registrasi Publik (`PM-BIZ-001`):
+    - Membatasi endpoint `POST /api/auth/register` khusus untuk domain email resmi perusahaan (`@indogreen.id`) via konfigurasi `auth.registration.allowed_domain`.
+    - Menambahkan sakelar enable/disable registrasi (`AUTH_REGISTRATION_ENABLED`).
+    - Mengaktifkan interface `MustVerifyEmail` pada model `App\Models\User`.
+    - Menyelaraskan format response error validasi registrasi menjadi standard bag (`errors`) untuk konsistensi integrasi dengan client SvelteKit.
+    - Penambahan `AuthRegistrationSecurityTest` (5 test cases) memvalidasi penolakan domain luar, keberhasilan domain resmi (case-insensitive), sakelar disable registrasi (HTTP 403), dan validasi password.
+  - Pembaruan konfigurasi lingkungan:
+    - Menambahkan placeholder `FRONTEND_URL`, `CORS_ALLOWED_ORIGINS`, `AUTH_REGISTRATION_ENABLED`, dan `AUTH_REGISTRATION_ALLOWED_DOMAIN` pada `backend/.env.example`.
+- File yang diubah:
+  - `backend/config/cors.php`
+  - `backend/config/auth.php`
+  - `backend/app/Http/Controllers/AuthController.php`
+  - `backend/app/Models/User.php`
+  - `backend/.env.example`
+  - `backend/tests/Feature/CorsSecurityTest.php`
+  - `backend/tests/Feature/AuthRegistrationSecurityTest.php`
+  - `docs/jwt-auth.md`
+  - `docs/environment-variables.md`
+  - `docs/security-checklist.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Seluruh request API lintas domain dari origin tidak terdaftar akan diblokir oleh Same-Origin Policy browser.
+  - Pendaftaran akun baru di aplikasi kini secara ketat mewajibkan alamat email `@indogreen.id`.
+
+## [2026-11-03] — fix(auth): enforce strict role and permission allowlist in RoleController (PM-AC-001)
+
+- Penuntasan temuan keamanan Fase 1 (`PM-AC-001` - High Severity):
+  - Menghapus sink dinamis `Role::firstOrCreate` dan `Permission::firstOrCreate` pada `backend/app/Http/Controllers/RoleController.php`.
+  - Menerapkan *allowlist* kanonikal untuk role (`Rule::in(['staff', 'user'])` untuk admin, dan `['super_admin', 'admin', 'staff', 'user']` untuk super_admin).
+  - Menerapkan validasi ketat terhadap 38 permission kanonikal; setiap key permission tak dikenal langsung ditolak dengan status HTTP 422.
+  - Menambahkan konfigurasi `system_roles` dan `system_modules` pada `backend/config/permission.php`.
+  - Mengamankan endpoint `/auth/role/config` agar hanya menyajikan role resmi aplikasi.
+  - Penambahan comprehensive test suite `backend/tests/Feature/RolePermissionSecurityTest.php` (11 test case) mencakup pencegahan injeksi role arbitrer, pencegahan injeksi permission liar, isolasi hierarki admin, serta verifikasi pembaruan sah.
+- File yang diubah:
+  - `backend/app/Http/Controllers/RoleController.php`
+  - `backend/config/permission.php`
+  - `backend/tests/Feature/RolePermissionSecurityTest.php`
+  - `docs/role-permission.md`
+  - `docs/security-checklist.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Aktor admin maupun super_admin tidak lagi dapat menyuntikkan nama role baru atau permission liar ke dalam database via API role assignment. Seluruh role dan permission wajib terdaftar dan ter-seed sebelumnya.
+
 ## [2026-11-03] — feat(ci): add GitHub Actions workflow and security-audit skill
 
 - Penambahan GitHub Actions workflow (`.github/workflows/ci.yml`):
