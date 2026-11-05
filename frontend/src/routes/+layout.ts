@@ -13,8 +13,12 @@ export async function load({ url }) {
   // SSR is disabled.
   const token = localStorage.getItem('jwt_token');
   if (!token) {
-    // Redirect unauthenticated users to the login page with a callback URL.
-    const redirectUrl = `/auth/login?redirect=${encodeURIComponent(url.pathname + url.search)}`;
+    // Redirect unauthenticated users to the login page.
+    // Omit redirect callback when visiting root ('/') so URL remains clean.
+    const redirectUrl =
+      url.pathname === '/'
+        ? '/auth/login'
+        : `/auth/login?redirect=${encodeURIComponent(url.pathname + url.search)}`;
     throw redirect(307, redirectUrl);
   }
   return {};

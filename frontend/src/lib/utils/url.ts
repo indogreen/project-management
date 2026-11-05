@@ -21,7 +21,7 @@ export function getSafeInternalRedirect(
     path = target.trim();
   }
 
-  if (!path) {
+  if (!path || path === '/' || path.startsWith('/?')) {
     return fallback;
   }
 
