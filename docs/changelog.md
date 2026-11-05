@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-11-05] — fix(frontend): eliminate redundant redirect query parameter when navigating to root route
+
+- Perbaikan pengalihan rute otentikasi saat mengakses root (`/`):
+  - Mengubah auth guard pada `frontend/src/routes/+layout.ts` agar saat pengguna belum login mengakses root (`/`), pengalihan langsung mengarah ke `/auth/login` tanpa menyertakan query parameter redundan `?redirect=%2F`.
+  - Memperbarui `frontend/src/lib/axiosClient.ts` agar pembersihan sesi saat gagal refresh tidak menambahkan `?redirect=%2F` jika pengguna berada pada root `/` atau rute auth.
+  - Memperbarui `getSafeInternalRedirect` di `frontend/src/lib/utils/url.ts` agar memperlakukan root path (`/`) atau query root sebagai kondisi fallback default (`/dashboard`), menghindari siklus redirect tambahan setelah login.
+  - Menambahkan unit test di `frontend/src/routes/layout.test.ts` dan memperluas pengujian di `frontend/src/lib/utils/url.test.ts`.
+- File yang diubah:
+  - `frontend/src/routes/+layout.ts`
+  - `frontend/src/routes/layout.test.ts`
+  - `frontend/src/lib/axiosClient.ts`
+  - `frontend/src/lib/utils/url.ts`
+  - `frontend/src/lib/utils/url.test.ts`
+  - `docs/jwt-auth.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Membuka halaman utama (`/`) dalam keadaan belum terotentikasi kini menghasilkan URL bersih `/auth/login`, sementara membuka halaman spesifik (seperti `/dashboard` atau `/projects`) tetap mempertahankan query parameter `redirect` sesuai tujuan.
+
+
 ## [2026-11-04] — docs(security): synchronize documentation and complete full regression quality gate (Fase 5)
 
 - Penuntasan Fase 5 (Comprehensive Quality Gate & Documentation Synchronization):
