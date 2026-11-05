@@ -1,5 +1,28 @@
 # Changelog
 
+## [2026-11-05] — feat(config): support PREVIEW_ALLOWED_HOSTS and configure indogreen.id HTTPS via Tailscale
+
+- Implementasi konfigurasi domain `indogreen.id` (`pm.indogreen.id` & `api-pm.indogreen.id`) dan pemisahan host header di Vite:
+  - Frontend:
+    - Memperbarui `frontend/vite.config.ts` untuk mendukung variabel `PREVIEW_ALLOWED_HOSTS` (serta alias `PREVIEW_ALLOWED_HOST`) pada blok `preview: { ... }` dengan fallback aman ke `DEV_ALLOWED_HOSTS`.
+    - Memperbarui `frontend/.env` dan `frontend/.env.example` dengan domain HTTPS `pm.indogreen.id` dan `api-pm.indogreen.id`.
+  - Backend:
+    - Menyesuaikan `APP_URL`, `FRONTEND_URL`, dan `CORS_ALLOWED_ORIGINS` di `backend/.env` dan `backend/.env.example` ke `https://api-pm.indogreen.id` dan `https://pm.indogreen.id`.
+  - Dokumentasi & Arsitektur:
+    - Menambahkan panduan deployment arsitektur Tailscale Subnet Router + Caddy HTTPS (Let's Encrypt DNS-01 via Rumahweb) pada `docs/deployment.md`.
+    - Menambahkan dokumentasi variabel `PREVIEW_ALLOWED_HOSTS` pada `docs/environment-variables.md`.
+- File yang diubah:
+  - `frontend/vite.config.ts`
+  - `frontend/.env`
+  - `frontend/.env.example`
+  - `backend/.env`
+  - `backend/.env.example`
+  - `docs/environment-variables.md`
+  - `docs/deployment.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Server Vite preview kini dapat diakses melalui host domain custom `pm.indogreen.id` tanpa terblokir proteksi host header. Akses HTTPS siap di-reverse proxy oleh Caddy ke port internal `8005` dan `8004`.
+
 ## [2026-11-05] — fix(frontend): eliminate redundant redirect query parameter when navigating to root route
 
 - Perbaikan pengalihan rute otentikasi saat mengakses root (`/`):

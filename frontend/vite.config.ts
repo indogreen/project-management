@@ -14,11 +14,19 @@ export default defineConfig(({ mode }) => {
   const hmrHost = env.HMR_HOST || host;
   const hmrPort = env.HMR_PORT ? Number(env.HMR_PORT) : undefined;
 
-  const allowedHosts = env.DEV_ALLOWED_HOSTS
+  const devAllowedHosts = env.DEV_ALLOWED_HOSTS
     ? env.DEV_ALLOWED_HOSTS.split(',')
         .map((h) => h.trim())
         .filter(Boolean)
     : undefined;
+
+  const previewAllowedHosts =
+    env.PREVIEW_ALLOWED_HOSTS || env.PREVIEW_ALLOWED_HOST || env.DEV_ALLOWED_HOSTS
+      ? (env.PREVIEW_ALLOWED_HOSTS || env.PREVIEW_ALLOWED_HOST || env.DEV_ALLOWED_HOSTS)
+          .split(',')
+          .map((h) => h.trim())
+          .filter(Boolean)
+      : undefined;
 
   const hmrClientPort = env.HMR_CLIENT_PORT ? Number(env.HMR_CLIENT_PORT) : undefined;
   const hmrConfig = hmrClientPort
@@ -35,14 +43,16 @@ export default defineConfig(({ mode }) => {
       host,
       port,
       strictPort: true,
-      ...(allowedHosts && allowedHosts.length > 0 ? { allowedHosts } : {}),
+      ...(devAllowedHosts && devAllowedHosts.length > 0 ? { allowedHosts: devAllowedHosts } : {}),
       hmr: hmrConfig
     },
     preview: {
       host: previewHost,
       port: previewPort,
       strictPort: true,
-      ...(allowedHosts && allowedHosts.length > 0 ? { allowedHosts } : {})
+      ...(previewAllowedHosts && previewAllowedHosts.length > 0
+        ? { allowedHosts: previewAllowedHosts }
+        : {})
     },
     test: {
       expect: { requireAssertions: true },

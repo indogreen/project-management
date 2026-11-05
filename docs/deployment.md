@@ -247,3 +247,66 @@ Lakukan verifikasi menggunakan smartphone dengan koneksi **DATA SELULER (bukan W
 - [ ] Periksa Console browser: tidak ada error _Mixed Content_ (seluruh resource dimuat melalui HTTPS).
 - [ ] Uji respons header: `curl -I https://app-pm-idg.zed.ai.id` menunjukkan header `cf-cache-status: BYPASS` atau `DYNAMIC`.
 - [ ] Uji Reboot VM: setelah server restart, seluruh service (`indogreen-backend`, `indogreen-frontend`, `cloudflared`) hidup kembali secara otomatis sesuai panduan [setup-auto-start.md](setup-auto-start.md).
+
+---
+
+## Production Deployment via Tailscale Subnet Router + Caddy (indogreen.id)
+
+Lingkungan production ini berjalan pada server lokal (`192.168.1.34`) di balik CGNAT ISP, diakses oleh klien melalui **Tailscale Subnet Router** (`192.168.1.0/24`) dengan custom domain `indogreen.id` dan protokol **HTTPS valid** (Let's Encrypt) tanpa Nginx dan tanpa Cloudflare Tunnel.
+
+### 1. Arsitektur Domain & Port
+
+| Komponen | Domain Target | Port Layanan Internal | Reverse Proxy & Protokol |
+| :--- | :--- | :--- | :--- |
+| **Frontend** | `https://pm.indogreen.id` | `http://127.0.0.1:8005` | Caddy (HTTPS 443) ➔ `npm run preview` |
+| **Backend** | `https://api-pm.indogreen.id` | `http://127.0.0.1:8004` | Caddy (HTTPS 443) ➔ `php artisan serve` |
+
+### 2. Konfigurasi DNS di Rumahweb
+
+Tambahkan **A Record** pada DNS Management Rumahweb:
+- `pm.indogreen.id` ➔ `192.168.1.34` (TTL: 3600)
+- `api-pm.indogreen.id` ➔ `192.168.1.34` (TTL: 3600)
+
+### 3. Penerbitan Sertifikat SSL Let's Encrypt (DNS-01 ACME)
+
+Jalankan perintah berikut di server Linux Ubuntu/Debian:
+```bash
+sudo apt update
+sudo apt install -y certbot
+sudo certbot certonly --manual --preferred-challenges dns -d pm.indogreen.id -d api-pm.indogreen.id
+```
+Tambahkan TXT record `_acme-challenge.pm` dan `_acme-challenge.api-pm` pada DNS Rumahweb sesuai token yang ditampilkan Certbot, tunggu 1-2 menit, lalu tekan Enter. Sertifikat akan tersimpan di `/etc/letsencrypt/live/pm.indogreen.id/`.
+
+### 4. Konfigurasi Caddy (`/etc/caddy/Caddyfile`)
+
+```caddyfile
+pm.indogreen.id {
+    tls /etc/letsencrypt/live/pm.indogreen.id/fullchain.pem /etc/letsencrypt/live/pm.indogreen.id/privkey.pem
+    reverse_proxy 127.0.0.1:8005
+}
+
+api-pm.indogreen.id {
+    tls /etc/letsencrypt/live/pm.indogreen.id/fullchain.pem /etc/letsencrypt/live/pm.indogreen.id/privkey.pem
+    reverse_proxy 127.0.0.1:8004
+}
+```
+
+Jalankan dan aktifkan Caddy:
+```bash
+sudo systemctl restart caddy
+sudo systemctl enable caddy
+```
+
+### 5. Frontend & Backend Environment Checklist
+
+- **`frontend/.env`**:
+  - `PREVIEW_HOST=0.0.0.0`
+  - `PREVIEW_PORT=8005`
+  - `PREVIEW_ALLOWED_HOSTS=pm.indogreen.id,192.168.1.34,localhost`
+  - `PUBLIC_API_BASE_URL=https://api-pm.indogreen.id/api`
+  - `PUBLIC_STORAGE_BASE_URL=https://api-pm.indogreen.id/storage`
+  - `PUBLIC_PWA_ENABLED=true`
+- **`backend/.env`**:
+  - `APP_URL=https://api-pm.indogreen.id`
+  - `FRONTEND_URL=https://pm.indogreen.id`
+  - `CORS_ALLOWED_ORIGINS=https://pm.indogreen.id,http://localhost:8005,http://192.168.1.34:8005`
