@@ -72,6 +72,16 @@ SERVER_HOST=0.0.0.0
 SERVER_PORT=8004
 ```
 
+### Konfigurasi Production Domain via Tailscale + Caddy (Backend)
+
+Pada lingkungan production berbasis Tailscale Subnet Router + Caddy HTTPS (`backend/.env`):
+
+```env
+APP_URL=https://api-pm.indogreen.id
+FRONTEND_URL=https://pm.indogreen.id
+CORS_ALLOWED_ORIGINS=https://pm.indogreen.id,http://localhost:8005,http://192.168.1.34:8005
+```
+
 ### Lainnya
 
 | Variable           | Scope  | Required | Default    | Deskripsi             |
@@ -102,9 +112,10 @@ Lokasi file: `frontend/.env` (salin dari `frontend/.env.example`)
 | ------------------- | ------ | -------- | ----------- | ------------------------------------------------------- |
 | `DEV_HOST`          | Server | No       | `localhost` | Host untuk dev server (`0.0.0.0` untuk tunnel)          |
 | `DEV_PORT`          | Server | No       | `5174`      | Port untuk dev server (`8005` untuk tunnel)             |
-| `DEV_ALLOWED_HOSTS` | Server | No       | —           | Daftar hostname yang diizinkan Vite (dipisah koma)      |
-| `PREVIEW_HOST`      | Server | No       | `localhost` | Host untuk preview server                               |
-| `PREVIEW_PORT`      | Server | No       | `4174`      | Port untuk preview server                               |
+| `DEV_ALLOWED_HOSTS`     | Server | No       | —           | Daftar hostname yang diizinkan Vite Dev Server (dipisah koma)      |
+| `PREVIEW_HOST`          | Server | No       | `localhost` | Host untuk preview server                                         |
+| `PREVIEW_PORT`          | Server | No       | `4174`      | Port untuk preview server                                         |
+| `PREVIEW_ALLOWED_HOSTS` | Server | No       | —           | Daftar hostname yang diizinkan Vite Preview di production (dipisah koma) |
 | `HMR_HOST`          | Server | No       | `localhost` | Host untuk WebSocket Hot Module Replacement             |
 | `HMR_PORT`          | Server | No       | `24679`     | Port internal HMR jika menggunakan port terpisah        |
 | `HMR_PROTOCOL`      | Server | No       | `wss`       | Protokol HMR (`ws` untuk HTTP lokal, `wss` untuk HTTPS) |
@@ -132,6 +143,21 @@ HMR_CLIENT_PORT=443
 
 PUBLIC_STORAGE_BASE_URL=https://api-pm-idg.zed.ai.id/storage
 PUBLIC_API_BASE_URL=https://api-pm-idg.zed.ai.id/api
+INTERNAL_API_BASE_URL=http://localhost:8004/api
+```
+
+### Konfigurasi Production Domain via Tailscale + Caddy (Frontend)
+
+Pada lingkungan production berbasis Tailscale Subnet Router + Caddy HTTPS (`frontend/.env`):
+
+```env
+PREVIEW_HOST=0.0.0.0
+PREVIEW_PORT=8005
+PREVIEW_ALLOWED_HOSTS=pm.indogreen.id,192.168.1.34,localhost
+
+PUBLIC_API_BASE_URL=https://api-pm.indogreen.id/api
+PUBLIC_STORAGE_BASE_URL=https://api-pm.indogreen.id/storage
+PUBLIC_PWA_ENABLED=true
 INTERNAL_API_BASE_URL=http://localhost:8004/api
 ```
 
