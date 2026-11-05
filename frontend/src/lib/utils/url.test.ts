@@ -60,6 +60,18 @@ describe('getSafeInternalRedirect (PM-REDIRECT-001)', () => {
     expect(getSafeInternalRedirect(null, '')).toBe('');
     expect(getSafeInternalRedirect(undefined, '/home')).toBe('/home');
   });
+
+  it('treats root path ("/") or root query as fallback to avoid redundant redirects', () => {
+    expect(getSafeInternalRedirect('/')).toBe('/dashboard');
+    expect(getSafeInternalRedirect('/?tab=1')).toBe('/dashboard');
+    expect(getSafeInternalRedirect('/', '')).toBe('');
+
+    const urlWithRootRedirect = new URL('http://localhost:5173/auth/login?redirect=%2F');
+    expect(getSafeInternalRedirect(urlWithRootRedirect)).toBe('/dashboard');
+
+    const urlWithPlainRootRedirect = new URL('http://localhost:5173/auth/login?redirect=/');
+    expect(getSafeInternalRedirect(urlWithPlainRootRedirect)).toBe('/dashboard');
+  });
 });
 
 describe('storageUrl and safeAttachmentUrl', () => {

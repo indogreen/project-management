@@ -132,7 +132,11 @@ export async function load({ url }) {
 
   const token = localStorage.getItem('jwt_token');
   if (!token) {
-    throw redirect(307, `/auth/login?redirect=...`);
+    const redirectUrl =
+      url.pathname === '/'
+        ? '/auth/login'
+        : `/auth/login?redirect=${encodeURIComponent(url.pathname + url.search)}`;
+    throw redirect(307, redirectUrl);
   }
   return {};
 }
