@@ -40,7 +40,7 @@ export async function login(loginIdentifier: string, password: string): Promise<
   const response = await axiosClient.post<AuthTokenResponse>('/auth/login', {
     login: loginIdentifier,
     email: loginIdentifier,
-    password,
+    password
   });
   return response.data;
 }

@@ -48,8 +48,9 @@
             </div>
           </div>
           <div class="sm:col-span-4">
-            <label for="username" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-100"
-              >Username</label
+            <label
+              for="username"
+              class="block text-sm/6 font-medium text-gray-900 dark:text-gray-100">Username</label
             >
             <div class="mt-2">
               <input

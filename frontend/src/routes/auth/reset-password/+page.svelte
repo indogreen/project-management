@@ -160,7 +160,13 @@
             <div
               class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-gray-500"
             >
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5">
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
                 <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0z" /><path
                   d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.364 6.364l-1.414-1.414M6.05 6.05 4.636 4.636"
                 />
@@ -193,8 +199,16 @@
             <div
               class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-gray-500"
             >
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
               </svg>
             </div>
           </div>
@@ -225,8 +239,16 @@
             <div
               class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-gray-500"
             >
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 15v2m-6 1h12a2 2 0 002-2v-3a2 2 0 00-2-2H6a2 2 0 00-2 2v3a2 2 0 002 2z" /><path d="M8 11V7a4 4 0 118 0v4" />
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M12 15v2m-6 1h12a2 2 0 002-2v-3a2 2 0 00-2-2H6a2 2 0 00-2 2v3a2 2 0 002 2z"
+                /><path d="M8 11V7a4 4 0 118 0v4" />
               </svg>
             </div>
             <button
@@ -236,12 +258,30 @@
               aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
             >
               {#if showPassword}
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                  />
                 </svg>
               {:else}
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M3 3l18 18" /><path d="M10.58 10.58A3 3 0 0113.41 13.4" /><path d="M9.88 4.64A9.94 9.94 0 0112 4c6.5 0 10 8 10 8a17.61 17.61 0 01-4.21 5.32" /><path d="M6.11 6.11A17.64 17.64 0 002 12s3.5 7 10 7a9.94 9.94 0 004.12-.83" />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M3 3l18 18" /><path d="M10.58 10.58A3 3 0 0113.41 13.4" /><path
+                    d="M9.88 4.64A9.94 9.94 0 0112 4c6.5 0 10 8 10 8a17.61 17.61 0 01-4.21 5.32"
+                  /><path d="M6.11 6.11A17.64 17.64 0 002 12s3.5 7 10 7a9.94 9.94 0 004.12-.83" />
                 </svg>
               {/if}
             </button>
@@ -273,23 +313,51 @@
             <div
               class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-gray-500"
             >
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 15v2m-6 1h12a2 2 0 002-2v-3a2 2 0 00-2-2H6a2 2 0 00-2 2v3a2 2 0 002 2z" /><path d="M8 11V7a4 4 0 118 0v4" />
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M12 15v2m-6 1h12a2 2 0 002-2v-3a2 2 0 00-2-2H6a2 2 0 00-2 2v3a2 2 0 002 2z"
+                /><path d="M8 11V7a4 4 0 118 0v4" />
               </svg>
             </div>
             <button
               type="button"
               class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               onclick={() => (showPasswordConfirmation = !showPasswordConfirmation)}
-              aria-label={showPasswordConfirmation ? 'Sembunyikan konfirmasi password' : 'Tampilkan konfirmasi password'}
+              aria-label={showPasswordConfirmation
+                ? 'Sembunyikan konfirmasi password'
+                : 'Tampilkan konfirmasi password'}
             >
               {#if showPasswordConfirmation}
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                  />
                 </svg>
               {:else}
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M3 3l18 18" /><path d="M10.58 10.58A3 3 0 0113.41 13.4" /><path d="M9.88 4.64A9.94 9.94 0 0112 4c6.5 0 10 8 10 8a17.61 17.61 0 01-4.21 5.32" /><path d="M6.11 6.11A17.64 17.64 0 002 12s3.5 7 10 7a9.94 9.94 0 004.12-.83" />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M3 3l18 18" /><path d="M10.58 10.58A3 3 0 0113.41 13.4" /><path
+                    d="M9.88 4.64A9.94 9.94 0 0112 4c6.5 0 10 8 10 8a17.61 17.61 0 01-4.21 5.32"
+                  /><path d="M6.11 6.11A17.64 17.64 0 002 12s3.5 7 10 7a9.94 9.94 0 004.12-.83" />
                 </svg>
               {/if}
             </button>
@@ -322,7 +390,8 @@
                 stroke="currentColor"
                 stroke-width="4"
               ></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
             </svg>
             <span>Menyimpan Password...</span>
           {:else}

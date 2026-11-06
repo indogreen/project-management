@@ -170,7 +170,8 @@
               Lupa Password
             </h2>
             <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              Masukkan alamat email akun Anda untuk menerima kode verifikasi dan instruksi reset password.
+              Masukkan alamat email akun Anda untuk menerima kode verifikasi dan instruksi reset
+              password.
             </p>
           </div>
 
@@ -240,10 +241,7 @@
                   stroke="currentColor"
                   stroke-width="4"
                 ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                 ></path>
               </svg>
               <span>Mengirim Kode...</span>

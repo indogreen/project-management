@@ -191,8 +191,7 @@
         <div>
           <label
             for="username"
-            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >Username</label
+            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label
           >
           <div class="relative">
             <input
