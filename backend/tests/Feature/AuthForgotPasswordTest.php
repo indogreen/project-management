@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Mail\AccountRegisteredMail;
 use App\Mail\ResetPasswordMail;
 use App\Models\User;
 use Carbon\Carbon;
@@ -196,5 +197,62 @@ class AuthForgotPasswordTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['token']);
+    }
+
+    public function test_registration_sends_authentication_code_email_and_custom_username(): void
+    {
+        Mail::fake();
+
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Budi Santoso',
+            'username' => 'budi_santoso',
+            'email' => 'budi@indogreen.id',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('username', 'budi_santoso')
+            ->assertJsonPath('email', 'budi@indogreen.id');
+
+        $this->assertDatabaseHas('users', [
+            'username' => 'budi_santoso',
+            'email' => 'budi@indogreen.id',
+        ]);
+
+        $this->assertDatabaseHas('password_reset_tokens', [
+            'email' => 'budi@indogreen.id',
+        ]);
+
+        Mail::assertSent(AccountRegisteredMail::class, function (AccountRegisteredMail $mail) {
+            return $mail->hasTo('budi@indogreen.id')
+                && $mail->username === 'budi_santoso'
+                && strlen($mail->code) === 6;
+        });
+    }
+
+    public function test_update_profile_updates_name_and_username(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'update_user@indogreen.id',
+            'username' => 'old_username',
+            'name' => 'Old Name',
+        ]);
+
+        $token = auth('api')->login($user);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->putJson('/api/auth/profile', [
+                'name' => 'New Name',
+                'username' => 'new_username',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('name', 'New Name')
+            ->assertJsonPath('username', 'new_username');
+
+        $user->refresh();
+        $this->assertSame('New Name', $user->name);
+        $this->assertSame('new_username', $user->username);
     }
 }

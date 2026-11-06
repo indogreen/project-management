@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\AccountRegisteredMail;
 use App\Mail\ResetPasswordMail;
 use App\Models\User;
 use Carbon\Carbon;
@@ -200,6 +201,35 @@ class AuthService
             'email' => $data['email'],
             'password' => $data['password'],
         ]);
+
+        // Generate kode autentikasi / verifikasi akun untuk dikirimkan via email
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            [
+                'token' => Hash::make($code),
+                'created_at' => now(),
+            ]
+        );
+
+        $frontendUrl = rtrim((string) config('app.frontend_url', 'http://localhost:5173'), '/');
+        $loginUrl = $frontendUrl . '/auth/login';
+
+        Mail::to($user->email)->send(new AccountRegisteredMail(
+            name: $user->name,
+            username: $user->username,
+            emailAddress: $user->email,
+            code: $code,
+            loginUrl: $loginUrl,
+        ));
+
+        $this->activityLogService->log(
+            'register',
+            User::class,
+            $user->id,
+            $user->name,
+            'User registered successfully and authentication code sent via email'
+        );
 
         return $user;
     }

@@ -50,9 +50,13 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'username' => 'nullable|string|max:255|unique:users,username',
+            'username' => 'nullable|string|max:255|alpha_dash|unique:users,username',
             'email' => $emailRules,
             'password' => 'required|confirmed|min:8',
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, minus (-), dan garis bawah (_).',
+            'username.unique' => 'Username sudah digunakan oleh pengguna lain.',
         ]);
 
         if ($validator->fails()) {
@@ -162,18 +166,29 @@ class AuthController extends Controller
 
     public function updateProfile(Request $request): UserResource|JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
-
         $user = $this->authService->me();
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'username' => [
+                'nullable',
+                'string',
+                'max:255',
+                'alpha_dash',
+                \Illuminate\Validation\Rule::unique('users', 'username')->ignore($user->id),
+            ],
+        ], [
+            'name.required' => 'Nama wajib diisi.',
+            'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, minus (-), dan garis bawah (_).',
+            'username.unique' => 'Username sudah digunakan oleh pengguna lain.',
+        ]);
+
         $user = $this->authService->updateProfile($user, $validated);
 
-        return new UserResource($user);
+        return (new UserResource($user))->response()->setStatusCode(200);
     }
 
     public function changePassword(Request $request): JsonResponse

@@ -65,13 +65,13 @@
 
 <!-- Background (punya varian dark) -->
 <div
-  class="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-50 via-white to-cyan-50
+  class="absolute inset-0 -z-10 bg-linear-to-br from-indigo-50 via-white to-cyan-50
             dark:from-neutral-900 dark:via-neutral-950 dark:to-black"
 ></div>
-<div class="absolute inset-x-0 top-[-10rem] -z-10 transform-gpu overflow-hidden blur-3xl">
+<div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl">
   <div
-    class="relative left-1/2 aspect-[1155/678] w-[36rem] -translate-x-1/2
-              bg-gradient-to-tr from-indigo-300 to-cyan-300 opacity-30
+    class="relative left-1/2 aspect-1155/678 w-xl -translate-x-1/2
+              bg-linear-to-tr from-indigo-300 to-cyan-300 opacity-30
               dark:from-indigo-700/40 dark:to-cyan-700/40"
   ></div>
 </div>

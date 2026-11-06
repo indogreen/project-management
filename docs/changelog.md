@@ -15,9 +15,14 @@
     - `/auth/forgot-password`: Form permintaan kode verifikasi dengan feedback state email terkirim.
     - `/auth/reset-password`: Form input kode verifikasi, password baru, dan konfirmasi password dengan dukungan prefill otomatis dari query parameter URL email (`?email=...&token=...`) serta toggle lihat/sembunyikan password.
   - Penambahan tautan *"Lupa password?"* pada halaman login yang terhubung ke `/auth/forgot-password`.
+- Pengelolaan Username & Registrasi Akun:
+  - Penambahan input `username` pada tab profil di Settings (`/settings`), memungkinkan pengguna mengubah username mereka secara mandiri (divalidasi unik dengan format `alpha_dash`).
+  - Penambahan input `username` pada formulir registrasi publik (`/auth/register`).
+  - Pengiriman email otomatis saat registrasi berhasil (`AccountRegisteredMail`) yang memuat **kode autentikasi akun** untuk verifikasi keamanan.
+- Desain Pesan Email Bertema Indogreen:
+  - Template email `emails/reset_password.blade.php` dan `emails/account_registered.blade.php` disesuaikan mengikuti skema warna identitas Indogreen (gradasi hijau tua `#008a00` hingga `#16a34a` dan aksen lime `#bbf7d0`), dengan tata letak lencana kapsul teks bersih tanpa menyematkan gambar logo.
 - Pengujian & Dokumentasi:
-  - Pembuatan test suite `AuthForgotPasswordTest` (8 skenario pengujian unit/feature di backend).
-  - Penambahan unit test service layer di `authService.test.ts` di frontend.
+  - Penambahan test kasus baru pada `AuthForgotPasswordTest` untuk pengujian email autentikasi saat registrasi dan pembaruan username di endpoint `/auth/profile`.
   - Pembaruan dokumen `docs/api-reference.md`, `docs/database-schema.md`, `docs/database-migrations.md`, dan `docs/jwt-auth.md`.
 - File yang diubah:
   - `backend/database/migrations/2026_11_06_000001_add_username_to_users_table.php`

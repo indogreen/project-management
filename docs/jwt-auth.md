@@ -47,16 +47,18 @@ Aplikasi menggunakan **JWT (JSON Web Token)** melalui package `php-open-source-s
 1. Frontend memuat konfigurasi fitur otentikasi melalui `GET /api/auth/features`. Jika `registration_enabled: false`:
    - Menu tautan pendaftaran (*"Belum punya akun? Daftar disini"*) pada halaman login otomatis disembunyikan.
    - Akses langsung ke URL `/auth/register` otomatis dialihkan (*redirect*) ke `/auth/login` dengan notifikasi kesalahan.
-2. Saat aktif (`registration_enabled: true`), user mengisi form register (name, email, password, password_confirmation).
+2. Saat aktif (`registration_enabled: true`), user mengisi form register (name, username opsional, email, password, password_confirmation).
 3. Frontend mengirim `POST /api/auth/register`.
 4. Backend memvalidasi input:
    - Status registrasi aktif (`AUTH_REGISTRATION_ENABLED=true`).
    - Domain email dibatasi ketat untuk alamat resmi perusahaan (`@indogreen.id` via `AUTH_REGISTRATION_ALLOWED_DOMAIN`).
+   - Username (opsional/otomatis dibuat jika kosong, unique, format `alpha_dash`).
    - Email valid & unique, password minimal 8 karakter, dan password confirmed.
 5. Model `User` mengimplementasikan `MustVerifyEmail`.
 6. Backend membuat user baru (password di-hash bcrypt).
-7. User pertama otomatis mendapat role `super_admin` via `RolePermissionSeeder`.
-8. Response: `UserResource` (tanpa token — user harus login manual).
+7. Backend mengirimkan email berisi **kode autentikasi akun** (`AccountRegisteredMail`) ke email pendaftar via SMTP.
+8. User pertama otomatis mendapat role `super_admin` via `RolePermissionSeeder`.
+9. Response: `UserResource` (tanpa token — user harus login manual).
 
 ## Login Flow
 
@@ -102,8 +104,8 @@ Aplikasi menggunakan **JWT (JSON Web Token)** melalui package `php-open-source-s
 ## Update Profile
 
 - Endpoint: `PUT /api/auth/profile`
-- Input: `{ name }` (hanya nama yang bisa diubah)
-- Validasi: `name` required, string, max 255
+- Input: `{ name, username }`
+- Validasi: `name` required string max 255; `username` nullable/string max 255 unique alpha_dash (ignore current user)
 
 ## Change Password
 

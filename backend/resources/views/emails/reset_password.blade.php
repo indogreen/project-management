@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kode Verifikasi Reset Password</title>
+    <title>Kode Verifikasi Reset Password - Indogreen</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
+            background-color: #f0fdf4;
+            color: #14532d;
             margin: 0;
             padding: 24px;
             -webkit-font-smoothing: antialiased;
@@ -17,59 +17,79 @@
             max-width: 560px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            border: 1px solid #bbf7d0;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 25px -5px rgba(22, 163, 74, 0.1);
         }
         .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
-            padding: 32px 28px;
+            background: linear-gradient(135deg, #008a00 0%, #00a800 60%, #16a34a 100%);
+            padding: 36px 28px;
             text-align: center;
+        }
+        .brand-badge {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.12);
+            padding: 10px 24px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .brand-name {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            line-height: 1.1;
+        }
+        .brand-indo {
             color: #ffffff;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.025em;
+        .brand-green {
+            color: #bbf7d0;
+        }
+        .brand-sub {
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            color: #dcfce7;
+            margin-top: 5px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
         .content {
             padding: 32px 28px;
         }
         .greeting {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 17px;
+            font-weight: 700;
             margin-bottom: 12px;
-            color: #0f172a;
+            color: #14532d;
         }
         .text {
             font-size: 14px;
             line-height: 1.6;
-            color: #475569;
+            color: #374151;
             margin-bottom: 24px;
         }
         .code-box {
-            background-color: #f1f5f9;
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 20px;
+            background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px dashed #4ade80;
+            border-radius: 16px;
+            padding: 22px;
             text-align: center;
-            margin: 24px 0;
+            margin: 26px 0;
         }
         .code-label {
             font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #64748b;
-            font-weight: 600;
+            letter-spacing: 0.12em;
+            color: #15803d;
+            font-weight: 700;
             margin-bottom: 8px;
         }
         .code-value {
-            font-size: 32px;
+            font-size: 34px;
             font-weight: 800;
             letter-spacing: 6px;
-            color: #4f46e5;
+            color: #15803d;
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
         }
         .btn-wrapper {
@@ -78,42 +98,47 @@
         }
         .btn {
             display: inline-block;
-            background-color: #4f46e5;
+            background: linear-gradient(135deg, #008a00 0%, #16a34a 100%);
             color: #ffffff !important;
             font-size: 15px;
-            font-weight: 600;
+            font-weight: 700;
             text-decoration: none;
-            padding: 12px 32px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            padding: 13px 36px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
         }
         .note {
             font-size: 12px;
-            color: #94a3b8;
+            color: #6b7280;
             line-height: 1.5;
-            border-top: 1px solid #f1f5f9;
+            border-top: 1px solid #f3f4f6;
             padding-top: 20px;
             margin-top: 24px;
         }
         .footer {
-            background-color: #f8fafc;
+            background-color: #f9fafb;
             padding: 20px 28px;
             text-align: center;
             font-size: 12px;
-            color: #94a3b8;
-            border-top: 1px solid #e2e8f0;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Indogreen Project Management</h1>
+            <div class="brand-badge">
+                <div class="brand-name">
+                    <span class="brand-indo">INDO</span><span class="brand-green">GREEN</span>
+                </div>
+                <div class="brand-sub">Perusahaan Listrik Tenaga Surya</div>
+            </div>
         </div>
         <div class="content">
             <div class="greeting">Halo, {{ $name }}</div>
             <p class="text">
-                Kami menerima permintaan pengaturan ulang kata sandi (reset password) untuk akun Anda. Gunakan kode verifikasi di bawah ini atau klik tombol tautan langsung untuk melanjutkan:
+                Kami menerima permintaan pengaturan ulang kata sandi (reset password) untuk akun Anda di <strong>Indogreen Project Management</strong>. Gunakan kode verifikasi di bawah ini atau klik tombol tautan langsung untuk melanjutkan:
             </p>
 
             <div class="code-box">
