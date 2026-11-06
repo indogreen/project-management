@@ -339,7 +339,7 @@ Karena server production berada di jaringan lokal/VirtualBox (`192.168.1.34`) di
 ### 2. Alur Eksekusi Otomatis `.github/workflows/cd.yml`
 
 Setiap kali kode di-push ke branch `main`:
-1. `git fetch origin main && git reset --hard origin/main` di direktori proyek `/opt/lampp/htdocs/project/indogreen/project-management`.
+1. Otentikasi dan sinkronisasi Git otomatis via `GITHUB_TOKEN`: `git fetch https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git main` dan `git reset --hard FETCH_HEAD` di direktori proyek `/opt/lampp/htdocs/project/indogreen/project-management`.
 2. Backend: `composer install --no-dev --optimize-autoloader`, `php artisan migrate --force`, `php artisan optimize:clear`, pembuatan ulang cache config/route/view, dan `php artisan queue:restart`.
 3. Frontend: `npm ci`, `npm run build`.
 4. Service Restart: `sudo systemctl restart indogreen-backend.service indogreen-frontend.service`.

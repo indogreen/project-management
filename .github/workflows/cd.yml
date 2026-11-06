@@ -1,10 +1,13 @@
-name: CD - Deploy to Production
+name: CD
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: cd-${{ github.workflow }}-${{ github.ref }}
@@ -17,6 +20,8 @@ jobs:
 
     steps:
       - name: Deploy to Server
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
           echo "=================================================="
@@ -33,8 +38,9 @@ jobs:
           cd "$PROJECT_DIR"
 
           echo "📥 [1/5] Pulling latest changes from Git..."
-          git fetch origin main
-          git reset --hard origin/main
+          git config --global --add safe.directory "$PROJECT_DIR" || true
+          git fetch "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" main
+          git reset --hard FETCH_HEAD
 
           echo "📦 [2/5] Updating Backend (Laravel)..."
           cd "$PROJECT_DIR/backend"
@@ -57,7 +63,7 @@ jobs:
 
           echo "🩺 [5/5] Performing Health Check..."
           sleep 3
-          
+
           # Health check backend
           if curl -s -f http://localhost:8004/up > /dev/null; then
             echo "✅ Backend API is healthy (port 8004)."
