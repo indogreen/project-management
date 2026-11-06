@@ -14,6 +14,7 @@ Menyimpan data akun pengguna.
 | ------------------- | -------------- | -------- | -------------- | -------------------------- |
 | `id`                | bigint (PK)    | No       | auto_increment | Primary key                |
 | `name`              | varchar(255)   | No       | —              | Nama pengguna              |
+| `username`          | varchar(255)   | Yes      | NULL           | Username unik untuk login  |
 | `email`             | varchar(255)   | No       | —              | Email (unique)             |
 | `email_verified_at` | timestamp      | Yes      | NULL           | Waktu verifikasi email     |
 | `password`          | varchar(255)   | No       | —              | Password (hashed bcrypt)   |
@@ -21,7 +22,7 @@ Menyimpan data akun pengguna.
 | `created_at`        | timestamp      | Yes      | NULL           | Waktu dibuat               |
 | `updated_at`        | timestamp      | Yes      | NULL           | Waktu terakhir diubah      |
 
-**Index:** `users_email_unique` (UNIQUE pada `email`)
+**Index:** `users_email_unique` (UNIQUE pada `email`), `users_username_unique` (UNIQUE pada `username`)
 
 ---
 

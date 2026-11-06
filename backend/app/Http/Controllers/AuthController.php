@@ -50,6 +50,7 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'username' => 'nullable|string|max:255|unique:users,username',
             'email' => $emailRules,
             'password' => 'required|confirmed|min:8',
         ]);
@@ -68,13 +69,78 @@ class AuthController extends Controller
 
     public function login(Request $request): JsonResponse
     {
-        $credentials = $request->only('email', 'password');
+        $loginInput = $request->input('login') ?? $request->input('email') ?? $request->input('username');
+        $password = $request->input('password');
 
         try {
-            $token = $this->authService->login($credentials);
+            $token = $this->authService->login([
+                'login' => $loginInput,
+                'password' => $password,
+            ]);
             return $this->respondWithToken($token);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['message' => $e->getMessage()], 401);
+        }
+    }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+        ], [
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format alamat email tidak valid.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Data yang diberikan tidak valid.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->authService->forgotPassword((string) $request->input('email'));
+
+        return response()->json($result);
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'token' => 'required|string',
+            'password' => [
+                'required', 'string', 'min:8', 'confirmed',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+            ],
+        ], [
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format alamat email tidak valid.',
+            'token.required' => 'Kode verifikasi / token wajib diisi.',
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password minimal harus 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'password.regex' => 'Password harus mengandung huruf kecil dan huruf besar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Data yang diberikan tidak valid.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $this->authService->resetPassword($validator->validated());
+            return response()->json([
+                'message' => 'Password berhasil direset. Silakan masuk menggunakan password baru Anda.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], 422);
         }
     }
 

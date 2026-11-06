@@ -23,6 +23,7 @@
 | 17  | `2026_06_01_000005_create_stock_movements_table.php`        | Membuat tabel `stock_movements` dengan multiple index                               | Active |
 | 18  | `2026_06_01_000006_create_project_materials_table.php`      | Membuat tabel `project_materials`                                                   | Active |
 | 19  | `2026_06_24_000001_create_item_attachments_table.php`       | Membuat tabel `item_attachments`                                                    | Active |
+| 20  | `2026_11_06_000001_add_username_to_users_table.php`         | Menambahkan kolom `username` (unique, nullable) pada tabel `users` dan backfill data | Active |
 
 ## Daftar Seeder
 

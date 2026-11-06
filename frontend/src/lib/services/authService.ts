@@ -1,11 +1,12 @@
 import axiosClient from '$lib/axiosClient';
-import type { AuthFeatures } from '$lib/types/auth';
+import type { AuthFeatures, ForgotPasswordPayload, ResetPasswordPayload } from '$lib/types/auth';
 
-export type { AuthFeatures };
+export type { AuthFeatures, ForgotPasswordPayload, ResetPasswordPayload };
 
 export type User = {
   id: number;
   name: string;
+  username?: string;
   email: string;
 };
 
@@ -22,6 +23,7 @@ export type AuthTokenResponse = {
 
 export type RegisterPayload = {
   name: string;
+  username?: string;
   email: string;
   password: string;
   password_confirmation: string;
@@ -33,9 +35,25 @@ export async function getAuthFeatures(): Promise<AuthFeatures> {
   return response.data;
 }
 
-/** Sends user credentials to the JWT login endpoint. */
-export async function login(email: string, password: string): Promise<AuthTokenResponse> {
-  const response = await axiosClient.post<AuthTokenResponse>('/auth/login', { email, password });
+/** Sends user credentials (email or username) to the JWT login endpoint. */
+export async function login(loginIdentifier: string, password: string): Promise<AuthTokenResponse> {
+  const response = await axiosClient.post<AuthTokenResponse>('/auth/login', {
+    login: loginIdentifier,
+    email: loginIdentifier,
+    password,
+  });
+  return response.data;
+}
+
+/** Requests a password reset verification code sent to the user's email. */
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  const response = await axiosClient.post<{ message: string }>('/auth/forgot-password', { email });
+  return response.data;
+}
+
+/** Resets user password using the verification token/code received via email. */
+export async function resetPassword(payload: ResetPasswordPayload): Promise<{ message: string }> {
+  const response = await axiosClient.post<{ message: string }>('/auth/reset-password', payload);
   return response.data;
 }
 

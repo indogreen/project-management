@@ -122,19 +122,19 @@
           <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Login</h2>
         </div>
 
-        <!-- Email -->
+        <!-- Email atau Username -->
         <div>
           <label for="email" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >Email</label
+            >Email atau Username</label
           >
           <div class="relative">
             <input
               id="email"
-              type="email"
-              name="email"
-              placeholder="Alamat Email"
+              type="text"
+              name="login"
+              placeholder="Email atau username"
               bind:value={email}
-              autocomplete="email"
+              autocomplete="username"
               required
               class="peer block w-full rounded-xl border border-gray-300 bg-white px-11 py-3 text-gray-900 placeholder:text-gray-400
                      focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:opacity-70
@@ -167,6 +167,12 @@
               class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >Password</label
             >
+            <a
+              href="/auth/forgot-password"
+              class="mb-1 text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              Lupa password?
+            </a>
           </div>
           <div class="relative">
             <input

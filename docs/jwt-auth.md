@@ -60,8 +60,8 @@ Aplikasi menggunakan **JWT (JSON Web Token)** melalui package `php-open-source-s
 
 ## Login Flow
 
-1. User mengisi form login (email, password).
-2. Frontend mengirim `POST /api/auth/login`.
+1. User mengisi form login (menggunakan **Email** atau **Username**, dan password).
+2. Frontend mengirim `POST /api/auth/login` dengan payload `{ login, password }` (mendukung email dan username secara transparan).
 3. Rate limiting: maksimal **5 request / 60 detik** (Sliding Window Throttle).
 4. Backend memvalidasi credential via JWT Auth.
 5. Jika berhasil → Response: `{ access_token, token_type, expires_in }`.
@@ -118,9 +118,23 @@ Aplikasi menggunakan **JWT (JSON Web Token)** melalui package `php-open-source-s
 
 ## Reset Password
 
-> **Status:** Belum diimplementasikan.
->
-> Tabel `password_reset_tokens` sudah ada di database, namun belum ada endpoint atau UI untuk fitur reset password via email. Saat ini password hanya bisa diubah oleh user yang sudah login melalui endpoint `/auth/password`.
+Fitur reset password publik melalui verifikasi email telah aktif penuh:
+
+1. **Permintaan Kode Verifikasi (Forgot Password):**
+   - URL Frontend: `/auth/forgot-password`
+   - Endpoint Backend: `POST /api/auth/forgot-password`
+   - Input: `{ email }`
+   - Rate limit: **3 request / 60 detik** (`sliding_throttle:3,60,auth`)
+   - Backend menghasilkan kode OTP 6-digit numerik yang disimpan dalam bentuk hash di tabel `password_reset_tokens` (masa berlaku: 60 menit).
+   - Email dikirim menggunakan SMTP Relay (Brevo) dengan format HTML responsif yang memuat kode verifikasi 6 digit dan tombol tautan langsung (`/auth/reset-password?email=...&token=...`).
+
+2. **Eksekusi Reset Password:**
+   - URL Frontend: `/auth/reset-password`
+   - Endpoint Backend: `POST /api/auth/reset-password`
+   - Input: `{ email, token, password, password_confirmation }`
+   - Rate limit: **5 request / 60 detik** (`sliding_throttle:5,60,auth`)
+   - Validasi: token cocok, belum kadaluarsa (<60 menit), password minimal 8 karakter, kombinasi huruf besar dan kecil, konfirmasi cocok.
+   - Setelah berhasil, record token dihapus dari database, aktivitas dicatat di activity log, dan user dapat login kembali menggunakan password baru.
 
 ## Protected Route (Frontend)
 
