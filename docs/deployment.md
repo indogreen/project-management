@@ -310,3 +310,38 @@ sudo systemctl enable caddy
   - `APP_URL=https://api-pm.indogreen.id`
   - `FRONTEND_URL=https://pm.indogreen.id`
   - `CORS_ALLOWED_ORIGINS=https://pm.indogreen.id,http://localhost:8005,http://192.168.1.34:8005`
+
+---
+
+## Automated Deployment (CD) via GitHub Self-Hosted Runner
+
+Workflow Continuous Deployment (CD) didefinisikan pada `.github/workflows/deploy.yml` dan berjalan otomatis setiap kali ada `push` ke branch **`main`** (atau via trigger manual `workflow_dispatch` dari GitHub Actions tab).
+
+Karena server production berada di jaringan lokal/VirtualBox (`192.168.1.34`) di balik CGNAT/Tailscale, workflow menggunakan **GitHub Self-Hosted Runner** yang terhubung keluar ke GitHub secara aman tanpa perlu IP publik atau port forwarding router.
+
+### 1. Prasyarat di Server VirtualBox (`indogreen-VirtualBox`)
+
+1. **Unduh dan Pasang Runner GitHub:**
+   - Masuk ke GitHub Repo ➔ **Settings** ➔ **Actions** ➔ **Runners** ➔ **New self-hosted runner** (Linux, x64).
+   - Jalankan langkah ekstraksi dan registrasi runner sesuai token yang diberikan GitHub di server (`~/actions-runner`).
+   - Daftarkan sebagai background systemd service:
+     ```bash
+     sudo ./svc.sh install
+     sudo ./svc.sh start
+     ```
+
+2. **Izin Sudo NOPASSWD untuk Systemctl Service:**
+   Jalankan `sudo visudo` di server dan tambahkan:
+   ```text
+   indogreen ALL=(ALL) NOPASSWD: /bin/systemctl restart indogreen-backend.service, /bin/systemctl restart indogreen-frontend.service
+   ```
+
+### 2. Alur Eksekusi Otomatis `.github/workflows/deploy.yml`
+
+Setiap kali kode di-push ke branch `main`:
+1. `git fetch origin main && git reset --hard origin/main` di direktori proyek `/opt/lampp/htdocs/project/indogreen/project-management`.
+2. Backend: `composer install --no-dev --optimize-autoloader`, `php artisan migrate --force`, `php artisan optimize:clear`, pembuatan ulang cache config/route/view, dan `php artisan queue:restart`.
+3. Frontend: `npm ci`, `npm run build`.
+4. Service Restart: `sudo systemctl restart indogreen-backend.service indogreen-frontend.service`.
+5. Health Check otomatis pada port internal `8004/up` dan `8005`.
+

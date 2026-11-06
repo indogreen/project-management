@@ -1,0 +1,77 @@
+name: CD - Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: self-hosted
+
+    steps:
+      - name: Deploy to Server
+        run: |
+          set -e
+          echo "=================================================="
+          echo "🚀 Starting Automated Deployment to Production..."
+          echo "Host: $(hostname) | Date: $(date)"
+          echo "=================================================="
+
+          PROJECT_DIR="/opt/lampp/htdocs/project/indogreen/project-management"
+          if [ ! -d "$PROJECT_DIR" ]; then
+            echo "❌ Error: Project directory $PROJECT_DIR not found!"
+            exit 1
+          fi
+
+          cd "$PROJECT_DIR"
+
+          echo "📥 [1/5] Pulling latest changes from Git..."
+          git fetch origin main
+          git reset --hard origin/main
+
+          echo "📦 [2/5] Updating Backend (Laravel)..."
+          cd "$PROJECT_DIR/backend"
+          composer install --no-dev --optimize-autoloader --no-interaction
+          php artisan migrate --force
+          php artisan optimize:clear
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan queue:restart 2>/dev/null || true
+
+          echo "🎨 [3/5] Updating and Building Frontend (SvelteKit)..."
+          cd "$PROJECT_DIR/frontend"
+          npm ci
+          npm run build
+
+          echo "🔄 [4/5] Restarting Systemd Services..."
+          sudo systemctl restart indogreen-backend.service
+          sudo systemctl restart indogreen-frontend.service
+
+          echo "🩺 [5/5] Performing Health Check..."
+          sleep 3
+          
+          # Health check backend
+          if curl -s -f http://localhost:8004/up > /dev/null; then
+            echo "✅ Backend API is healthy (port 8004)."
+          else
+            echo "⚠️ Warning: Backend health check /up did not respond on port 8004."
+          fi
+
+          # Health check frontend
+          if curl -s -f http://localhost:8005 > /dev/null; then
+            echo "✅ Frontend Web is healthy (port 8005)."
+          else
+            echo "⚠️ Warning: Frontend health check did not respond on port 8005."
+          fi
+
+          echo "=================================================="
+          echo "🎉 Deployment Completed Successfully!"
+          echo "=================================================="
