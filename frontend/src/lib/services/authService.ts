@@ -1,4 +1,7 @@
 import axiosClient from '$lib/axiosClient';
+import type { AuthFeatures } from '$lib/types/auth';
+
+export type { AuthFeatures };
 
 export type User = {
   id: number;
@@ -23,6 +26,12 @@ export type RegisterPayload = {
   password: string;
   password_confirmation: string;
 };
+
+/** Fetches public auth features/config (e.g. registration enabled status). */
+export async function getAuthFeatures(): Promise<AuthFeatures> {
+  const response = await axiosClient.get<AuthFeatures>('/auth/features');
+  return response.data;
+}
 
 /** Sends user credentials to the JWT login endpoint. */
 export async function login(email: string, password: string): Promise<AuthTokenResponse> {

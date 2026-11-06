@@ -2,10 +2,10 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import { register } from '$lib/services/authService';
+  import { getAuthFeatures, register } from '$lib/services/authService';
   import { theme, toggleTheme } from '$lib/stores/theme';
   import { extractApiErrors } from '$lib/utils/errors';
-  import { showSuccess } from '$lib/utils/toast';
+  import { showError, showSuccess } from '$lib/utils/toast';
   import { getSafeInternalRedirect } from '$lib/utils/url';
 
   let name = $state('');
@@ -16,17 +16,34 @@
   let showPassword2 = $state(false);
   let loading = $state(false);
   let error = $state<string | null>(null);
+  let registrationEnabled = $state(true);
 
-  // ⬇️ Jika sudah login, jangan boleh buka register
-  onMount(() => {
+  // ⬇️ Jika sudah login atau registrasi nonaktif, jangan boleh buka register
+  onMount(async () => {
     const token = localStorage.getItem('jwt_token');
     if (token) {
       goto(getSafeInternalRedirect($page.url));
+      return;
+    }
+
+    try {
+      const features = await getAuthFeatures();
+      if (!features.registration_enabled) {
+        registrationEnabled = false;
+        showError('Pendaftaran akun publik saat ini dinonaktifkan.');
+        goto('/auth/login');
+      }
+    } catch (err) {
+      console.warn('Gagal memverifikasi status registrasi:', err);
     }
   });
 
   async function handleSubmit() {
     if (loading) return;
+    if (!registrationEnabled) {
+      error = 'Pendaftaran akun publik saat ini dinonaktifkan.';
+      return;
+    }
     error = null;
     if (password !== password_confirmation) {
       error = 'Konfirmasi password tidak cocok.';
@@ -113,6 +130,15 @@
           {/if}
         </button>
       </div>
+
+      {#if !registrationEnabled}
+        <div
+          class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
+          role="alert"
+        >
+          Pendaftaran akun baru saat ini dinonaktifkan. Mengalihkan ke halaman login...
+        </div>
+      {/if}
 
       <form class="space-y-5" onsubmit={handleSubmitEvent} aria-busy={loading}>
         <div class="text-center">

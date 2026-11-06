@@ -29,6 +29,7 @@ Authorization: Bearer {access_token}
 
 | Method | Endpoint                | Auth | Deskripsi                      |
 | ------ | ----------------------- | ---- | ------------------------------ |
+| GET    | `/auth/features`        | No   | Cek konfigurasi fitur otentikasi publik (status `registration_enabled` dan `allowed_domain`) |
 | POST   | `/auth/register`        | No   | Registrasi user baru (khusus email resmi `@indogreen.id`, dapat dinonaktifkan via `AUTH_REGISTRATION_ENABLED`) |
 | POST   | `/auth/login`           | No   | Login dan dapatkan JWT token   |
 | POST   | `/auth/logout`          | Yes  | Invalidate token               |

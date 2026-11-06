@@ -75,6 +75,19 @@ class AuthService
         return $user;
     }
 
+    /**
+     * Mendapatkan status tata kelola registrasi dan fitur otentikasi publik.
+     *
+     * @return array{registration_enabled: bool, allowed_domain: string}
+     */
+    public function getRegistrationStatus(): array
+    {
+        return [
+            'registration_enabled' => (bool) config('auth.registration.enabled', true),
+            'allowed_domain' => (string) config('auth.registration.allowed_domain', 'indogreen.id'),
+        ];
+    }
+
     protected function logActivity(string $action, ?string $description = null): void
     {
         $this->activityLogService->log(

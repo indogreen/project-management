@@ -19,6 +19,14 @@ class AuthController extends Controller
         $this->authService = $authService;
     }
 
+    /**
+     * Mengembalikan status fitur publik auth (misal: registrasi aktif atau nonaktif).
+     */
+    public function features(): JsonResponse
+    {
+        return response()->json($this->authService->getRegistrationStatus());
+    }
+
     public function register(Request $request): UserResource|JsonResponse
     {
         $registrationEnabled = (bool) config('auth.registration.enabled', true);

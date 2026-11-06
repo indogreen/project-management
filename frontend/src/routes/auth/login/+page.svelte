@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import { login } from '$lib/services/authService';
+  import { getAuthFeatures, login } from '$lib/services/authService';
   import { theme, toggleTheme } from '$lib/stores/theme';
   import { extractApiErrors } from '$lib/utils/errors';
   import { getSafeInternalRedirect } from '$lib/utils/url';
@@ -12,14 +12,27 @@
   let showPassword = $state(false);
   let loading = $state(false);
   let error = $state<string | null>(null);
+  let registrationEnabled = $state(false);
 
   // ⬇️ Jika sudah login dan buka /auth/login, langsung redirect
   onMount(() => {
     const token = localStorage.getItem('jwt_token');
     if (token) {
       goto(getSafeInternalRedirect($page.url));
+      return;
     }
+
+    void loadFeatures();
   });
+
+  async function loadFeatures() {
+    try {
+      const features = await getAuthFeatures();
+      registrationEnabled = Boolean(features.registration_enabled);
+    } catch (err) {
+      console.warn('Gagal memuat status registrasi:', err);
+    }
+  }
 
   async function handleSubmit() {
     if (loading) return;
@@ -270,14 +283,16 @@
         </button>
       </form>
 
-      <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-300">
-        Belum punya akun?
-        <a
-          href="/auth/register"
-          class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-          >Daftar disini</a
-        >
-      </p>
+      {#if registrationEnabled}
+        <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-300">
+          Belum punya akun?
+          <a
+            href="/auth/register"
+            class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >Daftar disini</a
+          >
+        </p>
+      {/if}
     </div>
   </div>
 </div>

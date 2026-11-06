@@ -17,6 +17,7 @@ use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
+    Route::get('/features', [AuthController::class, 'features'])->name('features');
     Route::post('/register', [AuthController::class, 'register'])->middleware('sliding_throttle:5,60,auth')->name('register');
     Route::post('/login', [AuthController::class, 'login'])->middleware('sliding_throttle:5,60,auth')->name('login');
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api')->name('logout');

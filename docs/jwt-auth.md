@@ -44,16 +44,19 @@ Aplikasi menggunakan **JWT (JSON Web Token)** melalui package `php-open-source-s
 
 ## Register Flow
 
-1. User mengisi form register (name, email, password, password_confirmation).
-2. Frontend mengirim `POST /api/auth/register`.
-3. Backend memvalidasi input:
+1. Frontend memuat konfigurasi fitur otentikasi melalui `GET /api/auth/features`. Jika `registration_enabled: false`:
+   - Menu tautan pendaftaran (*"Belum punya akun? Daftar disini"*) pada halaman login otomatis disembunyikan.
+   - Akses langsung ke URL `/auth/register` otomatis dialihkan (*redirect*) ke `/auth/login` dengan notifikasi kesalahan.
+2. Saat aktif (`registration_enabled: true`), user mengisi form register (name, email, password, password_confirmation).
+3. Frontend mengirim `POST /api/auth/register`.
+4. Backend memvalidasi input:
    - Status registrasi aktif (`AUTH_REGISTRATION_ENABLED=true`).
    - Domain email dibatasi ketat untuk alamat resmi perusahaan (`@indogreen.id` via `AUTH_REGISTRATION_ALLOWED_DOMAIN`).
    - Email valid & unique, password minimal 8 karakter, dan password confirmed.
-4. Model `User` mengimplementasikan `MustVerifyEmail`.
-5. Backend membuat user baru (password di-hash bcrypt).
-6. User pertama otomatis mendapat role `super_admin` via `RolePermissionSeeder`.
-7. Response: `UserResource` (tanpa token — user harus login manual).
+5. Model `User` mengimplementasikan `MustVerifyEmail`.
+6. Backend membuat user baru (password di-hash bcrypt).
+7. User pertama otomatis mendapat role `super_admin` via `RolePermissionSeeder`.
+8. Response: `UserResource` (tanpa token — user harus login manual).
 
 ## Login Flow
 

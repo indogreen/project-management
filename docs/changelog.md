@@ -1,6 +1,30 @@
 # Changelog
 
-## [2026-11-06] — feat(ci): add automated production deployment workflow via github self-hosted runner
+## [2026-11-06] — feat(auth): synchronize registration menu visibility on login page with backend config
+
+- Penambahan endpoint publik `GET /api/auth/features` di backend untuk mengembalikan konfigurasi publik otentikasi (`registration_enabled` dan `allowed_domain`).
+- Sinkronisasi frontend login & register via service layer:
+  - Pada halaman login (`/auth/login`), tautan pendaftaran (*"Belum punya akun? Daftar disini"*) disembunyikan secara kondisional apabila `registration_enabled` bernilai `false`.
+  - Pada halaman register (`/auth/register`), akses langsung dicegat di `onMount` dengan pengalihan otomatis (*redirect*) ke `/auth/login` dan menampilkan notifikasi kesalahan jika registrasi dinonaktifkan.
+  - Penambahan tipe data `AuthFeatures` di `src/lib/types/auth.ts` dan fungsi `getAuthFeatures()` pada `authService.ts`.
+  - Penambahan unit test `AuthRegistrationSecurityTest` di backend dan `authService.test.ts` di frontend.
+- File yang diubah:
+  - `backend/app/Services/AuthService.php`
+  - `backend/app/Http/Controllers/AuthController.php`
+  - `backend/routes/api.php`
+  - `backend/phpunit.xml`
+  - `backend/tests/Feature/AuthRegistrationSecurityTest.php`
+  - `frontend/src/lib/types/auth.ts`
+  - `frontend/src/lib/types/index.ts`
+  - `frontend/src/lib/services/authService.ts`
+  - `frontend/src/lib/services/authService.test.ts`
+  - `frontend/src/routes/auth/login/+page.svelte`
+  - `frontend/src/routes/auth/register/_components/RegisterPageClient.svelte`
+  - `docs/api-reference.md`
+  - `docs/jwt-auth.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengubahan variabel environment `AUTH_REGISTRATION_ENABLED=false` di `backend/.env` kini secara otomatis menyembunyikan opsi pendaftaran akun dari antarmuka login frontend tanpa perlu konfigurasi terpisah di frontend.
 
 - Pembuatan workflow Continuous Deployment (CD) pada `.github/workflows/cd.yml`:
   - Menggunakan GitHub Self-Hosted Runner (`runs-on: self-hosted`) yang berjalan langsung di server VirtualBox (`indogreen-VirtualBox`).
