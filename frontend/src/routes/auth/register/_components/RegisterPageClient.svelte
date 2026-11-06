@@ -199,7 +199,7 @@
               id="username"
               type="text"
               name="username"
-              placeholder="Username unik (opsional / misal: riza_s)"
+              placeholder="Username unik (opsional)"
               bind:value={username}
               autocomplete="username"
               class="peer block w-full rounded-xl border border-gray-300 bg-white px-11 py-3 text-gray-900 placeholder:text-gray-400

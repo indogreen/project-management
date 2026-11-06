@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f8fafc;
+            background-color: #f0fdf4;
             color: #1e293b;
             margin: 0;
             padding: 24px;
@@ -18,29 +18,23 @@
             margin: 0 auto;
             background-color: #ffffff;
             border-radius: 20px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #bbf7d0;
             overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(0, 168, 0, 0.08);
+            box-shadow: 0 10px 25px -5px rgba(0, 177, 0, 0.15);
         }
         .header {
-            background-color: #ffffff;
-            padding: 32px 24px;
+            background-color: #00b100;
+            padding: 38px 20px;
             text-align: center;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .brand-pill {
-            display: inline-block;
-            background-color: #00a800;
-            padding: 10px 32px;
-            border-radius: 9999px;
-            box-shadow: 0 4px 12px rgba(0, 168, 0, 0.25);
         }
         .brand-name {
-            font-size: 28px;
+            font-size: 36px;
             font-weight: 900;
-            letter-spacing: 0.04em;
-            line-height: 1.1;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Arial Black', sans-serif;
+            letter-spacing: 0.05em;
+            line-height: 1;
+            font-family: 'Arial Black', Impact, -apple-system, BlinkMacSystemFont, sans-serif;
+            text-transform: uppercase;
+            display: inline-block;
         }
         .brand-indo {
             color: #ffffff;
@@ -65,7 +59,7 @@
         }
         .account-badge {
             background-color: #f0fdf4;
-            border-left: 4px solid #00a800;
+            border-left: 4px solid #00b100;
             border-radius: 8px;
             padding: 12px 16px;
             margin: 16px 0;
@@ -77,7 +71,7 @@
         }
         .code-box {
             background-color: #f0fdf4;
-            border: 2px dashed #00a800;
+            border: 2px dashed #00b100;
             border-radius: 16px;
             padding: 22px;
             text-align: center;
@@ -92,7 +86,7 @@
             margin-bottom: 8px;
         }
         .code-value {
-            font-size: 34px;
+            font-size: 36px;
             font-weight: 800;
             letter-spacing: 6px;
             color: #008a00;
@@ -104,14 +98,14 @@
         }
         .btn {
             display: inline-block;
-            background-color: #00a800;
+            background-color: #00b100;
             color: #ffffff !important;
             font-size: 15px;
             font-weight: 700;
             text-decoration: none;
-            padding: 13px 36px;
+            padding: 14px 38px;
             border-radius: 9999px;
-            box-shadow: 0 4px 14px rgba(0, 168, 0, 0.35);
+            box-shadow: 0 4px 14px rgba(0, 177, 0, 0.35);
         }
         .note {
             font-size: 12px;
@@ -122,22 +116,20 @@
             margin-top: 24px;
         }
         .footer {
-            background-color: #f8fafc;
+            background-color: #f9fafb;
             padding: 20px 28px;
             text-align: center;
             font-size: 12px;
-            color: #94a3b8;
-            border-top: 1px solid #f1f5f9;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="brand-pill">
-                <span class="brand-name">
-                    <span class="brand-indo">INDO</span><span class="brand-green">GREEN</span>
-                </span>
+            <div class="brand-name">
+                <span class="brand-indo">INDO</span><span class="brand-green">GREEN</span>
             </div>
         </div>
         <div class="content">
