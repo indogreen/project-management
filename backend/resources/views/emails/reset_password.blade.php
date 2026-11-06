@@ -7,8 +7,8 @@
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0fdf4;
-            color: #14532d;
+            background-color: #f8fafc;
+            color: #1e293b;
             margin: 0;
             padding: 24px;
             -webkit-font-smoothing: antialiased;
@@ -18,41 +18,35 @@
             margin: 0 auto;
             background-color: #ffffff;
             border-radius: 20px;
-            border: 1px solid #bbf7d0;
+            border: 1px solid #e2e8f0;
             overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(22, 163, 74, 0.1);
+            box-shadow: 0 10px 25px -5px rgba(0, 168, 0, 0.08);
         }
         .header {
-            background: linear-gradient(135deg, #008a00 0%, #00a800 60%, #16a34a 100%);
-            padding: 36px 28px;
+            background-color: #ffffff;
+            padding: 32px 24px;
             text-align: center;
+            border-bottom: 1px solid #f1f5f9;
         }
-        .brand-badge {
+        .brand-pill {
             display: inline-block;
-            background: rgba(0, 0, 0, 0.12);
-            padding: 10px 24px;
+            background-color: #00a800;
+            padding: 10px 32px;
             border-radius: 9999px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 12px rgba(0, 168, 0, 0.25);
         }
         .brand-name {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: 0.05em;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 0.04em;
             line-height: 1.1;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Arial Black', sans-serif;
         }
         .brand-indo {
             color: #ffffff;
         }
         .brand-green {
-            color: #bbf7d0;
-        }
-        .brand-sub {
-            font-size: 10px;
-            letter-spacing: 0.18em;
-            color: #dcfce7;
-            margin-top: 5px;
-            font-weight: 600;
-            text-transform: uppercase;
+            color: #ffff00;
         }
         .content {
             padding: 32px 28px;
@@ -61,17 +55,17 @@
             font-size: 17px;
             font-weight: 700;
             margin-bottom: 12px;
-            color: #14532d;
+            color: #0f172a;
         }
         .text {
             font-size: 14px;
             line-height: 1.6;
-            color: #374151;
+            color: #475569;
             margin-bottom: 24px;
         }
         .code-box {
-            background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 2px dashed #4ade80;
+            background-color: #f0fdf4;
+            border: 2px dashed #00a800;
             border-radius: 16px;
             padding: 22px;
             text-align: center;
@@ -81,7 +75,7 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.12em;
-            color: #15803d;
+            color: #008a00;
             font-weight: 700;
             margin-bottom: 8px;
         }
@@ -89,7 +83,7 @@
             font-size: 34px;
             font-weight: 800;
             letter-spacing: 6px;
-            color: #15803d;
+            color: #008a00;
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
         }
         .btn-wrapper {
@@ -98,41 +92,40 @@
         }
         .btn {
             display: inline-block;
-            background: linear-gradient(135deg, #008a00 0%, #16a34a 100%);
+            background-color: #00a800;
             color: #ffffff !important;
             font-size: 15px;
             font-weight: 700;
             text-decoration: none;
             padding: 13px 36px;
             border-radius: 9999px;
-            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+            box-shadow: 0 4px 14px rgba(0, 168, 0, 0.35);
         }
         .note {
             font-size: 12px;
-            color: #6b7280;
+            color: #64748b;
             line-height: 1.5;
-            border-top: 1px solid #f3f4f6;
+            border-top: 1px solid #f1f5f9;
             padding-top: 20px;
             margin-top: 24px;
         }
         .footer {
-            background-color: #f9fafb;
+            background-color: #f8fafc;
             padding: 20px 28px;
             text-align: center;
             font-size: 12px;
-            color: #9ca3af;
-            border-top: 1px solid #e5e7eb;
+            color: #94a3b8;
+            border-top: 1px solid #f1f5f9;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="brand-badge">
-                <div class="brand-name">
+            <div class="brand-pill">
+                <span class="brand-name">
                     <span class="brand-indo">INDO</span><span class="brand-green">GREEN</span>
-                </div>
-                <div class="brand-sub">Perusahaan Listrik Tenaga Surya</div>
+                </span>
             </div>
         </div>
         <div class="content">
