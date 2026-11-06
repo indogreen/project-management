@@ -315,7 +315,7 @@ sudo systemctl enable caddy
 
 ## Automated Deployment (CD) via GitHub Self-Hosted Runner
 
-Workflow Continuous Deployment (CD) didefinisikan pada `.github/workflows/deploy.yml` dan berjalan otomatis setiap kali ada `push` ke branch **`main`** (atau via trigger manual `workflow_dispatch` dari GitHub Actions tab).
+Workflow Continuous Deployment (CD) didefinisikan pada `.github/workflows/cd.yml` dan berjalan otomatis setiap kali ada `push` ke branch **`main`** (atau via trigger manual `workflow_dispatch` dari GitHub Actions tab).
 
 Karena server production berada di jaringan lokal/VirtualBox (`192.168.1.34`) di balik CGNAT/Tailscale, workflow menggunakan **GitHub Self-Hosted Runner** yang terhubung keluar ke GitHub secara aman tanpa perlu IP publik atau port forwarding router.
 
@@ -336,7 +336,7 @@ Karena server production berada di jaringan lokal/VirtualBox (`192.168.1.34`) di
    indogreen ALL=(ALL) NOPASSWD: /bin/systemctl restart indogreen-backend.service, /bin/systemctl restart indogreen-frontend.service
    ```
 
-### 2. Alur Eksekusi Otomatis `.github/workflows/deploy.yml`
+### 2. Alur Eksekusi Otomatis `.github/workflows/cd.yml`
 
 Setiap kali kode di-push ke branch `main`:
 1. `git fetch origin main && git reset --hard origin/main` di direktori proyek `/opt/lampp/htdocs/project/indogreen/project-management`.

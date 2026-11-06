@@ -2,14 +2,14 @@
 
 ## [2026-11-06] — feat(ci): add automated production deployment workflow via github self-hosted runner
 
-- Pembuatan workflow Continuous Deployment (CD) pada `.github/workflows/deploy.yml`:
+- Pembuatan workflow Continuous Deployment (CD) pada `.github/workflows/cd.yml`:
   - Menggunakan GitHub Self-Hosted Runner (`runs-on: self-hosted`) yang berjalan langsung di server VirtualBox (`indogreen-VirtualBox`).
   - Menjalankan sinkronisasi git otomatis (`git fetch` & `git reset --hard origin/main`), instalasi dependensi backend production (`composer install --no-dev`), migrasi database, pembersihan dan regenerasi cache Laravel, build produksi frontend (`npm ci && npm run build`), restart service systemd (`indogreen-backend` dan `indogreen-frontend`), serta health check internal port `8004/up` dan `8005`.
-  - Dilengkapi kontrol concurrency (`concurrency: production-deployment`, `cancel-in-progress: false`) dan dukungan manual trigger (`workflow_dispatch`).
+  - Dilengkapi kontrol concurrency per-branch dengan pembatalan otomatis proses lama (`concurrency.group: cd-${{ github.workflow }}-${{ github.ref }}`, `cancel-in-progress: true`) dan dukungan manual trigger (`workflow_dispatch`).
 - Dokumentasi:
   - Memperbarui `docs/deployment.md` dengan panduan komprehensif setup GitHub Self-Hosted Runner di VirtualBox, konfigurasi sudo `NOPASSWD` untuk systemctl, dan alur kerja eksekusi otomatis.
 - File yang diubah:
-  - `.github/workflows/deploy.yml`
+  - `.github/workflows/cd.yml`
   - `docs/deployment.md`
   - `docs/changelog.md`
 
