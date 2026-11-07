@@ -29,12 +29,15 @@ Authorization: Bearer {access_token}
 
 | Method | Endpoint                | Auth | Deskripsi                      |
 | ------ | ----------------------- | ---- | ------------------------------ |
-| POST   | `/auth/register`        | No   | Registrasi user baru (khusus email resmi `@indogreen.id`, dapat dinonaktifkan via `AUTH_REGISTRATION_ENABLED`) |
-| POST   | `/auth/login`           | No   | Login dan dapatkan JWT token   |
+| GET    | `/auth/features`        | No   | Cek konfigurasi fitur otentikasi publik (status `registration_enabled` dan `allowed_domain`) |
+| POST   | `/auth/register`        | No   | Registrasi user baru dengan opsi username dan pengiriman kode autentikasi via email (khusus email resmi `@indogreen.id`, dapat dinonaktifkan via `AUTH_REGISTRATION_ENABLED`) |
+| POST   | `/auth/login`           | No   | Login via email atau username dan dapatkan JWT token |
+| POST   | `/auth/forgot-password` | No   | Kirim kode verifikasi reset password ke email terdaftar |
+| POST   | `/auth/reset-password`  | No   | Reset password menggunakan token/kode verifikasi email |
 | POST   | `/auth/logout`          | Yes  | Invalidate token               |
 | POST   | `/auth/refresh`         | Yes  | Refresh JWT token              |
 | GET    | `/auth/me`              | Yes  | Data user + roles + permissions|
-| PUT    | `/auth/profile`         | Yes  | Update nama profil             |
+| PUT    | `/auth/profile`         | Yes  | Update nama dan username profil|
 | PUT    | `/auth/password`        | Yes  | Ubah password                  |
 
 ## Role Management

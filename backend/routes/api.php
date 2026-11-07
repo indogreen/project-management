@@ -17,8 +17,11 @@ use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
+    Route::get('/features', [AuthController::class, 'features'])->name('features');
     Route::post('/register', [AuthController::class, 'register'])->middleware('sliding_throttle:5,60,auth')->name('register');
     Route::post('/login', [AuthController::class, 'login'])->middleware('sliding_throttle:5,60,auth')->name('login');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('sliding_throttle:3,60,auth')->name('password.forgot');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('sliding_throttle:5,60,auth')->name('password.reset');
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api')->name('logout');
     Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:api')->name('refresh');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:api')->name('me');

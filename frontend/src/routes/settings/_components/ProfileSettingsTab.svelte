@@ -11,7 +11,7 @@
     onReset,
     onSubmit
   }: {
-    profile: { name: string; email: string };
+    profile: { name: string; username?: string; email: string };
     disabled: boolean;
     pageLoading: boolean;
     saving: boolean;
@@ -46,6 +46,26 @@
                 disabled={disabled || pageLoading || saving}
               />
             </div>
+          </div>
+          <div class="sm:col-span-4">
+            <label
+              for="username"
+              class="block text-sm/6 font-medium text-gray-900 dark:text-gray-100">Username</label
+            >
+            <div class="mt-2">
+              <input
+                id="username"
+                type="text"
+                bind:value={profile.username}
+                autocomplete="username"
+                placeholder="Username unik"
+                class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:opacity-60 sm:text-sm/6 dark:bg-neutral-900 dark:text-gray-100 dark:outline-gray-700"
+                disabled={disabled || pageLoading || saving}
+              />
+            </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Username dapat digunakan untuk masuk ke akun Anda.
+            </p>
           </div>
           <div class="sm:col-span-4">
             <label for="email" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-300"

@@ -117,4 +117,30 @@ class AuthRegistrationSecurityTest extends TestCase
         $responseMismatch->assertStatus(422);
         $responseMismatch->assertJsonValidationErrors(['password']);
     }
+
+    public function test_auth_features_returns_registration_enabled_status(): void
+    {
+        Config::set('auth.registration.enabled', true);
+        Config::set('auth.registration.allowed_domain', 'indogreen.id');
+
+        $response = $this->getJson('/api/auth/features');
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'registration_enabled' => true,
+            'allowed_domain' => 'indogreen.id',
+        ]);
+    }
+
+    public function test_auth_features_returns_registration_disabled_status(): void
+    {
+        Config::set('auth.registration.enabled', false);
+
+        $response = $this->getJson('/api/auth/features');
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'registration_enabled' => false,
+        ]);
+    }
 }

@@ -2,13 +2,14 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import { register } from '$lib/services/authService';
+  import { getAuthFeatures, register } from '$lib/services/authService';
   import { theme, toggleTheme } from '$lib/stores/theme';
   import { extractApiErrors } from '$lib/utils/errors';
-  import { showSuccess } from '$lib/utils/toast';
+  import { showError, showSuccess } from '$lib/utils/toast';
   import { getSafeInternalRedirect } from '$lib/utils/url';
 
   let name = $state('');
+  let username = $state('');
   let email = $state('');
   let password = $state('');
   let password_confirmation = $state('');
@@ -16,17 +17,34 @@
   let showPassword2 = $state(false);
   let loading = $state(false);
   let error = $state<string | null>(null);
+  let registrationEnabled = $state(true);
 
-  // ⬇️ Jika sudah login, jangan boleh buka register
-  onMount(() => {
+  // ⬇️ Jika sudah login atau registrasi nonaktif, jangan boleh buka register
+  onMount(async () => {
     const token = localStorage.getItem('jwt_token');
     if (token) {
       goto(getSafeInternalRedirect($page.url));
+      return;
+    }
+
+    try {
+      const features = await getAuthFeatures();
+      if (!features.registration_enabled) {
+        registrationEnabled = false;
+        showError('Pendaftaran akun publik saat ini dinonaktifkan.');
+        goto('/auth/login');
+      }
+    } catch (err) {
+      console.warn('Gagal memverifikasi status registrasi:', err);
     }
   });
 
   async function handleSubmit() {
     if (loading) return;
+    if (!registrationEnabled) {
+      error = 'Pendaftaran akun publik saat ini dinonaktifkan.';
+      return;
+    }
     error = null;
     if (password !== password_confirmation) {
       error = 'Konfirmasi password tidak cocok.';
@@ -36,11 +54,14 @@
     try {
       await register({
         name,
+        username: username.trim() || undefined,
         email,
         password,
         password_confirmation
       });
-      showSuccess('Registrasi berhasil! Silakan login.');
+      showSuccess(
+        'Registrasi berhasil! Kode autentikasi akun telah dikirim ke email Anda. Silakan login.'
+      );
 
       const nextParam =
         $page.url.searchParams.get('next') || $page.url.searchParams.get('redirect');
@@ -66,13 +87,13 @@
 
 <!-- Background dengan varian dark -->
 <div
-  class="absolute inset-0 -z-10 bg-gradient-to-br from-cyan-50 via-white to-indigo-50
+  class="absolute inset-0 -z-10 bg-linear-to-br from-cyan-50 via-white to-indigo-50
             dark:from-neutral-900 dark:via-neutral-950 dark:to-black"
 ></div>
-<div class="absolute inset-x-0 top-[-10rem] -z-10 transform-gpu overflow-hidden blur-3xl">
+<div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl">
   <div
-    class="relative left-1/3 aspect-[1155/678] w-[36rem] -translate-x-1/3
-              bg-gradient-to-tr from-cyan-300 to-indigo-300 opacity-30
+    class="relative left-1/3 aspect-1155/678 w-xl -translate-x-1/3
+              bg-linear-to-tr from-cyan-300 to-indigo-300 opacity-30
               dark:from-cyan-700/40 dark:to-indigo-700/40"
   ></div>
 </div>
@@ -114,6 +135,15 @@
         </button>
       </div>
 
+      {#if !registrationEnabled}
+        <div
+          class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
+          role="alert"
+        >
+          Pendaftaran akun baru saat ini dinonaktifkan. Mengalihkan ke halaman login...
+        </div>
+      {/if}
+
       <form class="space-y-5" onsubmit={handleSubmitEvent} aria-busy={loading}>
         <div class="text-center">
           <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Register</h2>
@@ -152,6 +182,41 @@
                   cy="7"
                   r="4"
                 />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Username -->
+        <div>
+          <label
+            for="username"
+            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label
+          >
+          <div class="relative">
+            <input
+              id="username"
+              type="text"
+              name="username"
+              placeholder="Username unik (opsional)"
+              bind:value={username}
+              autocomplete="username"
+              class="peer block w-full rounded-xl border border-gray-300 bg-white px-11 py-3 text-gray-900 placeholder:text-gray-400
+                     focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:opacity-70
+                     dark:border-gray-700 dark:bg-neutral-900 dark:text-gray-100 dark:placeholder-gray-400"
+              disabled={loading}
+            />
+            <div
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-gray-500"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
           </div>

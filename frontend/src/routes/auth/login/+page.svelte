@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import { login } from '$lib/services/authService';
+  import { getAuthFeatures, login } from '$lib/services/authService';
   import { theme, toggleTheme } from '$lib/stores/theme';
   import { extractApiErrors } from '$lib/utils/errors';
   import { getSafeInternalRedirect } from '$lib/utils/url';
@@ -12,14 +12,27 @@
   let showPassword = $state(false);
   let loading = $state(false);
   let error = $state<string | null>(null);
+  let registrationEnabled = $state(false);
 
   // ⬇️ Jika sudah login dan buka /auth/login, langsung redirect
   onMount(() => {
     const token = localStorage.getItem('jwt_token');
     if (token) {
       goto(getSafeInternalRedirect($page.url));
+      return;
     }
+
+    void loadFeatures();
   });
+
+  async function loadFeatures() {
+    try {
+      const features = await getAuthFeatures();
+      registrationEnabled = Boolean(features.registration_enabled);
+    } catch (err) {
+      console.warn('Gagal memuat status registrasi:', err);
+    }
+  }
 
   async function handleSubmit() {
     if (loading) return;
@@ -52,13 +65,13 @@
 
 <!-- Background (punya varian dark) -->
 <div
-  class="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-50 via-white to-cyan-50
+  class="absolute inset-0 -z-10 bg-linear-to-br from-indigo-50 via-white to-cyan-50
             dark:from-neutral-900 dark:via-neutral-950 dark:to-black"
 ></div>
-<div class="absolute inset-x-0 top-[-10rem] -z-10 transform-gpu overflow-hidden blur-3xl">
+<div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl">
   <div
-    class="relative left-1/2 aspect-[1155/678] w-[36rem] -translate-x-1/2
-              bg-gradient-to-tr from-indigo-300 to-cyan-300 opacity-30
+    class="relative left-1/2 aspect-1155/678 w-xl -translate-x-1/2
+              bg-linear-to-tr from-indigo-300 to-cyan-300 opacity-30
               dark:from-indigo-700/40 dark:to-cyan-700/40"
   ></div>
 </div>
@@ -109,19 +122,19 @@
           <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Login</h2>
         </div>
 
-        <!-- Email -->
+        <!-- Email atau Username -->
         <div>
           <label for="email" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >Email</label
+            >Email atau Username</label
           >
           <div class="relative">
             <input
               id="email"
-              type="email"
-              name="email"
-              placeholder="Alamat Email"
+              type="text"
+              name="login"
+              placeholder="Email atau username"
               bind:value={email}
-              autocomplete="email"
+              autocomplete="username"
               required
               class="peer block w-full rounded-xl border border-gray-300 bg-white px-11 py-3 text-gray-900 placeholder:text-gray-400
                      focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:opacity-70
@@ -154,6 +167,12 @@
               class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >Password</label
             >
+            <a
+              href="/auth/forgot-password"
+              class="mb-1 text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              Lupa password?
+            </a>
           </div>
           <div class="relative">
             <input
@@ -270,14 +289,16 @@
         </button>
       </form>
 
-      <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-300">
-        Belum punya akun?
-        <a
-          href="/auth/register"
-          class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-          >Daftar disini</a
-        >
-      </p>
+      {#if registrationEnabled}
+        <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-300">
+          Belum punya akun?
+          <a
+            href="/auth/register"
+            class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >Daftar disini</a
+          >
+        </p>
+      {/if}
     </div>
   </div>
 </div>

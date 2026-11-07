@@ -1,6 +1,77 @@
 # Changelog
 
-## [2026-11-06] — feat(ci): add automated production deployment workflow via github self-hosted runner
+## [2026-11-06] — feat(auth): support email/username login and implement forgot password with Brevo SMTP
+
+- Dukungan Login Fleksibel (Email atau Username):
+  - Penambahan kolom `username` (`string`, `unique`, `nullable`) pada tabel `users` via migration `2026_11_06_000001_add_username_to_users_table.php` dengan backfill otomatis dari prefix email untuk data user yang sudah ada.
+  - Endpoint `POST /api/auth/login` dan `AuthService::login` kini menerima pengenal `login` yang secara cerdas mendeteksi apakah input berupa alamat email (`@`) atau username (dengan fallback ke nama user).
+  - Formulir login frontend (`/auth/login`) diperbarui dengan label *"Email atau Username"* dan placeholder yang jelas.
+- Implementasi Lengkap Fitur Lupa Password & Reset Password:
+  - Penambahan endpoint publik:
+    - `POST /api/auth/forgot-password` (Rate limit: 3 req / 60 detik) untuk meminta kode verifikasi. Menghasilkan kode OTP 6-digit numerik yang disimpan dalam bentuk hash di tabel `password_reset_tokens` (berlaku 60 menit) dan mengirim email via Brevo SMTP relay.
+    - `POST /api/auth/reset-password` (Rate limit: 5 req / 60 detik) untuk memverifikasi kode OTP/token dan memperbarui password baru user.
+  - Pembuatan Mailable `ResetPasswordMail` dan template email Blade HTML responsif (`emails/reset_password.blade.php`) dengan desain profesional Indogreen.
+  - Pembuatan halaman antarmuka frontend baru:
+    - `/auth/forgot-password`: Form permintaan kode verifikasi dengan feedback state email terkirim.
+    - `/auth/reset-password`: Form input kode verifikasi, password baru, dan konfirmasi password dengan dukungan prefill otomatis dari query parameter URL email (`?email=...&token=...`) serta toggle lihat/sembunyikan password.
+  - Penambahan tautan *"Lupa password?"* pada halaman login yang terhubung ke `/auth/forgot-password`.
+- Pengelolaan Username & Registrasi Akun:
+  - Penambahan input `username` pada tab profil di Settings (`/settings`), memungkinkan pengguna mengubah username mereka secara mandiri (divalidasi unik dengan format `alpha_dash`).
+  - Penambahan input `username` pada formulir registrasi publik (`/auth/register`).
+  - Pengiriman email otomatis saat registrasi berhasil (`AccountRegisteredMail`) yang memuat **kode autentikasi akun** untuk verifikasi keamanan.
+- Desain Pesan Email Bertema Indogreen:
+  - Template email `emails/reset_password.blade.php` dan `emails/account_registered.blade.php` disesuaikan mengikuti skema warna identitas Indogreen (gradasi hijau tua `#008a00` hingga `#16a34a` dan aksen lime `#bbf7d0`), dengan tata letak lencana kapsul teks bersih tanpa menyematkan gambar logo.
+- Pengujian & Dokumentasi:
+  - Penambahan test kasus baru pada `AuthForgotPasswordTest` untuk pengujian email autentikasi saat registrasi dan pembaruan username di endpoint `/auth/profile`.
+  - Pembaruan dokumen `docs/api-reference.md`, `docs/database-schema.md`, `docs/database-migrations.md`, dan `docs/jwt-auth.md`.
+- File yang diubah:
+  - `backend/database/migrations/2026_11_06_000001_add_username_to_users_table.php`
+  - `backend/app/Models/User.php`
+  - `backend/app/Http/Resources/UserResource.php`
+  - `backend/app/Http/Controllers/AuthController.php`
+  - `backend/app/Http/Controllers/RoleController.php`
+  - `backend/app/Services/AuthService.php`
+  - `backend/app/Mail/ResetPasswordMail.php`
+  - `backend/resources/views/emails/reset_password.blade.php`
+  - `backend/routes/api.php`
+  - `backend/config/app.php`
+  - `backend/database/factories/UserFactory.php`
+  - `backend/tests/Feature/AuthForgotPasswordTest.php`
+  - `frontend/src/lib/types/auth.ts`
+  - `frontend/src/lib/services/authService.ts`
+  - `frontend/src/lib/services/authService.test.ts`
+  - `frontend/src/routes/auth/login/+page.svelte`
+  - `frontend/src/routes/auth/forgot-password/+page.svelte`
+  - `frontend/src/routes/auth/reset-password/+page.svelte`
+  - `docs/api-reference.md`
+  - `docs/database-schema.md`
+  - `docs/database-migrations.md`
+  - `docs/jwt-auth.md`
+  - `docs/changelog.md`
+
+- Penambahan endpoint publik `GET /api/auth/features` di backend untuk mengembalikan konfigurasi publik otentikasi (`registration_enabled` dan `allowed_domain`).
+- Sinkronisasi frontend login & register via service layer:
+  - Pada halaman login (`/auth/login`), tautan pendaftaran (*"Belum punya akun? Daftar disini"*) disembunyikan secara kondisional apabila `registration_enabled` bernilai `false`.
+  - Pada halaman register (`/auth/register`), akses langsung dicegat di `onMount` dengan pengalihan otomatis (*redirect*) ke `/auth/login` dan menampilkan notifikasi kesalahan jika registrasi dinonaktifkan.
+  - Penambahan tipe data `AuthFeatures` di `src/lib/types/auth.ts` dan fungsi `getAuthFeatures()` pada `authService.ts`.
+  - Penambahan unit test `AuthRegistrationSecurityTest` di backend dan `authService.test.ts` di frontend.
+- File yang diubah:
+  - `backend/app/Services/AuthService.php`
+  - `backend/app/Http/Controllers/AuthController.php`
+  - `backend/routes/api.php`
+  - `backend/phpunit.xml`
+  - `backend/tests/Feature/AuthRegistrationSecurityTest.php`
+  - `frontend/src/lib/types/auth.ts`
+  - `frontend/src/lib/types/index.ts`
+  - `frontend/src/lib/services/authService.ts`
+  - `frontend/src/lib/services/authService.test.ts`
+  - `frontend/src/routes/auth/login/+page.svelte`
+  - `frontend/src/routes/auth/register/_components/RegisterPageClient.svelte`
+  - `docs/api-reference.md`
+  - `docs/jwt-auth.md`
+  - `docs/changelog.md`
+- Dampak yang perlu diketahui:
+  - Pengubahan variabel environment `AUTH_REGISTRATION_ENABLED=false` di `backend/.env` kini secara otomatis menyembunyikan opsi pendaftaran akun dari antarmuka login frontend tanpa perlu konfigurasi terpisah di frontend.
 
 - Pembuatan workflow Continuous Deployment (CD) pada `.github/workflows/cd.yml`:
   - Menggunakan GitHub Self-Hosted Runner (`runs-on: self-hosted`) yang berjalan langsung di server VirtualBox (`indogreen-VirtualBox`).
