@@ -32,14 +32,15 @@
   // ---------------------------
   // Profile
   // ---------------------------
-  let profile = $state({ name: '', email: '' });
-  let initialProfile = $state({ name: '', email: '' });
+  let profile = $state({ name: '', username: '', email: '' });
+  let initialProfile = $state({ name: '', username: '', email: '' });
   let profileInitialized = $state(false);
 
   // Sinkronisasi Profile dari Store secara Reaktif
   $effect(() => {
     if ($currentUser && !profileInitialized) {
       profile.name = $currentUser.name;
+      profile.username = $currentUser.username ?? '';
       profile.email = $currentUser.email;
       initialProfile = { ...profile };
       profileInitialized = true;
@@ -55,10 +56,11 @@
     savingProfile = true;
     errorMsg = '';
     try {
-      const data = await updateProfile(profile.name);
+      const data = await updateProfile({ name: profile.name, username: profile.username });
       profile.name = data.name ?? profile.name;
+      profile.username = data.username ?? profile.username;
       initialProfile = { ...profile };
-      patchUser({ name: profile.name });
+      patchUser({ name: profile.name, username: profile.username });
       showSuccess('Profil berhasil diperbarui');
     } catch (err) {
       showError(extractApiErrors(err));

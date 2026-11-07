@@ -2,6 +2,7 @@ import axiosClient from '$lib/axiosClient';
 
 export type ProfileForm = {
   name: string;
+  username?: string;
   email: string;
 };
 
@@ -55,12 +56,16 @@ type RoleUsersResponse = {
 
 type ProfileResponse = {
   name?: string;
+  username?: string;
   email?: string;
 };
 
 /** Updates the authenticated user's profile. */
-export async function updateProfile(name: string): Promise<ProfileResponse> {
-  const response = await axiosClient.put<ProfileResponse>('/auth/profile', { name });
+export async function updateProfile(
+  data: string | { name: string; username?: string }
+): Promise<ProfileResponse> {
+  const payload = typeof data === 'string' ? { name: data } : data;
+  const response = await axiosClient.put<ProfileResponse>('/auth/profile', payload);
   return response.data;
 }
 
