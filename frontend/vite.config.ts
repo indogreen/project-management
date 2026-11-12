@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig, loadEnv } from 'vite';
+import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -61,10 +62,9 @@ export default defineConfig(({ mode }) => {
           extends: './vite.config.ts',
           test: {
             name: 'client',
-            environment: 'browser',
             browser: {
               enabled: true,
-              provider: 'playwright',
+              provider: playwright(),
               instances: [{ browser: 'chromium' }]
             },
             include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
