@@ -1,5 +1,14 @@
 # Changelog
 
+## [2026-11-12] — ci(cd): skip cd workflow on fork repositories without self-hosted runner
+
+- Menambahkan kondisi pembatas `if: github.repository == 'indogreen/project-management'` pada job deploy `.github/workflows/cd.yml`.
+- Mencegah workflow CD masuk status antrean tak terbatas (stuck in `Queued`) saat ada push ke branch `main` di repositori origin/fork pengguna yang tidak memiliki konfigurasi GitHub Self-Hosted Runner.
+- File yang diubah:
+  - `.github/workflows/cd.yml`
+  - `docs/deployment.md`
+  - `docs/changelog.md`
+
 ## [2026-11-11] — fix(frontend): resolve vitest 5 browser mode and async render type error in CI
 
 - Memperbaiki kegagalan GitHub Actions CI pada job frontend (`SvelteKit Diagnostics & Typecheck` dan `Run Unit & Component Tests`) pasca bump dependency Vitest 5 & vitest-browser-svelte 3:
