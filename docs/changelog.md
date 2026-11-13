@@ -1,11 +1,34 @@
 # Changelog
 
+## [2026-11-12] — ci(cd): skip cd workflow on fork repositories without self-hosted runner
+
+- Menambahkan kondisi pembatas `if: github.repository == 'indogreen/project-management'` pada job deploy `.github/workflows/cd.yml`.
+- Mencegah workflow CD masuk status antrean tak terbatas (stuck in `Queued`) saat ada push ke branch `main` di repositori origin/fork pengguna yang tidak memiliki konfigurasi GitHub Self-Hosted Runner.
+- File yang diubah:
+  - `.github/workflows/cd.yml`
+  - `docs/deployment.md`
+  - `docs/changelog.md`
+
+## [2026-11-11] — fix(frontend): resolve vitest 5 browser mode and async render type error in CI
+
+- Memperbaiki kegagalan GitHub Actions CI pada job frontend (`SvelteKit Diagnostics & Typecheck` dan `Run Unit & Component Tests`) pasca bump dependency Vitest 5 & vitest-browser-svelte 3:
+  - Mengubah pemanggilan `render(Page)` menjadi asynchronous (`await render(Page)`) pada `frontend/src/routes/page.svelte.test.ts`.
+  - Menambahkan devDependency `@vitest/browser-playwright` dan memperbarui inisialisasi browser provider pada `frontend/vite.config.ts`.
+  - Memperbarui type reference browser provider pada `frontend/vitest-setup-client.ts`.
+- File yang diubah:
+  - `frontend/src/routes/page.svelte.test.ts`
+  - `frontend/vite.config.ts`
+  - `frontend/vitest-setup-client.ts`
+  - `frontend/package.json`
+  - `frontend/package-lock.json`
+  - `docs/changelog.md`
+
 ## [2026-11-06] — feat(auth): support email/username login and implement forgot password with Brevo SMTP
 
 - Dukungan Login Fleksibel (Email atau Username):
   - Penambahan kolom `username` (`string`, `unique`, `nullable`) pada tabel `users` via migration `2026_11_06_000001_add_username_to_users_table.php` dengan backfill otomatis dari prefix email untuk data user yang sudah ada.
   - Endpoint `POST /api/auth/login` dan `AuthService::login` kini menerima pengenal `login` yang secara cerdas mendeteksi apakah input berupa alamat email (`@`) atau username (dengan fallback ke nama user).
-  - Formulir login frontend (`/auth/login`) diperbarui dengan label *"Email atau Username"* dan placeholder yang jelas.
+  - Formulir login frontend (`/auth/login`) diperbarui dengan label _"Email atau Username"_ dan placeholder yang jelas.
 - Implementasi Lengkap Fitur Lupa Password & Reset Password:
   - Penambahan endpoint publik:
     - `POST /api/auth/forgot-password` (Rate limit: 3 req / 60 detik) untuk meminta kode verifikasi. Menghasilkan kode OTP 6-digit numerik yang disimpan dalam bentuk hash di tabel `password_reset_tokens` (berlaku 60 menit) dan mengirim email via Brevo SMTP relay.
@@ -14,7 +37,7 @@
   - Pembuatan halaman antarmuka frontend baru:
     - `/auth/forgot-password`: Form permintaan kode verifikasi dengan feedback state email terkirim.
     - `/auth/reset-password`: Form input kode verifikasi, password baru, dan konfirmasi password dengan dukungan prefill otomatis dari query parameter URL email (`?email=...&token=...`) serta toggle lihat/sembunyikan password.
-  - Penambahan tautan *"Lupa password?"* pada halaman login yang terhubung ke `/auth/forgot-password`.
+  - Penambahan tautan _"Lupa password?"_ pada halaman login yang terhubung ke `/auth/forgot-password`.
 - Pengelolaan Username & Registrasi Akun:
   - Penambahan input `username` pada tab profil di Settings (`/settings`), memungkinkan pengguna mengubah username mereka secara mandiri (divalidasi unik dengan format `alpha_dash`).
   - Penambahan input `username` pada formulir registrasi publik (`/auth/register`).
@@ -51,8 +74,8 @@
 
 - Penambahan endpoint publik `GET /api/auth/features` di backend untuk mengembalikan konfigurasi publik otentikasi (`registration_enabled` dan `allowed_domain`).
 - Sinkronisasi frontend login & register via service layer:
-  - Pada halaman login (`/auth/login`), tautan pendaftaran (*"Belum punya akun? Daftar disini"*) disembunyikan secara kondisional apabila `registration_enabled` bernilai `false`.
-  - Pada halaman register (`/auth/register`), akses langsung dicegat di `onMount` dengan pengalihan otomatis (*redirect*) ke `/auth/login` dan menampilkan notifikasi kesalahan jika registrasi dinonaktifkan.
+  - Pada halaman login (`/auth/login`), tautan pendaftaran (_"Belum punya akun? Daftar disini"_) disembunyikan secara kondisional apabila `registration_enabled` bernilai `false`.
+  - Pada halaman register (`/auth/register`), akses langsung dicegat di `onMount` dengan pengalihan otomatis (_redirect_) ke `/auth/login` dan menampilkan notifikasi kesalahan jika registrasi dinonaktifkan.
   - Penambahan tipe data `AuthFeatures` di `src/lib/types/auth.ts` dan fungsi `getAuthFeatures()` pada `authService.ts`.
   - Penambahan unit test `AuthRegistrationSecurityTest` di backend dan `authService.test.ts` di frontend.
 - File yang diubah:
@@ -83,7 +106,6 @@
   - `.github/workflows/cd.yml`
   - `docs/deployment.md`
   - `docs/changelog.md`
-
 
 ## [2026-11-05] — feat(config): support PREVIEW_ALLOWED_HOSTS and configure indogreen.id HTTPS via Tailscale
 
@@ -126,18 +148,17 @@
 - Dampak yang perlu diketahui:
   - Membuka halaman utama (`/`) dalam keadaan belum terotentikasi kini menghasilkan URL bersih `/auth/login`, sementara membuka halaman spesifik (seperti `/dashboard` atau `/projects`) tetap mempertahankan query parameter `redirect` sesuai tujuan.
 
-
 ## [2026-11-04] — docs(security): synchronize documentation and complete full regression quality gate (Fase 5)
 
 - Penuntasan Fase 5 (Comprehensive Quality Gate & Documentation Synchronization):
   - Sinkronisasi Dokumentasi Sistem:
-    - Memperbarui `docs/api-reference.md` dengan batasan domain `@indogreen.id` pada `/auth/register`, *allowlist* RBAC pada `/auth/role`, serta catatan deteksi MIME server-side dan penanganan error pada `/activities`.
+    - Memperbarui `docs/api-reference.md` dengan batasan domain `@indogreen.id` pada `/auth/register`, _allowlist_ RBAC pada `/auth/role`, serta catatan deteksi MIME server-side dan penanganan error pada `/activities`.
     - Melakukan verifikasi konsistensi seluruh dokumen panduan (`docs/role-permission.md`, `docs/jwt-auth.md`, `docs/environment-variables.md`, `docs/security-checklist.md`, `docs/troubleshooting.md`).
   - Eksekusi Full Regression Quality Gate:
     - Backend: 40/40 test suite PHPUnit berhasil lolos (190 assertions, 0 failures).
     - Frontend: 93/93 test suite Vitest berhasil lolos (8 test files, 0 failures).
     - Type check: `svelte-check` 0 error, 0 warning.
-    - Production build: `vite build` selesai dengan sukses tanpa peringatan atau error *bundling*.
+    - Production build: `vite build` selesai dengan sukses tanpa peringatan atau error _bundling_.
   - Seluruh 8 temuan audit keamanan (`PM-AC-001`, `PM-CORS-001`, `PM-BIZ-001`, `PM-REDIRECT-001`, `PM-AUTH-001`, `PM-INJ-001`, `PM-INJ-002`, `PM-LOG-001`) dinyatakan tuntas termitigasi.
 - File yang diubah:
   - `docs/api-reference.md`
@@ -240,7 +261,7 @@
 
 - Penuntasan temuan keamanan Fase 1 (`PM-AC-001` - High Severity):
   - Menghapus sink dinamis `Role::firstOrCreate` dan `Permission::firstOrCreate` pada `backend/app/Http/Controllers/RoleController.php`.
-  - Menerapkan *allowlist* kanonikal untuk role (`Rule::in(['staff', 'user'])` untuk admin, dan `['super_admin', 'admin', 'staff', 'user']` untuk super_admin).
+  - Menerapkan _allowlist_ kanonikal untuk role (`Rule::in(['staff', 'user'])` untuk admin, dan `['super_admin', 'admin', 'staff', 'user']` untuk super_admin).
   - Menerapkan validasi ketat terhadap 38 permission kanonikal; setiap key permission tak dikenal langsung ditolak dengan status HTTP 422.
   - Menambahkan konfigurasi `system_roles` dan `system_modules` pada `backend/config/permission.php`.
   - Mengamankan endpoint `/auth/role/config` agar hanya menyajikan role resmi aplikasi.
@@ -312,7 +333,6 @@
   - Backend automated tests (`php artisan test`) 15 passed, 81 assertions lulus 100%.
 - Dampak yang perlu diketahui:
   - Seluruh pustaka runtime dan dev-tools beroperasi pada rilis mutakhir dan aman dari kerentanan tanpa mengubah arsitektur, struktur routing, atau fungsionalitas UI yang berjalan.
-
 
 ## [2026-11-02] — docs(pwa): phase 9 documentation consolidation and production release plan
 
