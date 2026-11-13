@@ -256,25 +256,28 @@ Lingkungan production ini berjalan pada server lokal (`192.168.1.34`) di balik C
 
 ### 1. Arsitektur Domain & Port
 
-| Komponen | Domain Target | Port Layanan Internal | Reverse Proxy & Protokol |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | `https://pm.indogreen.id` | `http://127.0.0.1:8005` | Caddy (HTTPS 443) ➔ `npm run preview` |
-| **Backend** | `https://api-pm.indogreen.id` | `http://127.0.0.1:8004` | Caddy (HTTPS 443) ➔ `php artisan serve` |
+| Komponen     | Domain Target                 | Port Layanan Internal   | Reverse Proxy & Protokol                |
+| :----------- | :---------------------------- | :---------------------- | :-------------------------------------- |
+| **Frontend** | `https://pm.indogreen.id`     | `http://127.0.0.1:8005` | Caddy (HTTPS 443) ➔ `npm run preview`   |
+| **Backend**  | `https://api-pm.indogreen.id` | `http://127.0.0.1:8004` | Caddy (HTTPS 443) ➔ `php artisan serve` |
 
 ### 2. Konfigurasi DNS di Rumahweb
 
 Tambahkan **A Record** pada DNS Management Rumahweb:
+
 - `pm.indogreen.id` ➔ `192.168.1.34` (TTL: 3600)
 - `api-pm.indogreen.id` ➔ `192.168.1.34` (TTL: 3600)
 
 ### 3. Penerbitan Sertifikat SSL Let's Encrypt (DNS-01 ACME)
 
 Jalankan perintah berikut di server Linux Ubuntu/Debian:
+
 ```bash
 sudo apt update
 sudo apt install -y certbot
 sudo certbot certonly --manual --preferred-challenges dns -d pm.indogreen.id -d api-pm.indogreen.id
 ```
+
 Tambahkan TXT record `_acme-challenge.pm` dan `_acme-challenge.api-pm` pada DNS Rumahweb sesuai token yang ditampilkan Certbot, tunggu 1-2 menit, lalu tekan Enter. Sertifikat akan tersimpan di `/etc/letsencrypt/live/pm.indogreen.id/`.
 
 ### 4. Konfigurasi Caddy (`/etc/caddy/Caddyfile`)
@@ -292,6 +295,7 @@ api-pm.indogreen.id {
 ```
 
 Jalankan dan aktifkan Caddy:
+
 ```bash
 sudo systemctl restart caddy
 sudo systemctl enable caddy
@@ -317,6 +321,9 @@ sudo systemctl enable caddy
 
 Workflow Continuous Deployment (CD) didefinisikan pada `.github/workflows/cd.yml` dan berjalan otomatis setiap kali ada `push` ke branch **`main`** (atau via trigger manual `workflow_dispatch` dari GitHub Actions tab).
 
+> **Catatan Fork / Origin Guard:**
+> Workflow CD memiliki kondisi pembatas `if: github.repository == 'indogreen/project-management'` pada level job. Ini memastikan bahwa push ke repositori fork/origin pribadi (seperti `kupzed/project-management`) akan langsung berstatus **Skipped** dan tidak menggantung di antrean (**Queued**) karena ketiadaan self-hosted runner.
+
 Karena server production berada di jaringan lokal/VirtualBox (`192.168.1.34`) di balik CGNAT/Tailscale, workflow menggunakan **GitHub Self-Hosted Runner** yang terhubung keluar ke GitHub secara aman tanpa perlu IP publik atau port forwarding router.
 
 ### 1. Prasyarat di Server VirtualBox (`indogreen-VirtualBox`)
@@ -339,9 +346,9 @@ Karena server production berada di jaringan lokal/VirtualBox (`192.168.1.34`) di
 ### 2. Alur Eksekusi Otomatis `.github/workflows/cd.yml`
 
 Setiap kali kode di-push ke branch `main`:
+
 1. Otentikasi dan sinkronisasi Git otomatis via `GITHUB_TOKEN`: `git fetch https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git main` dan `git reset --hard FETCH_HEAD` di direktori proyek `/opt/lampp/htdocs/project/indogreen/project-management`.
 2. Backend: `composer install --no-dev --optimize-autoloader`, `php artisan migrate --force`, `php artisan optimize:clear`, pembuatan ulang cache config/route/view, dan `php artisan queue:restart`.
 3. Frontend: `npm ci`, `npm run build`.
 4. Service Restart: `sudo systemctl restart indogreen-backend.service indogreen-frontend.service`.
 5. Health Check otomatis pada port internal `8004/up` dan `8005`.
-

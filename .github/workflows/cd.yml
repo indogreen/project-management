@@ -16,6 +16,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy to Production Server
+    if: github.repository == 'indogreen/project-management'
     runs-on: self-hosted
 
     steps:
